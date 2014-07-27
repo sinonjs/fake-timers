@@ -302,45 +302,45 @@ Clock.prototype = {
     }
 };
 
-function restore() {
+function uninstall(clock, target) {
     var method;
 
-    for (var i = 0, l = this.methods.length; i < l; i++) {
-        method = this.methods[i];
+    for (var i = 0, l = clock.methods.length; i < l; i++) {
+        method = clock.methods[i];
 
-        if (global[method].hadOwnProperty) {
-            global[method] = this["_" + method];
+        if (target[method].hadOwnProperty) {
+            target[method] = clock["_" + method];
         } else {
             try {
-                delete global[method];
+                delete target[method];
             } catch (e) {}
         }
     }
 
     // Prevent multiple executions which will completely remove these props
-    this.methods = [];
+    clock.methods = [];
 }
 
-function stubGlobal(method, clock) {
-    clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(global, method);
-    clock["_" + method] = global[method];
+function hijackMethod(target, method, clock) {
+    clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(target, method);
+    clock["_" + method] = target[method];
 
     if (method == "Date") {
-        var date = mirrorDateProperties(clock[method], global[method]);
-        global[method] = date;
+        var date = mirrorDateProperties(clock[method], target[method]);
+        target[method] = date;
     } else {
-        global[method] = function () {
+        target[method] = function () {
             return clock[method].apply(clock, arguments);
         };
 
         for (var prop in clock[method]) {
             if (clock[method].hasOwnProperty(prop)) {
-                global[method][prop] = clock[method][prop];
+                target[method][prop] = clock[method][prop];
             }
         }
     }
 
-    global[method].clock = clock;
+    target[method].clock = clock;
 }
 
 var timers = {
@@ -367,9 +367,23 @@ module.exports.createClock = function (now) {
     return new Clock(now);
 };
 
-module.exports.useFakeTimers = function useFakeTimers(now, toFake) {
+module.exports.install = function install(target, now, toFake) {
+    if (typeof target === "number") {
+        toFake = now;
+        now = target;
+        target = null;
+    }
+
+    if (!target) {
+        target = GLOBAL;
+    }
+
     var clock = new Clock(now);
-    clock.restore = restore;
+
+    clock.uninstall = function () {
+        uninstall(clock, target);
+    };
+
     clock.methods = toFake || [];
 
     if (clock.methods.length === 0) {
@@ -377,7 +391,7 @@ module.exports.useFakeTimers = function useFakeTimers(now, toFake) {
     }
 
     for (var i = 0, l = clock.methods.length; i < l; i++) {
-        stubGlobal(clock.methods[i], clock);
+        hijackMethod(target, clock.methods[i], clock);
     }
 
     return clock;

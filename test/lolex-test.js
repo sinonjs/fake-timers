@@ -173,11 +173,11 @@ buster.testCase("lolex", {
 
     "tick": {
         setUp: function () {
-            this.clock = lolex.useFakeTimers(0);
+            this.clock = lolex.install(0);
         },
 
         tearDown: function () {
-            this.clock.restore();
+            this.clock.uninstall();
         },
 
         "triggers immediately without specified delay": function () {
@@ -825,7 +825,7 @@ buster.testCase("lolex", {
 
         tearDown: function () {
             if (this.clock) {
-                this.clock.restore();
+                this.clock.uninstall();
             }
 
             clearTimeout(this.timer);
@@ -837,14 +837,14 @@ buster.testCase("lolex", {
         },
 
         "returns clock object": function () {
-            this.clock = lolex.useFakeTimers();
+            this.clock = lolex.install();
 
             assert.isObject(this.clock);
             assert.isFunction(this.clock.tick);
         },
 
         "has clock property": function () {
-            this.clock = lolex.useFakeTimers();
+            this.clock = lolex.install();
 
             assert.same(setTimeout.clock, this.clock);
             assert.same(clearTimeout.clock, this.clock);
@@ -854,13 +854,13 @@ buster.testCase("lolex", {
         },
 
         "sets initial timestamp": function () {
-            this.clock = lolex.useFakeTimers(1400);
+            this.clock = lolex.install(1400);
 
             assert.equals(this.clock.now, 1400);
         },
 
         "replaces global setTimeout": function () {
-            this.clock = lolex.useFakeTimers();
+            this.clock = lolex.install();
             var stub = sinon.stub();
 
             setTimeout(stub, 1000);
@@ -870,7 +870,7 @@ buster.testCase("lolex", {
         },
 
         "global fake setTimeout should return id": function () {
-            this.clock = lolex.useFakeTimers();
+            this.clock = lolex.install();
             var stub = sinon.stub();
 
             var to = setTimeout(stub, 1000);
@@ -886,7 +886,7 @@ buster.testCase("lolex", {
         },
 
         "replaces global clearTimeout": function () {
-            this.clock = lolex.useFakeTimers();
+            this.clock = lolex.install();
             var stub = sinon.stub();
 
             clearTimeout(setTimeout(stub, 1000));
@@ -895,10 +895,10 @@ buster.testCase("lolex", {
             assert.isFalse(stub.called);
         },
 
-        "restores global setTimeout": function () {
-            this.clock = lolex.useFakeTimers();
+        "uninstalls global setTimeout": function () {
+            this.clock = lolex.install();
             var stub = sinon.stub();
-            this.clock.restore();
+            this.clock.uninstall();
 
             this.timer = setTimeout(stub, 1000);
             this.clock.tick(1000);
@@ -907,16 +907,16 @@ buster.testCase("lolex", {
             assert.same(setTimeout, lolex.timers.setTimeout);
         },
 
-        "restores global clearTimeout": function () {
-            this.clock = lolex.useFakeTimers();
+        "uninstalls global clearTimeout": function () {
+            this.clock = lolex.install();
             sinon.stub();
-            this.clock.restore();
+            this.clock.uninstall();
 
             assert.same(clearTimeout, lolex.timers.clearTimeout);
         },
 
         "replaces global setInterval": function () {
-            this.clock = lolex.useFakeTimers();
+            this.clock = lolex.install();
             var stub = sinon.stub();
 
             setInterval(stub, 500);
@@ -926,7 +926,7 @@ buster.testCase("lolex", {
         },
 
         "replaces global clearInterval": function () {
-            this.clock = lolex.useFakeTimers();
+            this.clock = lolex.install();
             var stub = sinon.stub();
 
             clearInterval(setInterval(stub, 500));
@@ -935,10 +935,10 @@ buster.testCase("lolex", {
             assert.isFalse(stub.called);
         },
 
-        "restores global setInterval": function () {
-            this.clock = lolex.useFakeTimers();
+        "uninstalls global setInterval": function () {
+            this.clock = lolex.install();
             var stub = sinon.stub();
-            this.clock.restore();
+            this.clock.uninstall();
 
             this.timer = setInterval(stub, 1000);
             this.clock.tick(1000);
@@ -947,41 +947,41 @@ buster.testCase("lolex", {
             assert.same(setInterval, lolex.timers.setInterval);
         },
 
-        "restores global clearInterval": function () {
-            this.clock = lolex.useFakeTimers();
+        "uninstalls global clearInterval": function () {
+            this.clock = lolex.install();
             sinon.stub();
-            this.clock.restore();
+            this.clock.uninstall();
 
             assert.same(clearInterval, lolex.timers.clearInterval);
         },
 
-        "deletes global property on restore if it was inherited onto the global object": function () {
+        "deletes global property on uninstall if it was inherited onto the global object": function () {
             // Give the global object an inherited 'tick' method
             delete this.global.tick;
             this.global.__proto__.tick = function() { };
 
-            this.clock = lolex.useFakeTimers(0, ['tick']);
+            this.clock = lolex.install(0, ['tick']);
             assert.isTrue(this.global.hasOwnProperty("tick"));
-            this.clock.restore();
+            this.clock.uninstall();
 
             assert.isFalse(this.global.hasOwnProperty("tick"));
             delete this.global.__proto__.tick;
         },
 
-        "restores global property on restore if it is present on the global object itself": function () {
+        "uninstalls global property on uninstall if it is present on the global object itself": function () {
             // Directly give the global object a tick method
             this.global.tick = function () { };
 
-            this.clock = lolex.useFakeTimers(0, ['tick']);
+            this.clock = lolex.install(0, ['tick']);
             assert.isTrue(this.global.hasOwnProperty("tick"));
-            this.clock.restore();
+            this.clock.uninstall();
 
             assert.isTrue(this.global.hasOwnProperty("tick"));
             delete this.global.tick;
         },
 
         "fakes Date constructor": function () {
-            this.clock = lolex.useFakeTimers(0);
+            this.clock = lolex.install(0);
             var now = new Date();
 
             refute.same(Date, lolex.timers.Date);
@@ -989,7 +989,7 @@ buster.testCase("lolex", {
         },
 
         "fake Date constructor should mirror Date's properties": function () {
-            this.clock = lolex.useFakeTimers(0);
+            this.clock = lolex.install(0);
 
             assert(!!Date.parse);
             assert(!!Date.UTC);
@@ -997,14 +997,14 @@ buster.testCase("lolex", {
 
         "decide on Date.now support at call-time when supported": function () {
             this.global.Date.now = function () {};
-            this.clock = lolex.useFakeTimers(0);
+            this.clock = lolex.install(0);
 
             assert.equals(typeof Date.now, "function");
         },
 
         "decide on Date.now support at call-time when unsupported": function () {
             this.global.Date.now = null;
-            this.clock = lolex.useFakeTimers(0);
+            this.clock = lolex.install(0);
 
             refute.defined(Date.now);
         },
@@ -1014,35 +1014,35 @@ buster.testCase("lolex", {
         // "mirrors custom Date properties": function () {
         //     var f = function () { };
         //     this.global.Date.format = f;
-        //     lolex.useFakeTimers();
+        //     lolex.install();
 
         //     assert.equals(Date.format, f);
         // },
 
-        // "restores Date constructor": function () {
-        //     this.clock = lolex.useFakeTimers(0);
-        //     this.clock.restore();
+        // "uninstalls Date constructor": function () {
+        //     this.clock = lolex.install(0);
+        //     this.clock.uninstall();
 
         //     assert.same(globalDate, lolex.timers.Date);
         // },
 
         // "fakes provided methods": function () {
-        //     this.clock = lolex.useFakeTimers(0, ["setTimeout", "Date"]);
+        //     this.clock = lolex.install(0, ["setTimeout", "Date"]);
 
         //     refute.same(setTimeout, lolex.timers.setTimeout);
         //     refute.same(Date, lolex.timers.Date);
         // },
 
         // "resets faked methods": function () {
-        //     this.clock = lolex.useFakeTimers(0, ["setTimeout", "Date"]);
-        //     this.clock.restore();
+        //     this.clock = lolex.install(0, ["setTimeout", "Date"]);
+        //     this.clock.uninstall();
 
         //     assert.same(setTimeout, lolex.timers.setTimeout);
         //     assert.same(Date, lolex.timers.Date);
         // },
 
         // "does not fake methods not provided": function () {
-        //     this.clock = lolex.useFakeTimers(0, ["setTimeout", "Date"]);
+        //     this.clock = lolex.install(0, ["setTimeout", "Date"]);
 
         //     assert.same(clearTimeout, lolex.timers.clearTimeout);
         //     assert.same(setInterval, lolex.timers.setInterval);
@@ -1051,7 +1051,7 @@ buster.testCase("lolex", {
 
         // "does not be able to use date object for now": function () {
         //     assert.exception(function () {
-        //         lolex.useFakeTimers(new Date(2011, 9, 1));
+        //         lolex.install(new Date(2011, 9, 1));
         //     });
         // }
     }

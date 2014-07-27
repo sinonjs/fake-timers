@@ -86,7 +86,9 @@ var clock = lolex.install();
 
 ### `var clock = lolex.createClock([now])`
 
-### `var clock = lolex.install([context])`
+### `var clock = lolex.install([context[, now[, toFake]]])`
+
+### `var clock = lolex.install([now[, toFake]])`
 
 ### `var id = clock.setTimeout(callback, timeout)`
 
@@ -102,7 +104,7 @@ var clock = lolex.install();
 
 ### `clock.tick(time)`
 
-### `clock.reset()`
+### `clock.uninstall()`
 
 ### `Date`
 
