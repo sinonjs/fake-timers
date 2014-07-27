@@ -361,8 +361,11 @@ var keys = Object.keys || function (obj) {
     return ks;
 };
 
-module.exports.Clock = Clock;
 module.exports.timers = timers;
+
+module.exports.createClock = function (now) {
+    return new Clock(now);
+};
 
 module.exports.useFakeTimers = function useFakeTimers(now, toFake) {
     var clock = new Clock(now);

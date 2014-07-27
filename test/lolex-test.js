@@ -27,7 +27,7 @@ buster.testCase("lolex", {
 
     "setTimeout": {
         setUp: function () {
-            this.clock = new lolex.Clock();
+            this.clock = lolex.createClock();
             lolex.evalCalled = false;
         },
 
@@ -58,8 +58,8 @@ buster.testCase("lolex", {
         },
 
         "sets timers on instance": function () {
-            var clock1 = new lolex.Clock();
-            var clock2 = new lolex.Clock();
+            var clock1 = lolex.createClock();
+            var clock2 = lolex.createClock();
             var stubs = [sinon.stub(), sinon.stub()];
 
             clock1.setTimeout(stubs[0], 100);
@@ -78,7 +78,7 @@ buster.testCase("lolex", {
         },
 
         "passes setTimeout parameters": function() {
-            var clock = new lolex.Clock();
+            var clock = lolex.createClock();
             var stub = sinon.stub();
 
             clock.setTimeout(stub, 2, "the first", "the second");
@@ -89,7 +89,7 @@ buster.testCase("lolex", {
         },
 
         "calls correct timeout on recursive tick": function() {
-            var clock = new lolex.Clock();
+            var clock = lolex.createClock();
             var stub = sinon.stub();
             var recurseCallback = function () { clock.tick(100); };
 
@@ -103,7 +103,7 @@ buster.testCase("lolex", {
 
     "setImmediate": {
         setUp: function () {
-            this.clock = new lolex.Clock();
+            this.clock = lolex.createClock();
         },
 
         "returns numeric id or object with numeric id": function () {
@@ -133,8 +133,8 @@ buster.testCase("lolex", {
         },
 
         "manages separate timers per clock instance": function () {
-            var clock1 = new lolex.Clock();
-            var clock2 = new lolex.Clock();
+            var clock1 = lolex.createClock();
+            var clock2 = lolex.createClock();
             var stubs = [sinon.stub(), sinon.stub()];
 
             clock1.setImmediate(stubs[0]);
@@ -157,7 +157,7 @@ buster.testCase("lolex", {
 
     "clearImmediate": {
         setUp: function () {
-            this.clock = new lolex.Clock();
+            this.clock = lolex.createClock();
         },
 
         "removes immediate callbacks": function () {
@@ -509,7 +509,7 @@ buster.testCase("lolex", {
 
     "clearTimeout": {
         setUp: function () {
-            this.clock = new lolex.Clock();
+            this.clock = lolex.createClock();
         },
 
         "removes timeout": function () {
@@ -529,7 +529,7 @@ buster.testCase("lolex", {
 
     "reset": {
         setUp: function () {
-            this.clock = new lolex.Clock();
+            this.clock = lolex.createClock();
         },
 
         "empties timeouts queue": function () {
@@ -544,7 +544,7 @@ buster.testCase("lolex", {
 
     "setInterval": {
         setUp: function () {
-            this.clock = new lolex.Clock();
+            this.clock = lolex.createClock();
         },
 
         "throws if no arguments": function () {
@@ -595,7 +595,7 @@ buster.testCase("lolex", {
         },
 
         "passes setTimeout parameters": function() {
-            var clock = new lolex.Clock();
+            var clock = lolex.createClock();
             var stub = sinon.stub();
 
             clock.setInterval(stub, 2, "the first", "the second");
@@ -609,7 +609,7 @@ buster.testCase("lolex", {
     "date": {
         setUp: function () {
             this.now = new globalDate().getTime() - 3000;
-            this.clock = new lolex.Clock(this.now);
+            this.clock = lolex.createClock(this.now);
             this.Date = this.global.Date;
         },
 
