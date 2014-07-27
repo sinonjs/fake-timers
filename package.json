@@ -2,19 +2,19 @@
   "name": "lolex",
   "description": "Fake JavaScript timers",
   "version": "1.0.0",
-  "homepage": "http://github.com/sinon/lolex",
+  "homepage": "http://github.com/sinonjs/lolex",
   "author": "Christian Johansen",
   "repository": {
     "type": "git",
-    "url": "http://github.com/sinon/lolex.git"
+    "url": "http://github.com/sinonjs/lolex.git"
   },
   "bugs": {
     "mail": "christian@cjohansen.no",
-    "url": "http://github.com/sinon/lolex/issues"
+    "url": "http://github.com/sinonjs/lolex/issues"
   },
   "licenses": [
     { "type": "BSD",
-      "url": "http://github.com/sinon/lolex/blob/master/LICENSE"
+      "url": "http://github.com/sinonjs/lolex/blob/master/LICENSE"
     }
   ],
   "scripts": {
