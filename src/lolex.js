@@ -127,13 +127,6 @@ function createDate() {
     return mirrorDateProperties(ClockDate, NativeDate);
 }
 
-function Clock(epoch) {
-    this.now = getEpoch(epoch);
-    this.timeouts = {};
-    this.Date = createDate();
-    this.Date.clock = this;
-}
-
 function addTimer(clock, args, opt) {
     if (args.length === 0) {
         throw new Error("Function requires at least 1 parameter");
@@ -227,81 +220,6 @@ function callTimer(clock, timer) {
     }
 }
 
-Clock.prototype = {
-    setTimeout: function setTimeout(callback, timeout) {
-        return addTimer(this, arguments);
-    },
-
-    clearTimeout: function clearTimeout(timerId) {
-        if (!timerId) {
-            // null appears to be allowed in most browsers, and appears to be
-            // relied upon by some libraries, like Bootstrap carousel
-            return;
-        }
-        if (!this.timeouts) {
-            this.timeouts = [];
-        }
-        // in Node, timerId is an object with .ref()/.unref(), and
-        // its .id field is the actual timer id.
-        if (typeof timerId === "object") {
-            timerId = timerId.id
-        }
-        if (timerId in this.timeouts) {
-            delete this.timeouts[timerId];
-        }
-    },
-
-    setInterval: function setInterval(callback, timeout) {
-        return addTimer(this, arguments, { recurring: true });
-    },
-
-    clearInterval: function clearInterval(timerId) {
-        this.clearTimeout(timerId);
-    },
-
-    setImmediate: function setImmediate(callback) {
-        var passThruArgs = Array.prototype.slice.call(arguments, 1);
-        return addTimer(this, [callback, 0].concat(passThruArgs));
-    },
-
-    clearImmediate: function clearImmediate(timerId) {
-        this.clearTimeout(timerId);
-    },
-
-    tick: function tick(ms) {
-        ms = typeof ms == "number" ? ms : parseTime(ms);
-        var tickFrom = this.now, tickTo = this.now + ms, previous = this.now;
-        var timer = firstTimerInRange(this, tickFrom, tickTo);
-
-        var firstException;
-        while (timer && tickFrom <= tickTo) {
-            if (this.timeouts[timer.id]) {
-                tickFrom = this.now = timer.callAt;
-                try {
-                    callTimer(this, timer);
-                } catch (e) {
-                    firstException = firstException || e;
-                }
-            }
-
-            timer = firstTimerInRange(this, previous, tickTo);
-            previous = tickFrom;
-        }
-
-        this.now = tickTo;
-
-        if (firstException) {
-            throw firstException;
-        }
-
-        return this.now;
-    },
-
-    reset: function reset() {
-        this.timeouts = {};
-    }
-};
-
 function uninstall(clock, target) {
     var method;
 
@@ -363,8 +281,89 @@ var keys = Object.keys || function (obj) {
 
 module.exports.timers = timers;
 
-module.exports.createClock = function (now) {
-    return new Clock(now);
+var createClock = module.exports.createClock = function (now) {
+    var clock = {
+        now: getEpoch(now),
+        timeouts: {},
+        Date: createDate()
+    };
+
+    clock.Date.clock = clock;
+
+    clock.setTimeout = function setTimeout(callback, timeout) {
+        return addTimer(clock, arguments);
+    };
+
+    clock.clearTimeout = function clearTimeout(timerId) {
+        if (!timerId) {
+            // null appears to be allowed in most browsers, and appears to be
+            // relied upon by some libraries, like Bootstrap carousel
+            return;
+        }
+        if (!clock.timeouts) {
+            clock.timeouts = [];
+        }
+        // in Node, timerId is an object with .ref()/.unref(), and
+        // its .id field is the actual timer id.
+        if (typeof timerId === "object") {
+            timerId = timerId.id
+        }
+        if (timerId in clock.timeouts) {
+            delete clock.timeouts[timerId];
+        }
+    };
+
+    clock.setInterval = function setInterval(callback, timeout) {
+        return addTimer(clock, arguments, { recurring: true });
+    };
+
+    clock.clearInterval = function clearInterval(timerId) {
+        clock.clearTimeout(timerId);
+    };
+
+    clock.setImmediate = function setImmediate(callback) {
+        var passThruArgs = Array.prototype.slice.call(arguments, 1);
+        return addTimer(clock, [callback, 0].concat(passThruArgs));
+    };
+
+    clock.clearImmediate = function clearImmediate(timerId) {
+        clock.clearTimeout(timerId);
+    };
+
+    clock.tick = function tick(ms) {
+        ms = typeof ms == "number" ? ms : parseTime(ms);
+        var tickFrom = clock.now, tickTo = clock.now + ms, previous = clock.now;
+        var timer = firstTimerInRange(clock, tickFrom, tickTo);
+
+        var firstException;
+        while (timer && tickFrom <= tickTo) {
+            if (clock.timeouts[timer.id]) {
+                tickFrom = clock.now = timer.callAt;
+                try {
+                    callTimer(clock, timer);
+                } catch (e) {
+                    firstException = firstException || e;
+                }
+            }
+
+            timer = firstTimerInRange(clock, previous, tickTo);
+            previous = tickFrom;
+        }
+
+        clock.now = tickTo;
+
+        if (firstException) {
+            throw firstException;
+        }
+
+        return clock.now;
+    };
+
+    clock.reset = function reset() {
+        clock.timeouts = {};
+    };
+
+    return clock;
 };
 
 module.exports.install = function install(target, now, toFake) {
@@ -378,7 +377,7 @@ module.exports.install = function install(target, now, toFake) {
         target = GLOBAL;
     }
 
-    var clock = new Clock(now);
+    var clock = createClock(now);
 
     clock.uninstall = function () {
         uninstall(clock, target);

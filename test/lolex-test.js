@@ -98,6 +98,17 @@ buster.testCase("lolex", {
 
             clock.tick(50);
             assert(stub.called);
+        },
+
+        "does not depend on this": function () {
+            var clock = lolex.createClock();
+            var stub = sinon.stub();
+            var setTimeout = clock.setTimeout;
+
+            setTimeout(stub, 100);
+
+            clock.tick(100);
+            assert(stub.called);
         }
     },
 
