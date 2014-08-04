@@ -18,10 +18,14 @@
     }
   ],
   "scripts": {
-    "test": "node test/node-runner.js"
+    "test-node": "mocha -R dot",
+    "test-headless": "mochify",
+    "test-cloud": "mochify --wd",
+    "test": "npm run test-node && npm run test-headless && npm run test-cloud"
   },
   "devDependencies": {
-    "buster-test": ">=0.7.5",
+    "mocha": "~1.21.0",
+    "mochify": "~0.11.3",
     "referee": "~1.0",
     "sinon": "~1.10"
   },
