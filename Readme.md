@@ -1,4 +1,4 @@
-# Lolex [![Build Status](https://secure.travis-ci.org/sinon/lolex.png)](http://travis-ci.org/sinon/lolex)
+# Lolex [![Build Status](https://secure.travis-ci.org/sinonjs/lolex.png)](http://travis-ci.org/sinonjs/lolex)
 
 JavaScript implementation of the timer APIs; `setTimeout`, `clearTimeout`,
 `setImmediate`, `clearImmediate`, `setInterval`, `clearInterval`, and
