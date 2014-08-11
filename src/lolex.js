@@ -8,8 +8,6 @@
  */
 "use strict";
 
-var GLOBAL = typeof global != "undefined" && typeof global !== "function" ? global : this;
-
 // node expects setTimeout/setInterval to return a fn object w/ .ref()/.unref()
 // browsers, a number.
 // see https://github.com/cjohansen/Sinon.JS/pull/436
@@ -374,7 +372,7 @@ module.exports.install = function install(target, now, toFake) {
     }
 
     if (!target) {
-        target = GLOBAL;
+        target = global;
     }
 
     var clock = createClock(now);
