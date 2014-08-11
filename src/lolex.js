@@ -277,9 +277,9 @@ var keys = Object.keys || function (obj) {
     return ks;
 };
 
-module.exports.timers = timers;
+exports.timers = timers;
 
-var createClock = module.exports.createClock = function (now) {
+var createClock = exports.createClock = function (now) {
     var clock = {
         now: getEpoch(now),
         timeouts: {},
@@ -364,7 +364,7 @@ var createClock = module.exports.createClock = function (now) {
     return clock;
 };
 
-module.exports.install = function install(target, now, toFake) {
+exports.install = function install(target, now, toFake) {
     if (typeof target === "number") {
         toFake = now;
         now = target;
