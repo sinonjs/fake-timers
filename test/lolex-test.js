@@ -21,10 +21,6 @@ var globalDate = Date;
 
 describe("lolex", function () {
 
-    beforeEach(function () {
-        this.global = typeof global != "undefined" ? global : window;
-    });
-
     describe("setTimeout", function () {
 
         beforeEach(function () {
@@ -322,7 +318,7 @@ describe("lolex", function () {
                 clock.tick(100);
             });
 
-            assert(stub.calledOn(this.global) || stub.calledOn(null));
+            assert(stub.calledOn(global) || stub.calledOn(null));
         });
 
         it("triggers in the order scheduled", function () {
@@ -629,11 +625,11 @@ describe("lolex", function () {
         beforeEach(function () {
             this.now = new globalDate().getTime() - 3000;
             this.clock = lolex.createClock(this.now);
-            this.Date = this.global.Date;
+            this.Date = global.Date;
         });
 
         afterEach(function () {
-            this.global.Date = this.Date;
+            global.Date = this.Date;
         });
 
         it("provides date constructor", function () {
@@ -655,7 +651,7 @@ describe("lolex", function () {
         it("creates real Date objects when Date constructor is gone", function () {
             var realDate = new Date();
             Date = function () {};
-            this.global.Date = function () {};
+            global.Date = function () {};
 
             var date = new this.clock.Date();
 
@@ -840,7 +836,7 @@ describe("lolex", function () {
     describe("stubTimers", function () {
 
         beforeEach(function () {
-            this.dateNow = this.global.Date.now;
+            this.dateNow = global.Date.now;
         });
 
         afterEach(function () {
@@ -850,9 +846,9 @@ describe("lolex", function () {
 
             clearTimeout(this.timer);
             if (typeof this.dateNow == "undefined") {
-                delete this.global.Date.now;
+                delete global.Date.now;
             } else {
-                this.global.Date.now = this.dateNow;
+                global.Date.now = this.dateNow;
             }
         });
 
@@ -975,29 +971,31 @@ describe("lolex", function () {
             assert.same(clearInterval, lolex.timers.clearInterval);
         });
 
-        it("deletes global property on uninstall if it was inherited onto the global object", function () {
-            // Give the global object an inherited 'tick' method
-            delete this.global.tick;
-            this.global.__proto__.tick = function() { };
+        if (global.__proto__) {
+            it("deletes global property on uninstall if it was inherited onto the global object", function () {
+                // Give the global object an inherited 'tick' method
+                delete global.tick;
+                global.__proto__.tick = function() { };
 
-            this.clock = lolex.install(0, ['tick']);
-            assert.isTrue(this.global.hasOwnProperty("tick"));
-            this.clock.uninstall();
+                this.clock = lolex.install(0, ['tick']);
+                assert.isTrue(global.hasOwnProperty("tick"));
+                this.clock.uninstall();
 
-            assert.isFalse(this.global.hasOwnProperty("tick"));
-            delete this.global.__proto__.tick;
-        });
+                assert.isFalse(global.hasOwnProperty("tick"));
+                delete global.__proto__.tick;
+            });
+        }
 
         it("uninstalls global property on uninstall if it is present on the global object itself", function () {
             // Directly give the global object a tick method
-            this.global.tick = function () { };
+            global.tick = function () { };
 
             this.clock = lolex.install(0, ['tick']);
-            assert.isTrue(this.global.hasOwnProperty("tick"));
+            assert.isTrue(global.hasOwnProperty("tick"));
             this.clock.uninstall();
 
-            assert.isTrue(this.global.hasOwnProperty("tick"));
-            delete this.global.tick;
+            assert.isTrue(global.hasOwnProperty("tick"));
+            delete global.tick;
         });
 
         it("fakes Date constructor", function () {
@@ -1016,14 +1014,14 @@ describe("lolex", function () {
         });
 
         it("decide on Date.now support at call-time when supported", function () {
-            this.global.Date.now = function () {};
+            global.Date.now = function () {};
             this.clock = lolex.install(0);
 
             assert.equals(typeof Date.now, "function");
         });
 
         it("decide on Date.now support at call-time when unsupported", function () {
-            this.global.Date.now = null;
+            global.Date.now = null;
             this.clock = lolex.install(0);
 
             refute.defined(Date.now);
@@ -1033,7 +1031,7 @@ describe("lolex", function () {
 
         // "mirrors custom Date properties": function () {
         //     var f = function () { };
-        //     this.global.Date.format = f;
+        //     global.Date.format = f;
         //     lolex.install();
 
         //     assert.equals(Date.format, f);
