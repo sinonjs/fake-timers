@@ -193,6 +193,14 @@ function compareTimers(a, b) {
         return 1;
     }
 
+    // Sort next by creation time, earlier-created timers take precedence
+    if (a.createdAt < b.createdAt) {
+        return -1;
+    }
+    if (a.createdAt > b.createdAt) {
+        return 1;
+    }
+
     // Sort next by id, lower-id timers take precedence
     if (a.id < b.id) {
         return -1;
