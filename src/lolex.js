@@ -143,7 +143,8 @@ function addTimer(clock, callback, opt) {
         callAt: clock.now + delay,
         createdAt: clock.now,
         invokeArgs: opt.args,
-        interval: opt.recurring ? delay : null
+        interval: opt.recurring ? delay : null,
+        immediate: opt.immediate
     };
 
     if (addTimerReturnsObject) {
@@ -171,17 +172,7 @@ function firstTimerInRange(clock, from, to) {
         }
     }
 
-    if (timer) {
-        return {
-            func: timer.func,
-            callAt: timer.callAt,
-            interval: timer.interval,
-            id: timer.id,
-            invokeArgs: timer.invokeArgs
-        };
-    }
-
-    return null;
+    return timer || null;
 }
 
 function compareTimers(a, b) {
@@ -190,6 +181,14 @@ function compareTimers(a, b) {
         return -1;
     }
     if (a.callAt > b.callAt) {
+        return 1;
+    }
+
+    // Sort next by immediate, immediate timers take precedence
+    if (a.immediate && !b.immediate) {
+        return -1;
+    }
+    if (!a.immediate && b.immediate) {
         return 1;
     }
 
@@ -343,7 +342,7 @@ var createClock = exports.createClock = function (now) {
     };
 
     clock.setImmediate = function setImmediate(callback) {
-        return addTimer(clock, callback, { args: Array.prototype.slice.call(arguments, 1) });
+        return addTimer(clock, callback, { args: Array.prototype.slice.call(arguments, 1), immediate: true });
     };
 
     clock.clearImmediate = function clearImmediate(timerId) {
