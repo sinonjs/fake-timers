@@ -125,17 +125,13 @@ function createDate() {
     return mirrorDateProperties(ClockDate, NativeDate);
 }
 
-function addTimer(clock, args, opt) {
-    if (args.length === 0) {
-        throw new Error("Function requires at least 1 parameter");
-    }
-
-    if (typeof args[0] === "undefined") {
+function addTimer(clock, callback, opt) {
+    if (typeof callback === "undefined") {
         throw new Error("Callback must be provided to timer calls");
     }
 
     var toId = id++;
-    var delay = args[1] || 0;
+    var delay = opt.delay || 0;
 
     if (!clock.timeouts) {
         clock.timeouts = {};
@@ -143,14 +139,12 @@ function addTimer(clock, args, opt) {
 
     clock.timeouts[toId] = {
         id: toId,
-        func: args[0],
+        func: callback,
         callAt: clock.now + delay,
-        invokeArgs: Array.prototype.slice.call(args, 2)
+        createdAt: clock.now,
+        invokeArgs: opt.args,
+        interval: opt.recurring ? delay : null
     };
-
-    if (opt && opt.recurring) {
-        clock.timeouts[toId].interval = delay;
-    }
 
     if (addTimerReturnsObject) {
         return {
@@ -289,7 +283,7 @@ var createClock = exports.createClock = function (now) {
     clock.Date.clock = clock;
 
     clock.setTimeout = function setTimeout(callback, timeout) {
-        return addTimer(clock, arguments);
+        return addTimer(clock, callback, { args: Array.prototype.slice.call(arguments, 2), delay: timeout });
     };
 
     clock.clearTimeout = function clearTimeout(timerId) {
@@ -312,7 +306,7 @@ var createClock = exports.createClock = function (now) {
     };
 
     clock.setInterval = function setInterval(callback, timeout) {
-        return addTimer(clock, arguments, { recurring: true });
+        return addTimer(clock, callback, { args: Array.prototype.slice.call(arguments, 2), delay: timeout, recurring: true });
     };
 
     clock.clearInterval = function clearInterval(timerId) {
@@ -320,8 +314,7 @@ var createClock = exports.createClock = function (now) {
     };
 
     clock.setImmediate = function setImmediate(callback) {
-        var passThruArgs = Array.prototype.slice.call(arguments, 1);
-        return addTimer(clock, [callback, 0].concat(passThruArgs));
+        return addTimer(clock, callback, { args: Array.prototype.slice.call(arguments, 1) });
     };
 
     clock.clearImmediate = function clearImmediate(timerId) {
