@@ -166,7 +166,7 @@ function firstTimerInRange(clock, from, to) {
             continue;
         }
 
-        if (!timer || timers[id].callAt < timer.callAt) {
+        if (!timer || ~compareTimers(timer, timers[id])) {
             timer = timers[id];
         }
     }
@@ -182,6 +182,26 @@ function firstTimerInRange(clock, from, to) {
     }
 
     return null;
+}
+
+function compareTimers(a, b) {
+    // Sort first by absolute timing
+    if (a.callAt < b.callAt) {
+        return -1;
+    }
+    if (a.callAt > b.callAt) {
+        return 1;
+    }
+
+    // Sort next by id, lower-id timers take precedence
+    if (a.id < b.id) {
+        return -1;
+    }
+    if (a.id > b.id) {
+        return 1;
+    }
+
+    // As timer ids are unique, no fallback `0` is necessary
 }
 
 function callTimer(clock, timer) {
