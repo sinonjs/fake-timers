@@ -159,28 +159,29 @@ function addTimer(clock, callback, opt) {
 }
 
 function firstTimerInRange(clock, from, to) {
-    var timer, smallest = null, originalTimer;
+    var timers = clock.timers, timer = null;
 
-    for (var id in clock.timers) {
-        if (!inRange(from, to, clock.timers[id])) {
+    for (var id in timers) {
+        if (!inRange(from, to, timers[id])) {
             continue;
         }
 
-        if (smallest === null || clock.timers[id].callAt < smallest) {
-            originalTimer = clock.timers[id];
-            smallest = clock.timers[id].callAt;
-
-            timer = {
-                func: clock.timers[id].func,
-                callAt: clock.timers[id].callAt,
-                interval: clock.timers[id].interval,
-                id: clock.timers[id].id,
-                invokeArgs: clock.timers[id].invokeArgs
-            };
+        if (!timer || timers[id].callAt < timer.callAt) {
+            timer = timers[id];
         }
     }
 
-    return timer || null;
+    if (timer) {
+        return {
+            func: timer.func,
+            callAt: timer.callAt,
+            interval: timer.interval,
+            id: timer.id,
+            invokeArgs: timer.invokeArgs
+        };
+    }
+
+    return null;
 }
 
 function callTimer(clock, timer) {
