@@ -133,11 +133,11 @@ function addTimer(clock, callback, opt) {
     var toId = id++;
     var delay = opt.delay || 0;
 
-    if (!clock.timeouts) {
-        clock.timeouts = {};
+    if (!clock.timers) {
+        clock.timers = {};
     }
 
-    clock.timeouts[toId] = {
+    clock.timers[toId] = {
         id: toId,
         func: callback,
         callAt: clock.now + delay,
@@ -161,21 +161,21 @@ function addTimer(clock, callback, opt) {
 function firstTimerInRange(clock, from, to) {
     var timer, smallest = null, originalTimer;
 
-    for (var id in clock.timeouts) {
-        if (!inRange(from, to, clock.timeouts[id])) {
+    for (var id in clock.timers) {
+        if (!inRange(from, to, clock.timers[id])) {
             continue;
         }
 
-        if (smallest === null || clock.timeouts[id].callAt < smallest) {
-            originalTimer = clock.timeouts[id];
-            smallest = clock.timeouts[id].callAt;
+        if (smallest === null || clock.timers[id].callAt < smallest) {
+            originalTimer = clock.timers[id];
+            smallest = clock.timers[id].callAt;
 
             timer = {
-                func: clock.timeouts[id].func,
-                callAt: clock.timeouts[id].callAt,
-                interval: clock.timeouts[id].interval,
-                id: clock.timeouts[id].id,
-                invokeArgs: clock.timeouts[id].invokeArgs
+                func: clock.timers[id].func,
+                callAt: clock.timers[id].callAt,
+                interval: clock.timers[id].interval,
+                id: clock.timers[id].id,
+                invokeArgs: clock.timers[id].invokeArgs
             };
         }
     }
@@ -185,9 +185,9 @@ function firstTimerInRange(clock, from, to) {
 
 function callTimer(clock, timer) {
     if (typeof timer.interval == "number") {
-        clock.timeouts[timer.id].callAt += timer.interval;
+        clock.timers[timer.id].callAt += timer.interval;
     } else {
-        delete clock.timeouts[timer.id];
+        delete clock.timers[timer.id];
     }
 
     try {
@@ -200,7 +200,7 @@ function callTimer(clock, timer) {
         var exception = e;
     }
 
-    if (!clock.timeouts[timer.id]) {
+    if (!clock.timers[timer.id]) {
         if (exception) {
             throw exception;
         }
@@ -292,16 +292,16 @@ var createClock = exports.createClock = function (now) {
             // relied upon by some libraries, like Bootstrap carousel
             return;
         }
-        if (!clock.timeouts) {
-            clock.timeouts = [];
+        if (!clock.timers) {
+            clock.timers = [];
         }
         // in Node, timerId is an object with .ref()/.unref(), and
         // its .id field is the actual timer id.
         if (typeof timerId === "object") {
             timerId = timerId.id
         }
-        if (timerId in clock.timeouts) {
-            delete clock.timeouts[timerId];
+        if (timerId in clock.timers) {
+            delete clock.timers[timerId];
         }
     };
 
@@ -328,7 +328,7 @@ var createClock = exports.createClock = function (now) {
 
         var firstException;
         while (timer && tickFrom <= tickTo) {
-            if (clock.timeouts[timer.id]) {
+            if (clock.timers[timer.id]) {
                 tickFrom = clock.now = timer.callAt;
                 try {
                     callTimer(clock, timer);
@@ -351,7 +351,7 @@ var createClock = exports.createClock = function (now) {
     };
 
     clock.reset = function reset() {
-        clock.timeouts = {};
+        clock.timers = {};
     };
 
     return clock;
