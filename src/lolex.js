@@ -125,37 +125,30 @@ function createDate() {
     return mirrorDateProperties(ClockDate, NativeDate);
 }
 
-function addTimer(clock, callback, opt) {
-    if (typeof callback === "undefined") {
+function addTimer(clock, timer) {
+    if (typeof timer.func === "undefined") {
         throw new Error("Callback must be provided to timer calls");
     }
-
-    var toId = id++;
-    var delay = opt.delay || 0;
 
     if (!clock.timers) {
         clock.timers = {};
     }
 
-    clock.timers[toId] = {
-        id: toId,
-        func: callback,
-        callAt: clock.now + delay,
-        createdAt: clock.now,
-        invokeArgs: opt.args,
-        interval: opt.recurring ? delay : null,
-        immediate: opt.immediate
-    };
+    timer.id = id++;
+    timer.createdAt = clock.now;
+    timer.callAt = clock.now + (timer.delay || 0);
+
+    clock.timers[timer.id] = timer;
 
     if (addTimerReturnsObject) {
         return {
-            id: toId,
+            id: timer.id,
             ref: function() {},
             unref: function() {}
         };
     }
     else {
-        return toId;
+        return timer.id;
     }
 }
 
@@ -220,7 +213,7 @@ function callTimer(clock, timer) {
 
     try {
         if (typeof timer.func == "function") {
-            timer.func.apply(null, timer.invokeArgs);
+            timer.func.apply(null, timer.args);
         } else {
             eval(timer.func);
         }
@@ -310,8 +303,12 @@ var createClock = exports.createClock = function (now) {
 
     clock.Date.clock = clock;
 
-    clock.setTimeout = function setTimeout(callback, timeout) {
-        return addTimer(clock, callback, { args: Array.prototype.slice.call(arguments, 2), delay: timeout });
+    clock.setTimeout = function setTimeout(func, timeout) {
+        return addTimer(clock, {
+            func: func,
+            args: Array.prototype.slice.call(arguments, 2),
+            delay: timeout
+        });
     };
 
     clock.clearTimeout = function clearTimeout(timerId) {
@@ -333,16 +330,25 @@ var createClock = exports.createClock = function (now) {
         }
     };
 
-    clock.setInterval = function setInterval(callback, timeout) {
-        return addTimer(clock, callback, { args: Array.prototype.slice.call(arguments, 2), delay: timeout, recurring: true });
+    clock.setInterval = function setInterval(func, timeout) {
+        return addTimer(clock, {
+            func: func,
+            args: Array.prototype.slice.call(arguments, 2),
+            delay: timeout,
+            interval: timeout
+        });
     };
 
     clock.clearInterval = function clearInterval(timerId) {
         clock.clearTimeout(timerId);
     };
 
-    clock.setImmediate = function setImmediate(callback) {
-        return addTimer(clock, callback, { args: Array.prototype.slice.call(arguments, 1), immediate: true });
+    clock.setImmediate = function setImmediate(func) {
+        return addTimer(clock, {
+            func: func,
+            args: Array.prototype.slice.call(arguments, 1),
+            immediate: true
+        });
     };
 
     clock.clearImmediate = function clearImmediate(timerId) {
