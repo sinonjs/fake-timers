@@ -165,7 +165,7 @@ function firstTimerInRange(clock, from, to) {
         }
     }
 
-    return timer || null;
+    return timer;
 }
 
 function compareTimers(a, b) {
