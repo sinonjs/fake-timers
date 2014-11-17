@@ -391,6 +391,18 @@ var createClock = exports.createClock = function (now) {
     return clock;
 };
 
+function detectKnownFailSituation(methods) {
+    if (methods.indexOf("Date") < 0) { return; }
+
+    if (methods.indexOf("setTimeout") < 0) {
+        throw new Error("Native setTimeout will not work when Date is faked");
+    }
+
+    if (methods.indexOf("setImmediate") < 0) {
+        throw new Error("Native setImmediate will not work when Date is faked");
+    }
+}
+
 exports.install = function install(target, now, toFake) {
     if (typeof target === "number") {
         toFake = now;
@@ -413,6 +425,8 @@ exports.install = function install(target, now, toFake) {
     if (clock.methods.length === 0) {
         clock.methods = keys(timers);
     }
+
+    detectKnownFailSituation(clock.methods);
 
     for (var i = 0, l = clock.methods.length; i < l; i++) {
         hijackMethod(target, clock.methods[i], clock);
