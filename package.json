@@ -13,21 +13,24 @@
     "url": "http://github.com/sinonjs/lolex/issues"
   },
   "licenses": [
-    { "type": "BSD",
+    {
+      "type": "BSD",
       "url": "http://github.com/sinonjs/lolex/blob/master/LICENSE"
     }
   ],
   "scripts": {
+    "lint": "$(npm bin)/jslint src/**/*.js",
     "test-node": "mocha -R dot",
     "test-headless": "mochify",
     "test-cloud": "mochify --wd",
-    "test": "npm run test-node && npm run test-headless && npm run test-cloud",
+    "test": "npm run lint && npm run test-node && npm run test-headless && npm run test-cloud",
     "bundle": "browserify -s lolex -o lolex.js src/lolex.js"
   },
   "devDependencies": {
+    "browserify": ">=5.9 <6",
+    "jslint": "^0.6.6",
     "mocha": ">=1.21 <2",
     "mochify": ">=1.0 <2",
-    "browserify": ">=5.9 <6",
     "referee": "~1.0",
     "sinon": "~1.10"
   },
