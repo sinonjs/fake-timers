@@ -988,18 +988,25 @@ describe("lolex", function () {
         });
 
         if (global.__proto__) {
-            it("deletes global property on uninstall if it was inherited onto the global object", function () {
-                // Give the global object an inherited 'tick' method
-                delete global.tick;
-                global.__proto__.tick = function() { };
+            delete global.hasOwnPropertyTest;
+            global.__proto__.hasOwnPropertyTest = function() {};
 
-                this.clock = lolex.install(0, ['tick']);
-                assert.isTrue(global.hasOwnProperty("tick"));
-                this.clock.uninstall();
+            if (!global.hasOwnProperty("hasOwnPropertyTest")) {
+                it("deletes global property on uninstall if it was inherited onto the global object", function () {
+                    // Give the global object an inherited 'tick' method
+                    delete global.tick;
+                    global.__proto__.tick = function() { };
 
-                assert.isFalse(global.hasOwnProperty("tick"));
-                delete global.__proto__.tick;
-            });
+                    this.clock = lolex.install(0, ['tick']);
+                    assert.isTrue(global.hasOwnProperty("tick"));
+                    this.clock.uninstall();
+
+                    assert.isFalse(global.hasOwnProperty("tick"));
+                    delete global.__proto__.tick;
+                });
+            }
+
+            delete global.__proto__.hasOwnPropertyTest;
         }
 
         it("uninstalls global property on uninstall if it is present on the global object itself", function () {
