@@ -1042,48 +1042,48 @@ describe("lolex", function () {
 
         // TODO: The following tests causes test suite instability
 
-        // "mirrors custom Date properties": function () {
-        //     var f = function () { };
-        //     global.Date.format = f;
-        //     lolex.install();
+        it("mirrors custom Date properties", function () {
+            var f = function () { };
+            global.Date.format = f;
+            lolex.install();
 
-        //     assert.equals(Date.format, f);
-        // },
+            assert.equals(Date.format, f);
+        });
 
-        // "uninstalls Date constructor": function () {
-        //     this.clock = lolex.install(0);
-        //     this.clock.uninstall();
+        it("uninstalls Date constructor", function () {
+            this.clock = lolex.install(0);
+            this.clock.uninstall();
 
-        //     assert.same(globalDate, lolex.timers.Date);
-        // },
+            assert.same(globalDate, lolex.timers.Date);
+        });
 
-        // "fakes provided methods": function () {
-        //     this.clock = lolex.install(0, ["setTimeout", "Date"]);
+        it("fakes provided methods", function () {
+            this.clock = lolex.install(0, ["setTimeout", "Date"]);
 
-        //     refute.same(setTimeout, lolex.timers.setTimeout);
-        //     refute.same(Date, lolex.timers.Date);
-        // },
+            refute.same(setTimeout, lolex.timers.setTimeout);
+            refute.same(Date, lolex.timers.Date);
+        });
 
-        // "resets faked methods": function () {
-        //     this.clock = lolex.install(0, ["setTimeout", "Date"]);
-        //     this.clock.uninstall();
+        it("resets faked methods", function () {
+            this.clock = lolex.install(0, ["setTimeout", "Date"]);
+            this.clock.uninstall();
 
-        //     assert.same(setTimeout, lolex.timers.setTimeout);
-        //     assert.same(Date, lolex.timers.Date);
-        // },
+            assert.same(setTimeout, lolex.timers.setTimeout);
+            assert.same(Date, lolex.timers.Date);
+        });
 
-        // "does not fake methods not provided": function () {
-        //     this.clock = lolex.install(0, ["setTimeout", "Date"]);
+        it("does not fake methods not provided", function () {
+            this.clock = lolex.install(0, ["setTimeout", "Date"]);
 
-        //     assert.same(clearTimeout, lolex.timers.clearTimeout);
-        //     assert.same(setInterval, lolex.timers.setInterval);
-        //     assert.same(clearInterval, lolex.timers.clearInterval);
-        // },
+            assert.same(clearTimeout, lolex.timers.clearTimeout);
+            assert.same(setInterval, lolex.timers.setInterval);
+            assert.same(clearInterval, lolex.timers.clearInterval);
+        });
 
-        // "does not be able to use date object for now": function () {
-        //     assert.exception(function () {
-        //         lolex.install(new Date(2011, 9, 1));
-        //     });
-        // }
+        it("does not be able to use date object for now", function () {
+            assert.exception(function () {
+                lolex.install(new Date(2011, 9, 1));
+            });
+        });
     });
 });
