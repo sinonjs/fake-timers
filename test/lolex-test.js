@@ -1034,7 +1034,7 @@ describe("lolex", function () {
         });
 
         it("decide on Date.now support at call-time when unsupported", function () {
-            global.Date.now = null;
+            global.Date.now = undefined;
             this.clock = lolex.install(0);
 
             refute.defined(Date.now);
