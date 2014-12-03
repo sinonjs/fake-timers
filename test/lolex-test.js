@@ -175,6 +175,16 @@ describe("lolex", function () {
             assert(stub2.calledOnce);
             assert(stub2.calledBefore(stub1));
         });
+
+        it("does not stuck next tick even if nested", function() {
+            var clock = this.clock;
+
+            clock.setImmediate(function f() {
+                clock.setImmediate(f);
+            });
+
+            clock.tick(0);
+        });
     });
 
     describe("clearImmediate", function () {
