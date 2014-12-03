@@ -1045,7 +1045,7 @@ describe("lolex", function () {
         it("mirrors custom Date properties", function () {
             var f = function () { };
             global.Date.format = f;
-            lolex.install();
+            this.clock = lolex.install();
 
             assert.equals(Date.format, f);
         });
