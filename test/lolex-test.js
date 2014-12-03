@@ -800,7 +800,10 @@ describe("lolex", function () {
         if (Date.now) {
             describe("now", function () {
                 it("returns clock.now", function () {
-                    assert.equals(this.clock.Date.now(), this.now);
+                    var clock_now = this.clock.Date.now();
+                    var global_now = globalDate.now();
+
+                    assert(this.now <= clock_now && clock_now <= global_now);
                 });
             });
         } else {
