@@ -1058,14 +1058,14 @@ describe("lolex", function () {
         });
 
         it("fakes provided methods", function () {
-            this.clock = lolex.install(0, ["setTimeout", "Date"]);
+            this.clock = lolex.install(0, ["setTimeout", "Date", "setImmediate"]);
 
             refute.same(setTimeout, lolex.timers.setTimeout);
             refute.same(Date, lolex.timers.Date);
         });
 
         it("resets faked methods", function () {
-            this.clock = lolex.install(0, ["setTimeout", "Date"]);
+            this.clock = lolex.install(0, ["setTimeout", "Date", "setImmediate"]);
             this.clock.uninstall();
 
             assert.same(setTimeout, lolex.timers.setTimeout);
@@ -1073,7 +1073,7 @@ describe("lolex", function () {
         });
 
         it("does not fake methods not provided", function () {
-            this.clock = lolex.install(0, ["setTimeout", "Date"]);
+            this.clock = lolex.install(0, ["setTimeout", "Date", "setImmediate"]);
 
             assert.same(clearTimeout, lolex.timers.clearTimeout);
             assert.same(setInterval, lolex.timers.setInterval);
