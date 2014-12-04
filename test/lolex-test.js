@@ -175,6 +175,16 @@ describe("lolex", function () {
             assert(stub2.calledOnce);
             assert(stub2.calledBefore(stub1));
         });
+
+        it("does not stuck next tick even if nested", function() {
+            var clock = this.clock;
+
+            clock.setImmediate(function f() {
+                clock.setImmediate(f);
+            });
+
+            clock.tick(0);
+        });
     });
 
     describe("clearImmediate", function () {
@@ -800,7 +810,10 @@ describe("lolex", function () {
         if (Date.now) {
             describe("now", function () {
                 it("returns clock.now", function () {
-                    assert.equals(this.clock.Date.now(), this.now);
+                    var clock_now = this.clock.Date.now();
+                    var global_now = globalDate.now();
+
+                    assert(this.now <= clock_now && clock_now <= global_now);
                 });
             });
         } else {
@@ -985,18 +998,25 @@ describe("lolex", function () {
         });
 
         if (global.__proto__) {
-            it("deletes global property on uninstall if it was inherited onto the global object", function () {
-                // Give the global object an inherited 'tick' method
-                delete global.tick;
-                global.__proto__.tick = function() { };
+            delete global.hasOwnPropertyTest;
+            global.__proto__.hasOwnPropertyTest = function() {};
 
-                this.clock = lolex.install(0, ['tick']);
-                assert.isTrue(global.hasOwnProperty("tick"));
-                this.clock.uninstall();
+            if (!global.hasOwnProperty("hasOwnPropertyTest")) {
+                it("deletes global property on uninstall if it was inherited onto the global object", function () {
+                    // Give the global object an inherited 'tick' method
+                    delete global.tick;
+                    global.__proto__.tick = function() { };
 
-                assert.isFalse(global.hasOwnProperty("tick"));
-                delete global.__proto__.tick;
-            });
+                    this.clock = lolex.install(0, ['tick']);
+                    assert.isTrue(global.hasOwnProperty("tick"));
+                    this.clock.uninstall();
+
+                    assert.isFalse(global.hasOwnProperty("tick"));
+                    delete global.__proto__.tick;
+                });
+            }
+
+            delete global.__proto__.hasOwnPropertyTest;
         }
 
         it("uninstalls global property on uninstall if it is present on the global object itself", function () {
@@ -1034,7 +1054,7 @@ describe("lolex", function () {
         });
 
         it("decide on Date.now support at call-time when unsupported", function () {
-            global.Date.now = null;
+            global.Date.now = undefined;
             this.clock = lolex.install(0);
 
             refute.defined(Date.now);
@@ -1042,48 +1062,48 @@ describe("lolex", function () {
 
         // TODO: The following tests causes test suite instability
 
-        // "mirrors custom Date properties": function () {
-        //     var f = function () { };
-        //     global.Date.format = f;
-        //     lolex.install();
+        it("mirrors custom Date properties", function () {
+            var f = function () { };
+            global.Date.format = f;
+            this.clock = lolex.install();
 
-        //     assert.equals(Date.format, f);
-        // },
+            assert.equals(Date.format, f);
+        });
 
-        // "uninstalls Date constructor": function () {
-        //     this.clock = lolex.install(0);
-        //     this.clock.uninstall();
+        it("uninstalls Date constructor", function () {
+            this.clock = lolex.install(0);
+            this.clock.uninstall();
 
-        //     assert.same(globalDate, lolex.timers.Date);
-        // },
+            assert.same(globalDate, lolex.timers.Date);
+        });
 
-        // "fakes provided methods": function () {
-        //     this.clock = lolex.install(0, ["setTimeout", "Date"]);
+        it("fakes provided methods", function () {
+            this.clock = lolex.install(0, ["setTimeout", "Date", "setImmediate"]);
 
-        //     refute.same(setTimeout, lolex.timers.setTimeout);
-        //     refute.same(Date, lolex.timers.Date);
-        // },
+            refute.same(setTimeout, lolex.timers.setTimeout);
+            refute.same(Date, lolex.timers.Date);
+        });
 
-        // "resets faked methods": function () {
-        //     this.clock = lolex.install(0, ["setTimeout", "Date"]);
-        //     this.clock.uninstall();
+        it("resets faked methods", function () {
+            this.clock = lolex.install(0, ["setTimeout", "Date", "setImmediate"]);
+            this.clock.uninstall();
 
-        //     assert.same(setTimeout, lolex.timers.setTimeout);
-        //     assert.same(Date, lolex.timers.Date);
-        // },
+            assert.same(setTimeout, lolex.timers.setTimeout);
+            assert.same(Date, lolex.timers.Date);
+        });
 
-        // "does not fake methods not provided": function () {
-        //     this.clock = lolex.install(0, ["setTimeout", "Date"]);
+        it("does not fake methods not provided", function () {
+            this.clock = lolex.install(0, ["setTimeout", "Date", "setImmediate"]);
 
-        //     assert.same(clearTimeout, lolex.timers.clearTimeout);
-        //     assert.same(setInterval, lolex.timers.setInterval);
-        //     assert.same(clearInterval, lolex.timers.clearInterval);
-        // },
+            assert.same(clearTimeout, lolex.timers.clearTimeout);
+            assert.same(setInterval, lolex.timers.setInterval);
+            assert.same(clearInterval, lolex.timers.clearInterval);
+        });
 
-        // "does not be able to use date object for now": function () {
-        //     assert.exception(function () {
-        //         lolex.install(new Date(2011, 9, 1));
-        //     });
-        // }
+        it("does not be able to use date object for now", function () {
+            assert.exception(function () {
+                lolex.install(new Date(2011, 9, 1));
+            });
+        });
     });
 });

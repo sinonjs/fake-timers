@@ -142,7 +142,7 @@
 
         timer.id = uniqueTimerId++;
         timer.createdAt = clock.now;
-        timer.callAt = clock.now + (timer.delay || 0);
+        timer.callAt = clock.now + (timer.delay || (clock.duringTick ? 1 : 0));
 
         clock.timers[timer.id] = timer;
 
@@ -383,6 +383,8 @@
             var tickFrom = clock.now, tickTo = clock.now + ms, previous = clock.now;
             var timer = firstTimerInRange(clock, tickFrom, tickTo);
 
+            clock.duringTick = true;
+
             var firstException;
             while (timer && tickFrom <= tickTo) {
                 if (clock.timers[timer.id]) {
@@ -398,6 +400,7 @@
                 previous = tickFrom;
             }
 
+            clock.duringTick = false;
             clock.now = tickTo;
 
             if (firstException) {
