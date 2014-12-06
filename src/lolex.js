@@ -1,4 +1,3 @@
-/*jslint plusplus: true, evil: true, vars: true*/
 /*global global*/
 /**
  * @author Christian Johansen (christian@cjohansen.no) and contributors

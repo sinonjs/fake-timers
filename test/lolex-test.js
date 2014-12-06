@@ -1,4 +1,10 @@
-/*jslint onevar: false, eqeqeq: false, plusplus: false*/
+/*global
+    describe,
+    beforeEach,
+    afterEach,
+    it,
+    assert
+*/
 /**
  * @author Christian Johansen (christian@cjohansen.no)
  * @license BSD
@@ -7,7 +13,7 @@
  */
 "use strict";
 
-if (typeof require == "function" && typeof module == "object") {
+if (typeof require === "function" && typeof module === "object") {
     var referee = require("referee");
     var lolex = require("../src/lolex");
     var sinon = require("sinon");
@@ -17,7 +23,8 @@ if (typeof require == "function" && typeof module == "object") {
 
 var assert = referee.assert;
 var refute = referee.refute;
-var globalDate = Date;
+var GlobalDate = Date;
+var NOOP = function NOOP() { return undefined; };
 
 describe("lolex", function () {
 
@@ -41,10 +48,11 @@ describe("lolex", function () {
         it("returns numeric id or object with numeric id", function () {
             var result = this.clock.setTimeout("");
 
-            if (typeof result === 'object')
+            if (typeof result === 'object') {
                 assert.isNumber(result.id);
-            else
+            } else {
                 assert.isNumber(result);
+            }
         });
 
         it("returns unique id", function () {
@@ -74,7 +82,7 @@ describe("lolex", function () {
             assert(lolex.evalCalled);
         });
 
-        it("passes setTimeout parameters", function() {
+        it("passes setTimeout parameters", function () {
             var clock = lolex.createClock();
             var stub = sinon.stub();
 
@@ -85,7 +93,7 @@ describe("lolex", function () {
             assert.isTrue(stub.calledWithExactly("the first", "the second"));
         });
 
-        it("calls correct timeout on recursive tick", function() {
+        it("calls correct timeout on recursive tick", function () {
             var clock = lolex.createClock();
             var stub = sinon.stub();
             var recurseCallback = function () { clock.tick(100); };
@@ -116,12 +124,13 @@ describe("lolex", function () {
         });
 
         it("returns numeric id or object with numeric id", function () {
-            var result = this.clock.setImmediate(function () { });
+            var result = this.clock.setImmediate(NOOP);
 
-            if (typeof result === 'object')
+            if (typeof result === 'object') {
                 assert.isNumber(result.id);
-            else
+            } else {
                 assert.isNumber(result);
+            }
         });
 
         it("calls the given callback immediately", function () {
@@ -176,7 +185,7 @@ describe("lolex", function () {
             assert(stub2.calledBefore(stub1));
         });
 
-        it("does not stuck next tick even if nested", function() {
+        it("does not stuck next tick even if nested", function () {
             var clock = this.clock;
 
             clock.setImmediate(function f() {
@@ -268,8 +277,8 @@ describe("lolex", function () {
         it("triggers multiple simultaneous timers with zero callAt", function () {
             var test = this;
             var spies = [
-                sinon.spy(function() {
-                    test.clock.setTimeout(spies[1], 0)
+                sinon.spy(function () {
+                    test.clock.setTimeout(spies[1], 0);
                 }),
                 sinon.spy(),
                 sinon.spy()
@@ -324,7 +333,7 @@ describe("lolex", function () {
             clock.setTimeout(stubs[0], 100);
             clock.setTimeout(stubs[1], 120);
 
-            assert.exception(function() {
+            assert.exception(function () {
                 clock.tick(120);
             });
 
@@ -337,7 +346,7 @@ describe("lolex", function () {
             var stub = sinon.stub().throws();
             clock.setTimeout(stub, 100);
 
-            assert.exception(function() {
+            assert.exception(function () {
                 clock.tick(100);
             });
 
@@ -424,7 +433,7 @@ describe("lolex", function () {
         it("does not fire canceled intervals", function () {
             var id;
             var callback = sinon.spy(function () {
-                if (callback.callCount == 3) {
+                if (callback.callCount === 3) {
                     clearTimeout(id);
                 }
             });
@@ -522,14 +531,14 @@ describe("lolex", function () {
             assert.equals(i, 11);
         });
 
-        it("does not silently catch exceptions", function () {
+        it("does not silently catch errors", function () {
             var clock = this.clock;
 
-            clock.setTimeout(function() {
-                throw new Exception("oh no!");
+            clock.setTimeout(function () {
+                throw new Error("oh no!");
             }, 1000);
 
-            assert.exception(function() {
+            assert.exception(function () {
                 clock.tick(1000);
             });
         });
@@ -595,10 +604,11 @@ describe("lolex", function () {
         it("returns numeric id or object with numeric id", function () {
             var result = this.clock.setInterval("");
 
-            if (typeof result === 'object')
+            if (typeof result === 'object') {
                 assert.isNumber(result.id);
-            else
+            } else {
                 assert.isNumber(result);
+            }
         });
 
         it("returns unique id", function () {
@@ -620,7 +630,7 @@ describe("lolex", function () {
             var clock = this.clock;
             var id;
             var stub = sinon.spy(function () {
-                if (stub.callCount == 3) {
+                if (stub.callCount === 3) {
                     clock.clearInterval(id);
                 }
             });
@@ -631,7 +641,7 @@ describe("lolex", function () {
             assert.equals(stub.callCount, 3);
         });
 
-        it("passes setTimeout parameters", function() {
+        it("passes setTimeout parameters", function () {
             var clock = lolex.createClock();
             var stub = sinon.stub();
 
@@ -646,7 +656,7 @@ describe("lolex", function () {
     describe("date", function () {
 
         beforeEach(function () {
-            this.now = new globalDate().getTime() - 3000;
+            this.now = new GlobalDate().getTime() - 3000;
             this.clock = lolex.createClock(this.now);
             this.Date = global.Date;
         });
@@ -673,8 +683,8 @@ describe("lolex", function () {
 
         it("creates real Date objects when Date constructor is gone", function () {
             var realDate = new Date();
-            Date = function () {};
-            global.Date = function () {};
+            Date = NOOP;
+            global.Date = NOOP;
 
             var date = new this.clock.Date();
 
@@ -811,7 +821,7 @@ describe("lolex", function () {
             describe("now", function () {
                 it("returns clock.now", function () {
                     var clock_now = this.clock.Date.now();
-                    var global_now = globalDate.now();
+                    var global_now = GlobalDate.now();
 
                     assert(this.now <= clock_now && clock_now <= global_now);
                 });
@@ -871,7 +881,7 @@ describe("lolex", function () {
             }
 
             clearTimeout(this.timer);
-            if (typeof this.dateNow == "undefined") {
+            if (this.dateNow === undefined) {
                 delete global.Date.now;
             } else {
                 global.Date.now = this.dateNow;
@@ -917,12 +927,11 @@ describe("lolex", function () {
 
             var to = setTimeout(stub, 1000);
 
-            if (typeof (setTimeout(function() {}, 0)) === 'object') {
+            if (typeof (setTimeout(NOOP, 0)) === 'object') {
                 assert.isNumber(to.id);
                 assert.isFunction(to.ref);
                 assert.isFunction(to.unref);
-            }
-            else {
+            } else {
                 assert.isNumber(to);
             }
         });
@@ -1021,7 +1030,7 @@ describe("lolex", function () {
 
         it("uninstalls global property on uninstall if it is present on the global object itself", function () {
             // Directly give the global object a tick method
-            global.tick = function () { };
+            global.tick = NOOP;
 
             this.clock = lolex.install(0, ['tick']);
             assert.isTrue(global.hasOwnProperty("tick"));
@@ -1047,7 +1056,7 @@ describe("lolex", function () {
         });
 
         it("decide on Date.now support at call-time when supported", function () {
-            global.Date.now = function () {};
+            global.Date.now = NOOP;
             this.clock = lolex.install(0);
 
             assert.equals(typeof Date.now, "function");
@@ -1074,7 +1083,7 @@ describe("lolex", function () {
             this.clock = lolex.install(0);
             this.clock.uninstall();
 
-            assert.same(globalDate, lolex.timers.Date);
+            assert.same(GlobalDate, lolex.timers.Date);
         });
 
         it("fakes provided methods", function () {
