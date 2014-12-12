@@ -68,7 +68,13 @@
 
     function mirrorDateProperties(target, source) {
         var prop;
+        for (prop in source) {
+            if (source.hasOwnProperty(prop)) {
+                target[prop] = source[prop];
+            }
+        }
 
+        // set special now implementation
         if (source.now) {
             target.now = function now() {
                 return target.clock.now;
@@ -77,6 +83,7 @@
             delete target.now;
         }
 
+        // set special toSource implementation
         if (source.toSource) {
             target.toSource = function toSource() {
                 return source.toSource();
@@ -85,6 +92,7 @@
             delete target.toSource;
         }
 
+        // set special toString implementation
         target.toString = function toString() {
             return source.toString();
         };
@@ -93,12 +101,6 @@
         target.parse = source.parse;
         target.UTC = source.UTC;
         target.prototype.toUTCString = source.prototype.toUTCString;
-
-        for (prop in source) {
-            if (source.hasOwnProperty(prop)) {
-                target[prop] = source[prop];
-            }
-        }
 
         return target;
     }
