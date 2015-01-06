@@ -1,6 +1,6 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.lolex=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (global){
-/*global global*/
+/*global global, window*/
 /**
  * @author Christian Johansen (christian@cjohansen.no) and contributors
  * @license BSD
@@ -10,6 +10,19 @@
 
 (function (global) {
     "use strict";
+
+    // Make properties writable in IE, as per
+    // http://www.adequatelygood.com/Replacing-setTimeout-Globally.html
+    // JSLint being anal
+    var glbl = global;
+
+    global.setTimeout = glbl.setTimeout;
+    global.clearTimeout = glbl.clearTimeout;
+    global.setImmediate = glbl.setImmediate;
+    global.clearImmediate = glbl.clearImmediate;
+    global.setInterval = glbl.setInterval;
+    global.clearInterval = glbl.clearInterval;
+    global.Date = glbl.Date;
 
     // node expects setTimeout/setInterval to return a fn object w/ .ref()/.unref()
     // browsers, a number.
