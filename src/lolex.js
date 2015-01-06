@@ -9,19 +9,15 @@
 (function (global) {
     "use strict";
 
-    // JSLint being anal...
-    var wtype = typeof window;
-    if (wtype !== "undefined") {
-        // Make properties writable in IE, as per
-        // http://www.adequatelygood.com/Replacing-setTimeout-Globally.html
-        window.setTimeout = setTimeout;
-        window.clearTimeout = clearTimeout;
-        window.setImmediate = global.setImmediate;
-        window.clearImmediate = global.clearImmediate;
-        window.setInterval = setInterval;
-        window.clearInterval = clearInterval;
-        window.Date = Date;
-    }
+    // Make properties writable in IE, as per
+    // http://www.adequatelygood.com/Replacing-setTimeout-Globally.html
+    global.setTimeout = global.setTimeout;
+    global.clearTimeout = global.clearTimeout;
+    global.setImmediate = global.setImmediate;
+    global.clearImmediate = global.clearImmediate;
+    global.setInterval = global.setInterval;
+    global.clearInterval = global.clearInterval;
+    global.Date = global.Date;
 
     // node expects setTimeout/setInterval to return a fn object w/ .ref()/.unref()
     // browsers, a number.
