@@ -435,11 +435,11 @@
     function detectKnownFailSituation(methods) {
         if (methods.indexOf("Date") < 0) { return; }
 
-        if (typeof setTimeout !== "undefined" && methods.indexOf("setTimeout") < 0) {
+        if (typeof setTimeout === "function" && methods.indexOf("setTimeout") < 0) {
             throw new Error("Native setTimeout will not work when Date is faked");
         }
 
-        if (typeof setImmediate !== "undefined" && methods.indexOf("setImmediate") < 0) {
+        if (typeof setImmediate === "function" && methods.indexOf("setImmediate") < 0) {
             throw new Error("Native setImmediate will not work when Date is faked");
         }
     }
