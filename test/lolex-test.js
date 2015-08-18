@@ -117,7 +117,7 @@ describe("lolex", function () {
         });
     });
 
-    describe("setImmediate", function () {
+     describe("setImmediate", function () {
 
         beforeEach(function () {
             this.clock = lolex.createClock();
@@ -211,6 +211,27 @@ describe("lolex", function () {
 
             assert.isFalse(callback.called);
         });
+
+        it("does not remove timeout", function () {
+            var callback = sinon.stub();
+
+            var id = this.clock.setTimeout(callback, 50);
+            this.clock.clearImmediate(id);
+            this.clock.tick(55);
+
+            assert.isTrue(callback.called);
+        });
+
+        it("does not remove interval", function () {
+            var callback = sinon.stub();
+
+            var id = this.clock.setInterval(callback, 50);
+            this.clock.clearImmediate(id);
+            this.clock.tick(55);
+
+            assert.isTrue(callback.called);
+        });
+
     });
 
     describe("tick", function () {
@@ -434,7 +455,7 @@ describe("lolex", function () {
             var id;
             var callback = sinon.spy(function () {
                 if (callback.callCount === 3) {
-                    clearTimeout(id);
+                    clearInterval(id);
                 }
             });
 
@@ -565,6 +586,24 @@ describe("lolex", function () {
             assert.isFalse(stub.called);
         });
 
+        it("does not remove interval", function () {
+            var stub = sinon.stub();
+            var id = this.clock.setInterval(stub, 50);
+            this.clock.clearTimeout(id);
+            this.clock.tick(50);
+
+            assert.isTrue(stub.called);
+        });
+
+        it("does not remove immediate", function () {
+            var stub = sinon.stub();
+            var id = this.clock.setImmediate(stub);
+            this.clock.clearTimeout(id);
+            this.clock.tick(50);
+
+            assert.isTrue(stub.called);
+        });
+
         it("ignores null argument", function () {
             this.clock.clearTimeout(null);
             assert(true); // doesn't fail
@@ -650,6 +689,45 @@ describe("lolex", function () {
             clock.tick(3);
 
             assert.isTrue(stub.calledWithExactly("the first", "the second"));
+        });
+    });
+
+    describe("clearInterval", function () {
+
+        beforeEach(function () {
+            this.clock = lolex.createClock();
+        });
+
+        it("removes interval", function () {
+            var stub = sinon.stub();
+            var id = this.clock.setInterval(stub, 50);
+            this.clock.clearInterval(id);
+            this.clock.tick(50);
+
+            assert.isFalse(stub.called);
+        });
+
+        it("does not remove timeout", function () {
+            var stub = sinon.stub();
+            var id = this.clock.setTimeout(stub, 50);
+            this.clock.clearInterval(id);
+            this.clock.tick(50);
+
+            assert.isTrue(stub.called);
+        });
+
+        it("does not remove immediate", function () {
+            var stub = sinon.stub();
+            var id = this.clock.setImmediate(stub);
+            this.clock.clearInterval(id);
+            this.clock.tick(50);
+
+            assert.isTrue(stub.called);
+        });
+
+        it("ignores null argument", function () {
+            this.clock.clearInterval(null);
+            assert(true); // doesn't fail
         });
     });
 
