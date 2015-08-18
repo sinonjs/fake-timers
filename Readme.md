@@ -104,6 +104,10 @@ var clock = lolex.install();
 
 ### `clock.tick(time)`
 
+### `clock.setSystemTime([now])`
+This simulates a user changing the system clock while your program is running.
+It affects the current time but it does not in itself cause e.g. timers to fire; they will fire exactly as they would have done without the call to setSystemTime().
+
 ### `clock.uninstall()`
 
 ### `Date`

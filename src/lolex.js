@@ -414,6 +414,7 @@
             ms = typeof ms === "number" ? ms : parseTime(ms);
             var tickFrom = clock.now, tickTo = clock.now + ms, previous = clock.now;
             var timer = firstTimerInRange(clock, tickFrom, tickTo);
+            var oldNow;
 
             clock.duringTick = true;
 
@@ -422,7 +423,14 @@
                 if (clock.timers[timer.id]) {
                     tickFrom = clock.now = timer.callAt;
                     try {
+                        oldNow = clock.now;
                         callTimer(clock, timer);
+                        // compensate for any setSystemTime() call during timer callback
+                        if (oldNow !== clock.now) {
+                            tickFrom += clock.now - oldNow;
+                            tickTo += clock.now - oldNow;
+                            previous += clock.now - oldNow;
+                        }
                     } catch (e) {
                         firstException = firstException || e;
                     }
@@ -444,6 +452,24 @@
 
         clock.reset = function reset() {
             clock.timers = {};
+        };
+
+        clock.setSystemTime = function setSystemTime(now) {
+            // determine time difference
+            var newNow = getEpoch(now);
+            var difference = newNow - clock.now;
+
+            // update 'system clock'
+            clock.now = newNow;
+            
+            // update timers and intervals to keep them stable
+            for (var id in clock.timers) {
+                if (clock.timers.hasOwnProperty(id)) {
+                    var timer = clock.timers[id];
+                    timer.createdAt += difference;
+                    timer.callAt += difference;
+                }
+            }
         };
 
         return clock;
