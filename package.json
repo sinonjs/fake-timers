@@ -12,7 +12,7 @@
     "mail": "christian@cjohansen.no",
     "url": "http://github.com/sinonjs/lolex/issues"
   },
-  "license": "BSD",
+  "license": "BSD-3-Clause",
   "scripts": {
     "lint": "$(npm bin)/jslint src/**/*.js",
     "test-node": "mocha -R dot",
