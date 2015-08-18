@@ -123,7 +123,7 @@ npm test
 Or, if you prefer slightly less verbose output:
 
 ```
-node run-tests.js
+mocha ./test/lolex-test.js
 ```
 
 ### In the browser
