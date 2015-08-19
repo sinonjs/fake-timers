@@ -115,6 +115,28 @@ describe("lolex", function () {
             clock.tick(100);
             assert(stub.called);
         });
+
+        it("is not influenced by forward system clock changes", function () {
+            var stub = sinon.stub();
+            this.clock.setTimeout(stub, 5000);
+            this.clock.tick(1000);
+            this.clock.setSystemTime((new this.clock.Date()).getTime() + 1000);
+            this.clock.tick(3990);
+            assert.equals(stub.callCount, 0);
+            this.clock.tick(20);
+            assert.equals(stub.callCount, 1);
+        });
+
+        it("is not influenced by backward system clock changes", function () {
+            var stub = sinon.stub();
+            this.clock.setTimeout(stub, 5000);
+            this.clock.tick(1000);
+            this.clock.setSystemTime((new this.clock.Date()).getTime() - 1000);
+            this.clock.tick(3990);
+            assert.equals(stub.callCount, 0);
+            this.clock.tick(20);
+            assert.equals(stub.callCount, 1);
+        });
     });
 
     describe("setImmediate", function () {
@@ -626,6 +648,29 @@ describe("lolex", function () {
             assert.equals(stub.callCount, 9);
         });
 
+        it("is not influenced by forward system clock changes", function () {
+            var stub = sinon.stub();
+            this.clock.setInterval(stub, 10);
+            this.clock.tick(11);
+            assert.equals(stub.callCount, 1);
+            this.clock.setSystemTime((new this.clock.Date()).getTime() + 1000);
+            this.clock.tick(8);
+            assert.equals(stub.callCount, 1);
+            this.clock.tick(3);
+            assert.equals(stub.callCount, 2);
+        });
+
+        it("is not influenced by backward system clock changes", function () {
+            var stub = sinon.stub();
+            this.clock.setInterval(stub, 10);
+            this.clock.tick(5);
+            this.clock.setSystemTime((new this.clock.Date()).getTime() - 1000);
+            this.clock.tick(6);
+            assert.equals(stub.callCount, 1);
+            this.clock.tick(10);
+            assert.equals(stub.callCount, 2);
+        });
+
         it("does not schedule recurring timeout when cleared", function () {
             var clock = this.clock;
             var id;
@@ -709,6 +754,14 @@ describe("lolex", function () {
             var date2 = new this.clock.Date();
 
             assert.equals(date2.getTime() - date1.getTime(), 3);
+        });
+
+        it("listens to system clock changes", function () {
+            var date1 = new this.clock.Date();
+            this.clock.setSystemTime(date1.getTime() + 1000);
+            var date2 = new this.clock.Date();
+
+            assert.equals(date2.getTime() - date1.getTime(), 1000);
         });
 
         it("creates regular date when passing timestamp", function () {
