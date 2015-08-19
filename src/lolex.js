@@ -258,6 +258,44 @@
         }
     }
 
+    function timerType(timer) {
+        if (timer.immediate) {
+            return "Immediate";
+        } else if (typeof timer.interval !== "undefined") {
+            return "Interval";
+        } else {
+            return "Timeout";
+        }
+    }
+
+    function clearTimer(clock, timerId, ttype) {
+        if (!timerId) {
+            // null appears to be allowed in most browsers, and appears to be
+            // relied upon by some libraries, like Bootstrap carousel
+            return;
+        }
+
+        if (!clock.timers) {
+            clock.timers = [];
+        }
+
+        // in Node, timerId is an object with .ref()/.unref(), and
+        // its .id field is the actual timer id.
+        if (typeof timerId === "object") {
+            timerId = timerId.id;
+        }
+
+        if (clock.timers.hasOwnProperty(timerId)) {
+            // check that the ID matches a timer of the correct type
+            var timer = clock.timers[timerId];
+            if (timerType(timer) === ttype) {
+                delete clock.timers[timerId];
+            } else {
+				throw new Error("Cannot clear timer: timer created with set" + ttype + "() but cleared with clear" + timerType(timer) + "()");
+			}
+        }
+    }
+
     function uninstall(clock, target) {
         var method,
             i,
@@ -346,25 +384,7 @@
         };
 
         clock.clearTimeout = function clearTimeout(timerId) {
-            if (!timerId) {
-                // null appears to be allowed in most browsers, and appears to be
-                // relied upon by some libraries, like Bootstrap carousel
-                return;
-            }
-
-            if (!clock.timers) {
-                clock.timers = [];
-            }
-
-            // in Node, timerId is an object with .ref()/.unref(), and
-            // its .id field is the actual timer id.
-            if (typeof timerId === "object") {
-                timerId = timerId.id;
-            }
-
-            if (clock.timers.hasOwnProperty(timerId)) {
-                delete clock.timers[timerId];
-            }
+            return clearTimer(clock, timerId, "Timeout");
         };
 
         clock.setInterval = function setInterval(func, timeout) {
@@ -377,7 +397,7 @@
         };
 
         clock.clearInterval = function clearInterval(timerId) {
-            clock.clearTimeout(timerId);
+            return clearTimer(clock, timerId, "Interval");
         };
 
         clock.setImmediate = function setImmediate(func) {
@@ -389,7 +409,7 @@
         };
 
         clock.clearImmediate = function clearImmediate(timerId) {
-            clock.clearTimeout(timerId);
+            return clearTimer(clock, timerId, "Immediate");
         };
 
         clock.tick = function tick(ms) {
