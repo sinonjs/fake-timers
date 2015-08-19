@@ -260,11 +260,11 @@
 
     function timerType(timer) {
         if (timer.immediate) {
-            return "immediate";
+            return "Immediate";
         } else if (typeof timer.interval !== "undefined") {
-            return "interval";
+            return "Interval";
         } else {
-            return "timeout";
+            return "Timeout";
         }
     }
 
@@ -290,7 +290,9 @@
             var timer = clock.timers[timerId];
             if (timerType(timer) === ttype) {
                 delete clock.timers[timerId];
-            }
+            } else {
+				throw new Error("Cannot clear timer: timer created with set" + ttype + "() but cleared with clear" + timerType(timer) + "()");
+			}
         }
     }
 
@@ -382,7 +384,7 @@
         };
 
         clock.clearTimeout = function clearTimeout(timerId) {
-            return clearTimer(clock, timerId, "timeout");
+            return clearTimer(clock, timerId, "Timeout");
         };
 
         clock.setInterval = function setInterval(func, timeout) {
@@ -395,7 +397,7 @@
         };
 
         clock.clearInterval = function clearInterval(timerId) {
-            return clearTimer(clock, timerId, "interval");
+            return clearTimer(clock, timerId, "Interval");
         };
 
         clock.setImmediate = function setImmediate(func) {
@@ -407,7 +409,7 @@
         };
 
         clock.clearImmediate = function clearImmediate(timerId) {
-            return clearTimer(clock, timerId, "immediate");
+            return clearTimer(clock, timerId, "Immediate");
         };
 
         clock.tick = function tick(ms) {

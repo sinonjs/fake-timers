@@ -216,7 +216,9 @@ describe("lolex", function () {
             var callback = sinon.stub();
 
             var id = this.clock.setTimeout(callback, 50);
-            this.clock.clearImmediate(id);
+            assert.exception(function() {
+                this.clock.clearImmediate(id);
+            });
             this.clock.tick(55);
 
             assert.isTrue(callback.called);
@@ -226,7 +228,9 @@ describe("lolex", function () {
             var callback = sinon.stub();
 
             var id = this.clock.setInterval(callback, 50);
-            this.clock.clearImmediate(id);
+            assert.exception(function() {
+                this.clock.clearImmediate(id);
+            });
             this.clock.tick(55);
 
             assert.isTrue(callback.called);
@@ -589,7 +593,9 @@ describe("lolex", function () {
         it("does not remove interval", function () {
             var stub = sinon.stub();
             var id = this.clock.setInterval(stub, 50);
-            this.clock.clearTimeout(id);
+            assert.exception(function() {
+                this.clock.clearTimeout(id);
+            });
             this.clock.tick(50);
 
             assert.isTrue(stub.called);
@@ -598,7 +604,9 @@ describe("lolex", function () {
         it("does not remove immediate", function () {
             var stub = sinon.stub();
             var id = this.clock.setImmediate(stub);
-            this.clock.clearTimeout(id);
+            assert.exception(function() {
+                this.clock.clearTimeout(id);
+            });
             this.clock.tick(50);
 
             assert.isTrue(stub.called);
@@ -710,16 +718,19 @@ describe("lolex", function () {
         it("does not remove timeout", function () {
             var stub = sinon.stub();
             var id = this.clock.setTimeout(stub, 50);
-            this.clock.clearInterval(id);
+            assert.exception(function() {
+                this.clock.clearInterval(id);
+            });
             this.clock.tick(50);
-
             assert.isTrue(stub.called);
         });
 
         it("does not remove immediate", function () {
             var stub = sinon.stub();
             var id = this.clock.setImmediate(stub);
-            this.clock.clearInterval(id);
+            assert.exception(function() {
+                this.clock.clearInterval(id);
+            });
             this.clock.tick(50);
 
             assert.isTrue(stub.called);
