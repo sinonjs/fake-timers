@@ -463,7 +463,7 @@
 
             // update 'system clock'
             clock.now = newNow;
-            
+
             // update timers and intervals to keep them stable
             for (var id in clock.timers) {
                 if (clock.timers.hasOwnProperty(id)) {
@@ -477,18 +477,6 @@
         return clock;
     }
     exports.createClock = createClock;
-
-    function detectKnownFailSituation(methods) {
-        if (methods.indexOf("Date") < 0) { return; }
-
-        if (typeof setTimeout === "function" && methods.indexOf("setTimeout") < 0) {
-            throw new Error("Native setTimeout will not work when Date is faked");
-        }
-
-        if (typeof setImmediate === "function" && methods.indexOf("setImmediate") < 0) {
-            throw new Error("Native setImmediate will not work when Date is faked");
-        }
-    }
 
     exports.install = function install(target, now, toFake) {
         var i,
@@ -515,8 +503,6 @@
         if (clock.methods.length === 0) {
             clock.methods = keys(timers);
         }
-
-        detectKnownFailSituation(clock.methods);
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
             hijackMethod(target, clock.methods[i], clock);
