@@ -29,6 +29,7 @@
     var NOOP = function () { return undefined; };
     var timeoutResult = setTimeout(NOOP, 0);
     var addTimerReturnsObject = typeof timeoutResult === "object";
+    var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
     clearTimeout(timeoutResult);
 
     var NativeDate = Date;
@@ -63,6 +64,20 @@
         }
 
         return ms * 1000;
+    }
+
+    /**
+     * Floor function that also works for negative numbers
+     */
+    function fixedFloor(n) {
+        return (n >= 0 ? Math.floor(n) : Math.ceil(n))
+    }
+
+    /**
+     * % operator that also works for negative numbers
+     */
+    function fixedModulo(n, m) {
+        return ((n % m) + m) % m;
     }
 
     /**
@@ -303,13 +318,16 @@
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
             method = clock.methods[i];
-
-            if (target[method].hadOwnProperty) {
-                target[method] = clock["_" + method];
+            if (method === "hrtime") {
+                target.process.hrtime = clock["_hrtime"];
             } else {
-                try {
-                    delete target[method];
-                } catch (ignore) {}
+                if (target[method].hadOwnProperty) {
+                    target[method] = clock["_" + method];
+                } else {
+                    try {
+                        delete target[method];
+                    } catch (ignore) {}
+                }
             }
         }
 
@@ -348,7 +366,8 @@
         clearImmediate: global.clearImmediate,
         setInterval: setInterval,
         clearInterval: clearInterval,
-        Date: Date
+        Date: Date,
+        hrtime: global.process.hrtime
     };
 
     var keys = Object.keys || function (obj) {
@@ -369,6 +388,7 @@
     function createClock(now) {
         var clock = {
             now: getEpoch(now),
+            hrNow: 0,
             timeouts: {},
             Date: createDate()
         };
@@ -420,10 +440,17 @@
 
             clock.duringTick = true;
 
+            function updateHrTime(newNow) {
+                var ms = newNow - clock.now;
+                clock.hrNow += ms;
+            }
+
             var firstException;
             while (timer && tickFrom <= tickTo) {
                 if (clock.timers[timer.id]) {
-                    tickFrom = clock.now = timer.callAt;
+                    updateHrTime(timer.callAt);
+                    tickFrom = timer.callAt;
+                    clock.now = timer.callAt;
                     try {
                         oldNow = clock.now;
                         callTimer(clock, timer);
@@ -443,6 +470,7 @@
             }
 
             clock.duringTick = false;
+            updateHrTime(tickTo);
             clock.now = tickTo;
 
             if (firstException) {
@@ -473,6 +501,26 @@
                 }
             }
         };
+
+        if (hrtimePresent) {
+            clock.hrtime = function(prev) {
+                if (Array.isArray(prev)) {
+                    var oldSecs = (prev[0] + prev[1] / 1000000000);
+                    var newSecs = (clock.hrNow / 1000);
+                    var difference = (newSecs - oldSecs);
+                    var secs = fixedFloor(difference);
+                    var nanosecs = fixedModulo(difference * 1000000000, 1000000000);
+                    return [
+                        secs,
+                        nanosecs
+                    ];
+                }
+                return [
+                    fixedFloor(clock.hrNow / 1000),
+                    fixedModulo(clock.hrNow * 1000000, 1000000000)
+                ];
+            };
+        }
 
         return clock;
     }
@@ -505,7 +553,11 @@
         }
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
-            hijackMethod(target, clock.methods[i], clock);
+            if (clock.methods[i] === "hrtime") {
+                hijackMethod(target.process, clock.methods[i], clock);
+            } else {
+                hijackMethod(target, clock.methods[i], clock);
+            }
         }
 
         return clock;

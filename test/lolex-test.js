@@ -25,6 +25,7 @@ var assert = referee.assert;
 var refute = referee.refute;
 var GlobalDate = Date;
 var NOOP = function NOOP() { return undefined; };
+var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
 
 describe("lolex", function () {
 
@@ -1148,6 +1149,27 @@ describe("lolex", function () {
             assert.same(clearInterval, lolex.timers.clearInterval);
         });
 
+        if (hrtimePresent) {
+            it("replaces global process.hrtime", function () {
+                this.clock = lolex.install();
+                var prev = process.hrtime();
+                this.clock.tick(1000);
+                var result = process.hrtime(prev);
+                assert.same(result[0], 1);
+                assert.same(result[1], 0);
+            });
+
+            it("uninstalls global process.hrtime", function () {
+                this.clock = lolex.install();
+                this.clock.uninstall();
+                assert.same(process.hrtime, lolex.timers.hrtime);
+                var prev = process.hrtime();
+                this.clock.tick(1000);
+                var result = process.hrtime(prev);
+                assert.same(result[0], 0);
+            });
+        }
+
         if (global.__proto__) {
             delete global.hasOwnPropertyTest;
             global.__proto__.hasOwnPropertyTest = function() {};
@@ -1257,4 +1279,46 @@ describe("lolex", function () {
             });
         });
     });
+
+    if (hrtimePresent) {
+        describe("process.hrtime()", function() {
+
+            it("should start at 0", function() {
+                var clock = lolex.createClock(1001);
+                var result = clock.hrtime();
+                assert.same(result[0], 0);
+                assert.same(result[1], 0);
+            });
+
+            it("should run along with clock.tick", function() {
+                var clock = lolex.createClock(0);
+                clock.tick(5001);
+                var prev = clock.hrtime();
+                clock.tick(5001);
+                var result = clock.hrtime(prev);
+                assert.same(result[0], 5);
+                assert.same(result[1], 1000000);
+            });
+
+            it("should run along with clock.tick when timers set", function() {
+                var clock = lolex.createClock(0);
+                var prev = clock.hrtime();
+                clock.setTimeout(function() {
+                    var result = clock.hrtime(prev);
+                    assert.same(result[0], 2);
+                    assert.same(result[1], 500000000);
+                }, 2500)
+                clock.tick(5000);
+            });
+
+            it("should not move with setSystemTime", function() {
+                var clock = lolex.createClock(0);
+                var prev = clock.hrtime();
+                clock.setSystemTime(50000);
+                var result = clock.hrtime(prev);
+                assert.same(result[0], 0);
+                assert.same(result[1], 0);
+            });
+        });
+    }
 });

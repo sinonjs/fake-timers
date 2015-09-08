@@ -102,6 +102,9 @@ var clock = lolex.install();
 
 ### `clock.clearImmediate(id)`
 
+### `clock.hrtime(prevTime?)`
+Only available in Node.JS, mimicks process.hrtime().
+
 ### `clock.tick(time)`
 
 ### `clock.setSystemTime([now])`
