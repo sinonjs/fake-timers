@@ -18,11 +18,16 @@
 
     global.setTimeout = glbl.setTimeout;
     global.clearTimeout = glbl.clearTimeout;
-    global.setImmediate = glbl.setImmediate;
-    global.clearImmediate = glbl.clearImmediate;
     global.setInterval = glbl.setInterval;
     global.clearInterval = glbl.clearInterval;
     global.Date = glbl.Date;
+
+    // setImmediate is not a standard function
+    // avoid adding the prop to the window object if not present
+    if('setImmediate' in global) {
+        global.setImmediate = glbl.setImmediate;
+        global.clearImmediate = glbl.clearImmediate;
+    }
 
     // node expects setTimeout/setInterval to return a fn object w/ .ref()/.unref()
     // browsers, a number.
@@ -260,6 +265,44 @@
         }
     }
 
+    function timerType(timer) {
+        if (timer.immediate) {
+            return "Immediate";
+        } else if (typeof timer.interval !== "undefined") {
+            return "Interval";
+        } else {
+            return "Timeout";
+        }
+    }
+
+    function clearTimer(clock, timerId, ttype) {
+        if (!timerId) {
+            // null appears to be allowed in most browsers, and appears to be
+            // relied upon by some libraries, like Bootstrap carousel
+            return;
+        }
+
+        if (!clock.timers) {
+            clock.timers = [];
+        }
+
+        // in Node, timerId is an object with .ref()/.unref(), and
+        // its .id field is the actual timer id.
+        if (typeof timerId === "object") {
+            timerId = timerId.id;
+        }
+
+        if (clock.timers.hasOwnProperty(timerId)) {
+            // check that the ID matches a timer of the correct type
+            var timer = clock.timers[timerId];
+            if (timerType(timer) === ttype) {
+                delete clock.timers[timerId];
+            } else {
+				throw new Error("Cannot clear timer: timer created with set" + ttype + "() but cleared with clear" + timerType(timer) + "()");
+			}
+        }
+    }
+
     function uninstall(clock, target) {
         var method,
             i,
@@ -348,25 +391,7 @@
         };
 
         clock.clearTimeout = function clearTimeout(timerId) {
-            if (!timerId) {
-                // null appears to be allowed in most browsers, and appears to be
-                // relied upon by some libraries, like Bootstrap carousel
-                return;
-            }
-
-            if (!clock.timers) {
-                clock.timers = [];
-            }
-
-            // in Node, timerId is an object with .ref()/.unref(), and
-            // its .id field is the actual timer id.
-            if (typeof timerId === "object") {
-                timerId = timerId.id;
-            }
-
-            if (clock.timers.hasOwnProperty(timerId)) {
-                delete clock.timers[timerId];
-            }
+            return clearTimer(clock, timerId, "Timeout");
         };
 
         clock.setInterval = function setInterval(func, timeout) {
@@ -379,7 +404,7 @@
         };
 
         clock.clearInterval = function clearInterval(timerId) {
-            clock.clearTimeout(timerId);
+            return clearTimer(clock, timerId, "Interval");
         };
 
         clock.setImmediate = function setImmediate(func) {
@@ -391,13 +416,14 @@
         };
 
         clock.clearImmediate = function clearImmediate(timerId) {
-            clock.clearTimeout(timerId);
+            return clearTimer(clock, timerId, "Immediate");
         };
 
         clock.tick = function tick(ms) {
             ms = typeof ms === "number" ? ms : parseTime(ms);
             var tickFrom = clock.now, tickTo = clock.now + ms, previous = clock.now;
             var timer = firstTimerInRange(clock, tickFrom, tickTo);
+            var oldNow;
 
             clock.duringTick = true;
 
@@ -406,7 +432,14 @@
                 if (clock.timers[timer.id]) {
                     tickFrom = clock.now = timer.callAt;
                     try {
+                        oldNow = clock.now;
                         callTimer(clock, timer);
+                        // compensate for any setSystemTime() call during timer callback
+                        if (oldNow !== clock.now) {
+                            tickFrom += clock.now - oldNow;
+                            tickTo += clock.now - oldNow;
+                            previous += clock.now - oldNow;
+                        }
                     } catch (e) {
                         firstException = firstException || e;
                     }
@@ -430,21 +463,27 @@
             clock.timers = {};
         };
 
+        clock.setSystemTime = function setSystemTime(now) {
+            // determine time difference
+            var newNow = getEpoch(now);
+            var difference = newNow - clock.now;
+
+            // update 'system clock'
+            clock.now = newNow;
+
+            // update timers and intervals to keep them stable
+            for (var id in clock.timers) {
+                if (clock.timers.hasOwnProperty(id)) {
+                    var timer = clock.timers[id];
+                    timer.createdAt += difference;
+                    timer.callAt += difference;
+                }
+            }
+        };
+
         return clock;
     }
     exports.createClock = createClock;
-
-    function detectKnownFailSituation(methods) {
-        if (methods.indexOf("Date") < 0) { return; }
-
-        if (methods.indexOf("setTimeout") < 0) {
-            throw new Error("Native setTimeout will not work when Date is faked");
-        }
-
-        if (methods.indexOf("setImmediate") < 0) {
-            throw new Error("Native setImmediate will not work when Date is faked");
-        }
-    }
 
     exports.install = function install(target, now, toFake) {
         var i,
@@ -471,8 +510,6 @@
         if (clock.methods.length === 0) {
             clock.methods = keys(timers);
         }
-
-        detectKnownFailSituation(clock.methods);
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
             hijackMethod(target, clock.methods[i], clock);
