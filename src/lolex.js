@@ -16,11 +16,16 @@
 
     global.setTimeout = glbl.setTimeout;
     global.clearTimeout = glbl.clearTimeout;
-    global.setImmediate = glbl.setImmediate;
-    global.clearImmediate = glbl.clearImmediate;
     global.setInterval = glbl.setInterval;
     global.clearInterval = glbl.clearInterval;
     global.Date = glbl.Date;
+
+    // setImmediate is not a standard function
+    // avoid adding the prop to the window object if not present
+    if('setImmediate' in global) {
+        global.setImmediate = glbl.setImmediate;
+        global.clearImmediate = glbl.clearImmediate;
+    }
 
     // node expects setTimeout/setInterval to return a fn object w/ .ref()/.unref()
     // browsers, a number.
