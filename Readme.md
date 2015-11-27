@@ -125,7 +125,7 @@ It affects the current time but it does not in itself cause e.g. timers to fire;
 ## Running tests
 
 Lolex has a comprehensive test suite. If you're thinking of contributing bug
-fixes or suggest new features, you need to make sure you have not broken any
+fixes or suggesting new features, you need to make sure you have not broken any
 tests. You are also expected to add tests for any new behavior.
 
 ### On node:
@@ -134,15 +134,20 @@ tests. You are also expected to add tests for any new behavior.
 npm test
 ```
 
-Or, if you prefer slightly less verbose output:
+Or, if you prefer more verbose output:
 
 ```
-mocha ./test/lolex-test.js
+$(npm bin)/mocha ./test/lolex-test.js
 ```
 
 ### In the browser
 
+[Mochify](https://github.com/mantoni/mochify.js) is used to run the tests in
+PhantomJS. Make sure you have `phantomjs` installed. Then:
 
+```sh
+npm test-headless
+```
 
 ## License
 
