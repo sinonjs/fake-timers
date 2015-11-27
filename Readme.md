@@ -60,29 +60,40 @@ When using lolex to test timers, you will most likely want to replace the native
 timers such that calling `setTimeout` actually schedules a callback with your
 clock instance, not the browser's internals.
 
-To hijack timers in another context, use the `install` method. You can then call
-`uninstall` later to restore things as they were again.
+Calling `install` with no arguments achieves this. You can call `uninstall`
+later to restore things as they were again.
+
+```js
+// In the browser distribution, a global `lolex` is already available
+var lolex = require("lolex");
+
+var clock = lolex.install();
+// Equivalent to
+// var clock = lolex.install(typeof global !== "undefined" ? global : window);
+
+setTimeout(fn, 15); // Schedules with clock.setTimeout
+
+clock.uninstall();
+// setTimeout is restored to the native implementation
+```
+
+To hijack timers in another context pass it to the `install` method.
 
 ```js
 var lolex = require("lolex");
-var clock = lolex.install(window);
+var context = {
+    setTimeout: setTimeout // By default context.setTimeout uses the global setTimeout
+}
+var clock = lolex.install(context);
 
-window.setTimeout(fn, 15); // Schedules with clock.setTimeout
+context.setTimeout(fn, 15); // Schedules with clock.setTimeout
 
 clock.uninstall();
-
-// window.setTimeout is restored to the native implementation
+// context.setTimeout is restored to the original implementation
 ```
 
-In 90% av the times, you want to install the timers onto the global object.
-Calling `install` with no arguments achieves this:
-
-```js
-var clock = lolex.install();
-
-// Equivalent to
-// var clock = lolex.install(typeof global !== "undefined" ? global : window);
-```
+Usually you want to install the timers onto the global object, so call `install`
+without arguments.
 
 ## API Reference
 
