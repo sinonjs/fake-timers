@@ -56,7 +56,7 @@
         var ms = 0, parsed;
 
         if (l > 3 || !/^(\d\d:){0,2}\d\d?$/.test(str)) {
-            throw new Error("tick only understands numbers and 'h:m:s'");
+            throw new Error("tick only understands numbers, 'm:s' and 'h:m:s'. Each part must be two digits");
         }
 
         while (i--) {
