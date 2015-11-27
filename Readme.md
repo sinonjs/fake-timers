@@ -1,10 +1,9 @@
 # Lolex [![Build Status](https://secure.travis-ci.org/sinonjs/lolex.png)](http://travis-ci.org/sinonjs/lolex)
 
 JavaScript implementation of the timer APIs; `setTimeout`, `clearTimeout`,
-`setImmediate`, `clearImmediate`, `setInterval`, `clearInterval`, and
-`requestAnimationFrame`, along with a clock instance that controls the flow of
-time. Lolex also provides a `Date` implementation that gets its time from the
-clock.
+`setImmediate`, `clearImmediate`, `setInterval` and `clearInterval`, along with
+a clock instance that controls the flow of time. Lolex also provides a `Date`
+implementation that gets its time from the clock.
 
 Lolex can be used to simulate passing time in automated tests and other
 situations where you want the scheduling semantics, but don't want to actually
