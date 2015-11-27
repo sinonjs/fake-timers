@@ -494,7 +494,7 @@ describe("lolex", function () {
             assert.equals(callback.callCount, 3);
         });
 
-        it("passes 6 seconds", function () {
+        it("passes 8 seconds", function () {
             var spy = sinon.spy();
             this.clock.setInterval(spy, 4000);
 
@@ -512,7 +512,7 @@ describe("lolex", function () {
             assert.equals(spy.callCount, 10);
         });
 
-        it("passes 2 hours, 34 minutes and 12 seconds", function () {
+        it("passes 2 hours, 34 minutes and 10 seconds", function () {
             var spy = sinon.spy();
             this.clock.setInterval(spy, 10000);
 
