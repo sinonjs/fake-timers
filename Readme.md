@@ -52,6 +52,9 @@ Upon executing the last line, an interesting fact about the
 the screen. If you want to simulate asynchronous behavior, you have to use your
 imagination when calling the various functions.
 
+The `next` method is available to advance to the next scheduled timer. See the
+API Reference for more.
+
 ### Faking the native timers
 
 When using lolex to test timers, you will most likely want to replace the native
@@ -103,6 +106,10 @@ var clock = lolex.install();
 ### `clock.clearImmediate(id)`
 
 ### `clock.tick(time)`
+
+### `clock.next()`
+
+Advances the clock to the the moment of the first scheduled timer, firing it.
 
 ### `clock.setSystemTime([now])`
 This simulates a user changing the system clock while your program is running.
