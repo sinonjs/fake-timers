@@ -22,7 +22,7 @@
 
     // setImmediate is not a standard function
     // avoid adding the prop to the window object if not present
-    if('setImmediate' in global) {
+    if (global.setImmediate !== undefined) {
         global.setImmediate = glbl.setImmediate;
         global.clearImmediate = glbl.clearImmediate;
     }
@@ -266,11 +266,11 @@
     function timerType(timer) {
         if (timer.immediate) {
             return "Immediate";
-        } else if (typeof timer.interval !== "undefined") {
-            return "Interval";
-        } else {
-            return "Timeout";
         }
+        if (timer.interval !== undefined) {
+            return "Interval";
+        }
+        return "Timeout";
     }
 
     function clearTimer(clock, timerId, ttype) {
@@ -296,8 +296,8 @@
             if (timerType(timer) === ttype) {
                 delete clock.timers[timerId];
             } else {
-				throw new Error("Cannot clear timer: timer created with set" + ttype + "() but cleared with clear" + timerType(timer) + "()");
-			}
+                throw new Error("Cannot clear timer: timer created with set" + ttype + "() but cleared with clear" + timerType(timer) + "()");
+            }
         }
     }
 
@@ -465,14 +465,15 @@
             // determine time difference
             var newNow = getEpoch(now);
             var difference = newNow - clock.now;
+            var id, timer;
 
             // update 'system clock'
             clock.now = newNow;
 
             // update timers and intervals to keep them stable
-            for (var id in clock.timers) {
+            for (id in clock.timers) {
                 if (clock.timers.hasOwnProperty(id)) {
-                    var timer = clock.timers[id];
+                    timer = clock.timers[id];
                     timer.createdAt += difference;
                     timer.callAt += difference;
                 }
