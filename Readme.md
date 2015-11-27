@@ -99,35 +99,97 @@ without arguments.
 
 ### `var clock = lolex.createClock([now])`
 
+Creates a clock. The default
+[epoch](https://en.wikipedia.org/wiki/Epoch_%28reference_date%29) is `0`. Now
+may be a number (in milliseconds) or a Date object.
+
 ### `var clock = lolex.install([context[, now[, toFake]]])`
 
 ### `var clock = lolex.install([now[, toFake]])`
 
+Creates a clock and installs it onto the `context` object, or globally. The
+`now` argument is the same as in `lolex.createClock()`.
+
+`toFake` is an array of the names of the methods that should be faked. You can
+pick from `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`,
+`setInterval`, `clearInterval`, and `Date`. E.g. `lolex.install(["setTimeout",
+"clearTimeout"])`.
+
 ### `var id = clock.setTimeout(callback, timeout)`
+
+Schedules the callback to be fired once `timeout` milliseconds have ticked by.
+
+In Node.js `setTimeout` returns a timer object. Lolex will do the same, however
+its `ref()` and `unref()` methods have no effect.
+
+In browsers a timer ID is returned.
 
 ### `clock.clearTimeout(id)`
 
+Clears the timer given the ID or timer object, as long as it was created using
+`setTimeout`.
+
 ### `var id = clock.setInterval(callback, timeout)`
+
+Schedules the callback to be fired every time `timeout` milliseconds have ticked
+by.
+
+In Node.js `setInterval` returns a timer object. Lolex will do the same, however
+its `ref()` and `unref()` methods have no effect.
+
+In browsers a timer ID is returned.
 
 ### `clock.clearInterval(id)`
 
+Clears the timer given the ID or timer object, as long as it was created using
+`setInterval`.
+
 ### `var id = clock.setImmediate(callback)`
+
+Schedules the callback, to be fired once `0` milliseconds have ticked by. Note
+that you'll still have to call `clock.tick()` for the callback to fire. If
+called during a tick the callback won't fire until `1` millisecond has ticked
+by.
+
+In Node.js `setImmediate` returns a timer object. Lolex will do the same,
+however its `ref()` and `unref()` methods have no effect.
+
+In browsers a timer ID is returned.
 
 ### `clock.clearImmediate(id)`
 
+Clears the timer given the ID or timer object, as long as it was created using
+`setImmediate`.
+
 ### `clock.tick(time)`
+
+Advance the clock, firing callbacks if necessary. `time` may be the number of
+milliseconds to advance the clock by or a human-readable string. Valid string
+formats are `"08"` for eight seconds, `"01:00"` for one minute and `"02:34:10"`
+for two hours, 34 minutes and ten seconds.
+
+`time` may be negative, which causes the clock to change but won't fire any
+callbacks.
 
 ### `clock.next()`
 
 Advances the clock to the the moment of the first scheduled timer, firing it.
 
 ### `clock.setSystemTime([now])`
+
 This simulates a user changing the system clock while your program is running.
-It affects the current time but it does not in itself cause e.g. timers to fire; they will fire exactly as they would have done without the call to setSystemTime().
+It affects the current time but it does not in itself cause e.g. timers to fire;
+they will fire exactly as they would have done without the call to
+setSystemTime().
 
 ### `clock.uninstall()`
 
+Restores the original methods on the `context` that was passed to
+`lolex.install`, or the native timers if no `context` was given.
+
 ### `Date`
+
+Implements the `Date` object but using the clock to provide the correct time.
 
 ## Running tests
 
