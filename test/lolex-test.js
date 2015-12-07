@@ -5,6 +5,9 @@
     it,
     assert
 */
+/*jslint
+    todo:true
+*/
 /**
  * @author Christian Johansen (christian@cjohansen.no)
  * @license BSD
@@ -139,7 +142,7 @@ describe("lolex", function () {
         });
     });
 
-     describe("setImmediate", function () {
+    describe("setImmediate", function () {
 
         beforeEach(function () {
             this.clock = lolex.createClock();
@@ -238,7 +241,7 @@ describe("lolex", function () {
             var callback = sinon.stub();
 
             var id = this.clock.setTimeout(callback, 50);
-            assert.exception(function() {
+            assert.exception(function () {
                 this.clock.clearImmediate(id);
             });
             this.clock.tick(55);
@@ -250,7 +253,7 @@ describe("lolex", function () {
             var callback = sinon.stub();
 
             var id = this.clock.setInterval(callback, 50);
-            assert.exception(function() {
+            assert.exception(function () {
                 this.clock.clearImmediate(id);
             });
             this.clock.tick(55);
@@ -615,7 +618,7 @@ describe("lolex", function () {
         it("does not remove interval", function () {
             var stub = sinon.stub();
             var id = this.clock.setInterval(stub, 50);
-            assert.exception(function() {
+            assert.exception(function () {
                 this.clock.clearTimeout(id);
             });
             this.clock.tick(50);
@@ -626,7 +629,7 @@ describe("lolex", function () {
         it("does not remove immediate", function () {
             var stub = sinon.stub();
             var id = this.clock.setImmediate(stub);
-            assert.exception(function() {
+            assert.exception(function () {
                 this.clock.clearTimeout(id);
             });
             this.clock.tick(50);
@@ -763,7 +766,7 @@ describe("lolex", function () {
         it("does not remove timeout", function () {
             var stub = sinon.stub();
             var id = this.clock.setTimeout(stub, 50);
-            assert.exception(function() {
+            assert.exception(function () {
                 this.clock.clearInterval(id);
             });
             this.clock.tick(50);
@@ -773,7 +776,7 @@ describe("lolex", function () {
         it("does not remove immediate", function () {
             var stub = sinon.stub();
             var id = this.clock.setImmediate(stub);
-            assert.exception(function() {
+            assert.exception(function () {
                 this.clock.clearInterval(id);
             });
             this.clock.tick(50);
@@ -817,6 +820,7 @@ describe("lolex", function () {
 
         it("creates real Date objects when Date constructor is gone", function () {
             var realDate = new Date();
+            // Comment out the next line for jslint to be "happy".
             Date = NOOP;
             global.Date = NOOP;
 
@@ -1148,6 +1152,7 @@ describe("lolex", function () {
             assert.same(clearInterval, lolex.timers.clearInterval);
         });
 
+        // Comment out the next block for jslint to be "happy".
         if (global.__proto__) {
             delete global.hasOwnPropertyTest;
             global.__proto__.hasOwnPropertyTest = function() {};
@@ -1214,7 +1219,7 @@ describe("lolex", function () {
         // TODO: The following tests causes test suite instability
 
         it("mirrors custom Date properties", function () {
-            var f = function () { };
+            var f = function () { return ""; };
             global.Date.format = f;
             this.clock = lolex.install();
 
