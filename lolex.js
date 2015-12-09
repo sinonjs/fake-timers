@@ -234,6 +234,22 @@
         return timer;
     }
 
+    function firstTimer(clock) {
+        var timers = clock.timers,
+            timer = null,
+            id;
+
+        for (id in timers) {
+            if (timers.hasOwnProperty(id)) {
+                if (!timer || compareTimers(timer, timers[id]) === 1) {
+                    timer = timers[id];
+                }
+            }
+        }
+
+        return timer;
+    }
+
     function callTimer(clock, timer) {
         var exception;
 
@@ -457,6 +473,22 @@
             }
 
             return clock.now;
+        };
+
+        clock.next = function next() {
+            var timer = firstTimer(clock);
+            if (!timer) {
+                return clock.now;
+            }
+
+            clock.duringTick = true;
+            try {
+                clock.now = timer.callAt;
+                callTimer(clock, timer);
+                return clock.now;
+            } finally {
+                clock.duringTick = false;
+            }
         };
 
         clock.reset = function reset() {
