@@ -14,7 +14,7 @@
   },
   "license": "BSD-3-Clause",
   "scripts": {
-    "lint": "$(npm bin)/jslint src/**/*.js",
+    "lint": "jslint src/**/*.js",
     "test-node": "mocha -R dot",
     "test-headless": "mochify",
     "test-cloud": "mochify --wd",
