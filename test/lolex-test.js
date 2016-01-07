@@ -18,7 +18,7 @@
 
 if (typeof require === "function" && typeof module === "object") {
     var referee = require("referee");
-    var lolex = require("../src/lolex");
+    var lolex = require("../src/lolex-src");
     var sinon = require("sinon");
 
     global.lolex = lolex; // For testing eval

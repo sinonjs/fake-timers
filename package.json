@@ -19,7 +19,7 @@
     "test-headless": "mochify",
     "test-cloud": "mochify --wd",
     "test": "npm run lint && npm run test-node && npm run test-headless",
-    "bundle": "browserify -s lolex -o lolex.js src/lolex.js"
+    "bundle": "browserify -s lolex -o lolex.js src/lolex-src.js"
   },
   "devDependencies": {
     "browserify": ">=5.9 <6",
@@ -29,5 +29,5 @@
     "referee": "~1.0",
     "sinon": "~1.10"
   },
-  "main": "./src/lolex.js"
+  "main": "./src/lolex-src.js"
 }
