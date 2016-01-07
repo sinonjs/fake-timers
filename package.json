@@ -26,7 +26,7 @@
     "jslint": "^0.6.6",
     "mocha": "^2.3.4",
     "mochify": "^2.14.3",
-    "referee": "~1.0",
+    "referee": "^1.2.0",
     "sinon": "^1.17.2"
   },
   "main": "./src/lolex-src.js"
