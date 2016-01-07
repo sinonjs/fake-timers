@@ -25,7 +25,7 @@
     "browserify": ">=5.9 <6",
     "jslint": "^0.6.6",
     "mocha": ">=1.21 <2",
-    "mochify": ">=1.0 <2",
+    "mochify": "^2.14.3",
     "referee": "~1.0",
     "sinon": "~1.10"
   },
