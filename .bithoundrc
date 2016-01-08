@@ -1,6 +1,6 @@
 {
   "ignore": [
-    "/lolex.js",
+    "lolex.js",
     "**/deps/**",
     "**/node_modules/**",
     "**/thirdparty/**",
