@@ -592,7 +592,9 @@
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
             if (clock.methods[i] === "hrtime") {
-                hijackMethod(target.process, clock.methods[i], clock);
+                if (target.process && typeof target.process.hrtime === "function") {
+                    hijackMethod(target.process, clock.methods[i], clock);
+                }
             } else {
                 hijackMethod(target, clock.methods[i], clock);
             }
