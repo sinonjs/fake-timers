@@ -543,11 +543,11 @@
         if (hrtimePresent) {
             clock.hrtime = function (prev) {
                 if (Array.isArray(prev)) {
-                    var oldSecs = (prev[0] + prev[1] / 1000000000);
+                    var oldSecs = (prev[0] + prev[1] / 1e9);
                     var newSecs = (clock.hrNow / 1000);
                     var difference = (newSecs - oldSecs);
                     var secs = fixedFloor(difference);
-                    var nanosecs = fixedModulo(difference * 1000000000, 1000000000);
+                    var nanosecs = fixedModulo(difference * 1e9, 1e9);
                     return [
                         secs,
                         nanosecs
@@ -555,7 +555,7 @@
                 }
                 return [
                     fixedFloor(clock.hrNow / 1000),
-                    fixedModulo(clock.hrNow * 1000000, 1000000000)
+                    fixedModulo(clock.hrNow * 1e6, 1e9)
                 ];
             };
         }
