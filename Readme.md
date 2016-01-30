@@ -161,6 +161,9 @@ In browsers a timer ID is returned.
 Clears the timer given the ID or timer object, as long as it was created using
 `setImmediate`.
 
+### `clock.hrtime(prevTime?)`
+Only available in Node.JS, mimicks process.hrtime().
+
 ### `clock.tick(time)`
 
 Advance the clock, firing callbacks if necessary. `time` may be the number of
