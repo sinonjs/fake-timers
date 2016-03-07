@@ -1062,6 +1062,20 @@ describe("lolex", function () {
             assert.equals(fakeDate.getTime(), date.getTime());
         });
 
+        it("creates regular date when passing a date as string", function () {
+            var date = new Date();
+            var fakeDate = new this.clock.Date(date.toISOString());
+
+            assert.equals(fakeDate.getTime(), date.getTime());
+        });
+
+        it("creates regular date when passing a date as RFC 2822 string", function () {
+            var date = new Date('Sat Apr 12 2014 12:22:00 GMT+1000');
+            var fakeDate = new this.clock.Date('Sat Apr 12 2014 12:22:00 GMT+1000');
+
+            assert.equals(fakeDate.getTime(), date.getTime());
+        });
+
         it("returns regular date when calling with timestamp", function () {
             var date = new Date();
             var fakeDate = this.clock.Date(date.getTime());
