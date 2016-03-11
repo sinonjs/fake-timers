@@ -7,6 +7,13 @@ node_js:
   - "0.12"
   - "4.2"
   - "5"
+
+env:
+  global:
+    - SAUCE_USERNAME=sinonjs
+    - secure: "Szc/biR+MJFC/r4IFzDVXJkIt1COglrCyCd/drmBrXj4AE70J2qn8QlU0n3uQUhrDH5k0NtSWnZHcfxuUTHpasvh9yPFGtqnNeqgftZjXQyJFS+rYye4i04cyYGEmc1qxhpljfAXbvCJV+bHDFmWxIF6KSHWMsVk6IbhoD0/Dis="
+
 script:
   - "./script/ci-test.sh"
+  - 'if [ "x$TRAVIS_NODE_VERSION" = "x4.2" ]; then npm run test-cloud; fi'
 
