@@ -97,15 +97,18 @@ without arguments.
 
 ## API Reference
 
-### `var clock = lolex.createClock([now])`
+### `var clock = lolex.createClock([now[, loopLimit]])`
 
 Creates a clock. The default
-[epoch](https://en.wikipedia.org/wiki/Epoch_%28reference_date%29) is `0`. Now
-may be a number (in milliseconds) or a Date object.
+[epoch](https://en.wikipedia.org/wiki/Epoch_%28reference_date%29) is `0`.
 
-### `var clock = lolex.install([context[, now[, toFake]]])`
+The `now` argument may be a number (in milliseconds) or a Date object.
 
-### `var clock = lolex.install([now[, toFake]])`
+The `loopLimit` argument sets the maximum number of timers that will be run when calling `runAll()` before assuming that we have an infinite loop and throwing an error. The default is `1000`.
+
+### `var clock = lolex.install([context[, now[, toFake[, loopLimit]]]])`
+
+### `var clock = lolex.install([now[, toFake[, loopLimit]]])`
 
 Creates a clock and installs it onto the `context` object, or globally. The
 `now` argument is the same as in `lolex.createClock()`.
@@ -114,6 +117,8 @@ Creates a clock and installs it onto the `context` object, or globally. The
 pick from `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`,
 `setInterval`, `clearInterval`, and `Date`. E.g. `lolex.install(["setTimeout",
 "clearTimeout"])`.
+
+The `loopLimit` argument is the same as in `lolex.createClock()`.
 
 ### `var id = clock.setTimeout(callback, timeout)`
 
@@ -177,6 +182,14 @@ callbacks.
 ### `clock.next()`
 
 Advances the clock to the the moment of the first scheduled timer, firing it.
+
+### `clock.runAll()`
+
+This runs all pending timers until there are none remaining. If new timers are added while it is executing they will be run as well.
+
+This makes it easier to run asynchronous tests to completion without worrying about the number of timers they use, or the delays in those timers.
+
+It runs a maximum of `loopLimit` times after which it assumes there is an infinite loop of timers and throws an error.
 
 ### `clock.setSystemTime([now])`
 

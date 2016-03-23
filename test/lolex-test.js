@@ -798,6 +798,81 @@ describe("lolex", function () {
         });
     });
 
+    describe('runAll', function() {
+
+        it('runs all timers', function() {
+            this.clock = lolex.createClock();
+            var spies = [sinon.spy(), sinon.spy()];
+            this.clock.setTimeout(spies[0], 10);
+            this.clock.setTimeout(spies[1], 50);
+
+            this.clock.runAll();
+
+            assert(spies[0].called);
+            assert(spies[1].called);
+        });
+
+        it('new timers added while running are also run', function() {
+            this.clock = lolex.createClock();
+            var test = this;
+            var spies = [
+                sinon.spy(function() {
+                    test.clock.setTimeout(spies[1], 50);
+                }),
+                sinon.spy()
+            ];
+
+            // Spy calls another setTimeout
+            this.clock.setTimeout(spies[0], 10);
+
+            this.clock.runAll();
+
+            assert(spies[0].called);
+            assert(spies[1].called);
+        });
+
+        it('throws before allowing infinite recursion', function() {
+            this.clock = lolex.createClock();
+            var test = this;
+            var recursiveCallback = function() {
+                test.clock.setTimeout(recursiveCallback, 10);
+            };
+
+            this.clock.setTimeout(recursiveCallback, 10);
+
+            assert.exception(function () {
+                test.clock.runAll();
+            });
+        });
+
+        it('the loop limit can be set when creating a clock', function() {
+            this.clock = lolex.createClock(0, 1);
+
+            var spies = [sinon.spy(), sinon.spy()];
+            this.clock.setTimeout(spies[0], 10);
+            this.clock.setTimeout(spies[1], 50);
+
+            assert.exception(function () {
+                test.clock.runAll();
+            });
+        });
+
+        it('the loop limit can be set when installing a clock', function() {
+            this.clock = lolex.install(0, null, 1);
+
+            var spies = [sinon.spy(), sinon.spy()];
+            setTimeout(spies[0], 10);
+            setTimeout(spies[1], 50);
+
+            assert.exception(function () {
+                test.clock.runAll();
+            });
+
+            this.clock.uninstall();
+        });
+
+    });
+
     describe("clearTimeout", function () {
 
         beforeEach(function () {
