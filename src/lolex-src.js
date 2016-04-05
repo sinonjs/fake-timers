@@ -407,12 +407,15 @@
 
     exports.timers = timers;
 
-    function createClock(now) {
+    function createClock(now, loopLimit) {
+        loopLimit = loopLimit || 1000;
+
         var clock = {
             now: getEpoch(now),
             hrNow: 0,
             timeouts: {},
-            Date: createDate()
+            Date: createDate(),
+            loopLimit: loopLimit
         };
 
         clock.Date.clock = clock;
@@ -517,6 +520,20 @@
             }
         };
 
+        clock.runAll = function runAll() {
+            var numTimers, i;
+            for (i = 0; i < clock.loopLimit; i++) {
+                numTimers = Object.keys(clock.timers).length;
+                if (numTimers === 0) {
+                    return clock.now;
+                }
+
+                clock.next();
+            }
+
+            throw new Error('Aborting after running ' + clock.loopLimit + 'timers, assuming an infinite loop!');
+        };
+
         clock.reset = function reset() {
             clock.timers = {};
         };
@@ -564,7 +581,7 @@
     }
     exports.createClock = createClock;
 
-    exports.install = function install(target, now, toFake) {
+    exports.install = function install(target, now, toFake, loopLimit) {
         var i,
             l;
 
@@ -578,7 +595,7 @@
             target = global;
         }
 
-        var clock = createClock(now);
+        var clock = createClock(now, loopLimit);
 
         clock.uninstall = function () {
             uninstall(clock, target);
