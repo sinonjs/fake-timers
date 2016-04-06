@@ -873,6 +873,110 @@ describe("lolex", function () {
 
     });
 
+    describe('runToLast', function() {
+
+        it('returns current time when there are no timers', function() {
+            this.clock = lolex.createClock();
+
+            var time = this.clock.runToLast();
+
+            assert.equals(time, 0);
+        });
+
+        it('runs all existing timers', function() {
+            this.clock = lolex.createClock();
+            var spies = [sinon.spy(), sinon.spy()];
+            this.clock.setTimeout(spies[0], 10);
+            this.clock.setTimeout(spies[1], 50);
+
+            this.clock.runToLast();
+
+            assert(spies[0].called);
+            assert(spies[1].called);
+        });
+
+        it('returns time of the last timer', function() {
+            this.clock = lolex.createClock();
+            var spies = [sinon.spy(), sinon.spy()];
+            this.clock.setTimeout(spies[0], 10);
+            this.clock.setTimeout(spies[1], 50);
+
+            var time = this.clock.runToLast();
+
+            assert.equals(time, 50);
+        });
+
+        it('runs all existing timers when two timers are matched for being last', function() {
+            this.clock = lolex.createClock();
+            var spies = [sinon.spy(), sinon.spy()];
+            this.clock.setTimeout(spies[0], 10);
+            this.clock.setTimeout(spies[1], 10);
+
+            this.clock.runToLast();
+
+            assert(spies[0].called);
+            assert(spies[1].called);
+        });
+
+        it('new timers added with a call time later than the last existing timer are NOT run', function() {
+            this.clock = lolex.createClock();
+            var test = this;
+            var spies = [
+                sinon.spy(function() {
+                    test.clock.setTimeout(spies[1], 50);
+                }),
+                sinon.spy()
+            ];
+
+            // Spy calls another setTimeout
+            this.clock.setTimeout(spies[0], 10);
+
+            this.clock.runToLast();
+
+            assert.isTrue(spies[0].called);
+            assert.isFalse(spies[1].called);
+        });
+
+        it('new timers added with a call time ealier than the last existing timer are run', function() {
+            this.clock = lolex.createClock();
+            var test = this;
+            var spies = [
+                sinon.spy(),
+                sinon.spy(function() {
+                    test.clock.setTimeout(spies[2], 50);
+                }),
+                sinon.spy()
+            ];
+
+            this.clock.setTimeout(spies[0], 100);
+            // Spy calls another setTimeout
+            this.clock.setTimeout(spies[1], 10);
+
+            this.clock.runToLast();
+
+            assert.isTrue(spies[0].called);
+            assert.isTrue(spies[1].called);
+            assert.isTrue(spies[2].called);
+        });
+
+        it('new timers cannot cause an infinite loop', function() {
+            this.clock = lolex.createClock();
+            var test = this;
+            var spy = sinon.spy();
+            var recursiveCallback = function() {
+                test.clock.setTimeout(recursiveCallback, 0);
+            };
+
+            this.clock.setTimeout(recursiveCallback, 0);
+            this.clock.setTimeout(spy, 100);
+
+            this.clock.runToLast();
+
+            assert.isTrue(spy.called);
+        });
+
+    });
+
     describe("clearTimeout", function () {
 
         beforeEach(function () {
