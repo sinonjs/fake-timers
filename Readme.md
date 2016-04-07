@@ -51,8 +51,8 @@ Upon executing the last line, an interesting fact about the
 the screen. If you want to simulate asynchronous behavior, you have to use your
 imagination when calling the various functions.
 
-The `next` method is available to advance to the next scheduled timer. See the
-API Reference for more.
+The `next`, `runAll`, and `runToLast` methods are available to advance the clock. See the
+API Reference for more details.
 
 ### Faking the native timers
 
@@ -190,6 +190,17 @@ This runs all pending timers until there are none remaining. If new timers are a
 This makes it easier to run asynchronous tests to completion without worrying about the number of timers they use, or the delays in those timers.
 
 It runs a maximum of `loopLimit` times after which it assumes there is an infinite loop of timers and throws an error.
+
+### `clock.runToLast()`
+
+This takes note of the last scheduled timer when it is run, and advances the
+clock to that time firing callbacks as necessary.
+
+If new timers are added while it is executing they will be run only if they
+would occur before this time.
+
+This is useful when you want to run a test to completion, but the test recursively
+sets timers that would cause `runAll` to trigger an infinite loop warning.
 
 ### `clock.setSystemTime([now])`
 

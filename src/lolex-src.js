@@ -263,6 +263,22 @@
         return timer;
     }
 
+    function lastTimer(clock) {
+        var timers = clock.timers,
+            timer = null,
+            id;
+
+        for (id in timers) {
+            if (timers.hasOwnProperty(id)) {
+                if (!timer || compareTimers(timer, timers[id]) === -1) {
+                    timer = timers[id];
+                }
+            }
+        }
+
+        return timer;
+    }
+
     function callTimer(clock, timer) {
         var exception;
 
@@ -532,6 +548,15 @@
             }
 
             throw new Error('Aborting after running ' + clock.loopLimit + 'timers, assuming an infinite loop!');
+        };
+
+        clock.runToLast = function runToLast() {
+            var timer = lastTimer(clock);
+            if (!timer) {
+                return clock.now;
+            }
+
+            return clock.tick(timer.callAt);
         };
 
         clock.reset = function reset() {
