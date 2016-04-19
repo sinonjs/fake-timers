@@ -405,8 +405,11 @@
         setInterval: setInterval,
         clearInterval: clearInterval,
         Date: Date,
-        hrtime: global.process.hrtime
     };
+
+    if (hrtimePresent) {
+        timers.hrtime = global.process.hrtime;
+    }
 
     var keys = Object.keys || function (obj) {
         var ks = [],
