@@ -2,8 +2,7 @@
     describe,
     beforeEach,
     afterEach,
-    it,
-    assert
+    it
 */
 /*jslint
     todo:true
@@ -847,6 +846,7 @@ describe("lolex", function () {
 
         it('the loop limit can be set when creating a clock', function() {
             this.clock = lolex.createClock(0, 1);
+            var test = this;
 
             var spies = [sinon.spy(), sinon.spy()];
             this.clock.setTimeout(spies[0], 10);
@@ -858,7 +858,8 @@ describe("lolex", function () {
         });
 
         it('the loop limit can be set when installing a clock', function() {
-            this.clock = lolex.install(0, null, 1);
+            this.clock = lolex.install(0, null, null, 1);
+            var test = this;
 
             var spies = [sinon.spy(), sinon.spy()];
             setTimeout(spies[0], 10);
@@ -1564,27 +1565,26 @@ describe("lolex", function () {
             });
         }
 
-        // Comment out the next block for jslint to be "happy".
-        if (global.__proto__) {
+        if (Object.getPrototypeOf(global)) {
             delete global.hasOwnPropertyTest;
-            global.__proto__.hasOwnPropertyTest = function() {};
+            Object.getPrototypeOf(global).hasOwnPropertyTest = function() {};
 
             if (!global.hasOwnProperty("hasOwnPropertyTest")) {
                 it("deletes global property on uninstall if it was inherited onto the global object", function () {
                     // Give the global object an inherited 'tick' method
                     delete global.tick;
-                    global.__proto__.tick = function() { };
+                    Object.getPrototypeOf(global).tick = function() { };
 
                     this.clock = lolex.install(0, ['tick']);
                     assert.isTrue(global.hasOwnProperty("tick"));
                     this.clock.uninstall();
 
                     assert.isFalse(global.hasOwnProperty("tick"));
-                    delete global.__proto__.tick;
+                    delete Object.getPrototypeOf(global).tick;
                 });
             }
 
-            delete global.__proto__.hasOwnPropertyTest;
+            delete Object.getPrototypeOf(global).hasOwnPropertyTest;
         }
 
         it("uninstalls global property on uninstall if it is present on the global object itself", function () {
@@ -1702,7 +1702,7 @@ describe("lolex", function () {
                     var result = clock.hrtime(prev);
                     assert.same(result[0], 2);
                     assert.same(result[1], 500000000);
-                }, 2500)
+                }, 2500);
                 clock.tick(5000);
             });
 
