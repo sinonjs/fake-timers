@@ -51,8 +51,8 @@ Upon executing the last line, an interesting fact about the
 the screen. If you want to simulate asynchronous behavior, you have to use your
 imagination when calling the various functions.
 
-The `next` method is available to advance to the next scheduled timer. See the
-API Reference for more.
+The `next`, `runAll`, and `runToLast` methods are available to advance the clock. See the
+API Reference for more details.
 
 ### Faking the native timers
 
@@ -97,15 +97,18 @@ without arguments.
 
 ## API Reference
 
-### `var clock = lolex.createClock([now])`
+### `var clock = lolex.createClock([now[, loopLimit]])`
 
 Creates a clock. The default
-[epoch](https://en.wikipedia.org/wiki/Epoch_%28reference_date%29) is `0`. Now
-may be a number (in milliseconds) or a Date object.
+[epoch](https://en.wikipedia.org/wiki/Epoch_%28reference_date%29) is `0`.
 
-### `var clock = lolex.install([context[, now[, toFake]]])`
+The `now` argument may be a number (in milliseconds) or a Date object.
 
-### `var clock = lolex.install([now[, toFake]])`
+The `loopLimit` argument sets the maximum number of timers that will be run when calling `runAll()` before assuming that we have an infinite loop and throwing an error. The default is `1000`.
+
+### `var clock = lolex.install([context[, now[, toFake[, loopLimit]]]])`
+
+### `var clock = lolex.install([now[, toFake[, loopLimit]]])`
 
 Creates a clock and installs it onto the `context` object, or globally. The
 `now` argument is the same as in `lolex.createClock()`.
@@ -114,6 +117,8 @@ Creates a clock and installs it onto the `context` object, or globally. The
 pick from `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`,
 `setInterval`, `clearInterval`, and `Date`. E.g. `lolex.install(["setTimeout",
 "clearTimeout"])`.
+
+The `loopLimit` argument is the same as in `lolex.createClock()`.
 
 ### `var id = clock.setTimeout(callback, timeout)`
 
@@ -161,6 +166,9 @@ In browsers a timer ID is returned.
 Clears the timer given the ID or timer object, as long as it was created using
 `setImmediate`.
 
+### `clock.hrtime(prevTime?)`
+Only available in Node.JS, mimicks process.hrtime().
+
 ### `clock.tick(time)`
 
 Advance the clock, firing callbacks if necessary. `time` may be the number of
@@ -174,6 +182,25 @@ callbacks.
 ### `clock.next()`
 
 Advances the clock to the the moment of the first scheduled timer, firing it.
+
+### `clock.runAll()`
+
+This runs all pending timers until there are none remaining. If new timers are added while it is executing they will be run as well.
+
+This makes it easier to run asynchronous tests to completion without worrying about the number of timers they use, or the delays in those timers.
+
+It runs a maximum of `loopLimit` times after which it assumes there is an infinite loop of timers and throws an error.
+
+### `clock.runToLast()`
+
+This takes note of the last scheduled timer when it is run, and advances the
+clock to that time firing callbacks as necessary.
+
+If new timers are added while it is executing they will be run only if they
+would occur before this time.
+
+This is useful when you want to run a test to completion, but the test recursively
+sets timers that would cause `runAll` to trigger an infinite loop warning.
 
 ### `clock.setSystemTime([now])`
 

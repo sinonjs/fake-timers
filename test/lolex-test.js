@@ -28,6 +28,7 @@ var assert = referee.assert;
 var refute = referee.refute;
 var GlobalDate = Date;
 var NOOP = function NOOP() { return undefined; };
+var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
 
 describe("lolex", function () {
 
@@ -797,6 +798,185 @@ describe("lolex", function () {
         });
     });
 
+    describe('runAll', function() {
+
+        it('runs all timers', function() {
+            this.clock = lolex.createClock();
+            var spies = [sinon.spy(), sinon.spy()];
+            this.clock.setTimeout(spies[0], 10);
+            this.clock.setTimeout(spies[1], 50);
+
+            this.clock.runAll();
+
+            assert(spies[0].called);
+            assert(spies[1].called);
+        });
+
+        it('new timers added while running are also run', function() {
+            this.clock = lolex.createClock();
+            var test = this;
+            var spies = [
+                sinon.spy(function() {
+                    test.clock.setTimeout(spies[1], 50);
+                }),
+                sinon.spy()
+            ];
+
+            // Spy calls another setTimeout
+            this.clock.setTimeout(spies[0], 10);
+
+            this.clock.runAll();
+
+            assert(spies[0].called);
+            assert(spies[1].called);
+        });
+
+        it('throws before allowing infinite recursion', function() {
+            this.clock = lolex.createClock();
+            var test = this;
+            var recursiveCallback = function() {
+                test.clock.setTimeout(recursiveCallback, 10);
+            };
+
+            this.clock.setTimeout(recursiveCallback, 10);
+
+            assert.exception(function () {
+                test.clock.runAll();
+            });
+        });
+
+        it('the loop limit can be set when creating a clock', function() {
+            this.clock = lolex.createClock(0, 1);
+
+            var spies = [sinon.spy(), sinon.spy()];
+            this.clock.setTimeout(spies[0], 10);
+            this.clock.setTimeout(spies[1], 50);
+
+            assert.exception(function () {
+                test.clock.runAll();
+            });
+        });
+
+        it('the loop limit can be set when installing a clock', function() {
+            this.clock = lolex.install(0, null, 1);
+
+            var spies = [sinon.spy(), sinon.spy()];
+            setTimeout(spies[0], 10);
+            setTimeout(spies[1], 50);
+
+            assert.exception(function () {
+                test.clock.runAll();
+            });
+
+            this.clock.uninstall();
+        });
+
+    });
+
+    describe('runToLast', function() {
+
+        it('returns current time when there are no timers', function() {
+            this.clock = lolex.createClock();
+
+            var time = this.clock.runToLast();
+
+            assert.equals(time, 0);
+        });
+
+        it('runs all existing timers', function() {
+            this.clock = lolex.createClock();
+            var spies = [sinon.spy(), sinon.spy()];
+            this.clock.setTimeout(spies[0], 10);
+            this.clock.setTimeout(spies[1], 50);
+
+            this.clock.runToLast();
+
+            assert(spies[0].called);
+            assert(spies[1].called);
+        });
+
+        it('returns time of the last timer', function() {
+            this.clock = lolex.createClock();
+            var spies = [sinon.spy(), sinon.spy()];
+            this.clock.setTimeout(spies[0], 10);
+            this.clock.setTimeout(spies[1], 50);
+
+            var time = this.clock.runToLast();
+
+            assert.equals(time, 50);
+        });
+
+        it('runs all existing timers when two timers are matched for being last', function() {
+            this.clock = lolex.createClock();
+            var spies = [sinon.spy(), sinon.spy()];
+            this.clock.setTimeout(spies[0], 10);
+            this.clock.setTimeout(spies[1], 10);
+
+            this.clock.runToLast();
+
+            assert(spies[0].called);
+            assert(spies[1].called);
+        });
+
+        it('new timers added with a call time later than the last existing timer are NOT run', function() {
+            this.clock = lolex.createClock();
+            var test = this;
+            var spies = [
+                sinon.spy(function() {
+                    test.clock.setTimeout(spies[1], 50);
+                }),
+                sinon.spy()
+            ];
+
+            // Spy calls another setTimeout
+            this.clock.setTimeout(spies[0], 10);
+
+            this.clock.runToLast();
+
+            assert.isTrue(spies[0].called);
+            assert.isFalse(spies[1].called);
+        });
+
+        it('new timers added with a call time ealier than the last existing timer are run', function() {
+            this.clock = lolex.createClock();
+            var test = this;
+            var spies = [
+                sinon.spy(),
+                sinon.spy(function() {
+                    test.clock.setTimeout(spies[2], 50);
+                }),
+                sinon.spy()
+            ];
+
+            this.clock.setTimeout(spies[0], 100);
+            // Spy calls another setTimeout
+            this.clock.setTimeout(spies[1], 10);
+
+            this.clock.runToLast();
+
+            assert.isTrue(spies[0].called);
+            assert.isTrue(spies[1].called);
+            assert.isTrue(spies[2].called);
+        });
+
+        it('new timers cannot cause an infinite loop', function() {
+            this.clock = lolex.createClock();
+            var test = this;
+            var spy = sinon.spy();
+            var recursiveCallback = function() {
+                test.clock.setTimeout(recursiveCallback, 0);
+            };
+
+            this.clock.setTimeout(recursiveCallback, 0);
+            this.clock.setTimeout(spy, 100);
+
+            this.clock.runToLast();
+
+            assert.isTrue(spy.called);
+        });
+
+    });
+
     describe("clearTimeout", function () {
 
         beforeEach(function () {
@@ -1057,6 +1237,20 @@ describe("lolex", function () {
         it("creates regular date when passing timestamp", function () {
             var date = new Date();
             var fakeDate = new this.clock.Date(date.getTime());
+
+            assert.equals(fakeDate.getTime(), date.getTime());
+        });
+
+        it("creates regular date when passing a date as string", function () {
+            var date = new Date();
+            var fakeDate = new this.clock.Date(date.toISOString());
+
+            assert.equals(fakeDate.getTime(), date.getTime());
+        });
+
+        it("creates regular date when passing a date as RFC 2822 string", function () {
+            var date = new Date('Sat Apr 12 2014 12:22:00 GMT+1000');
+            var fakeDate = new this.clock.Date('Sat Apr 12 2014 12:22:00 GMT+1000');
 
             assert.equals(fakeDate.getTime(), date.getTime());
         });
@@ -1349,6 +1543,27 @@ describe("lolex", function () {
             assert.same(clearInterval, lolex.timers.clearInterval);
         });
 
+        if (hrtimePresent) {
+            it("replaces global process.hrtime", function () {
+                this.clock = lolex.install();
+                var prev = process.hrtime();
+                this.clock.tick(1000);
+                var result = process.hrtime(prev);
+                assert.same(result[0], 1);
+                assert.same(result[1], 0);
+            });
+
+            it("uninstalls global process.hrtime", function () {
+                this.clock = lolex.install();
+                this.clock.uninstall();
+                assert.same(process.hrtime, lolex.timers.hrtime);
+                var prev = process.hrtime();
+                this.clock.tick(1000);
+                var result = process.hrtime(prev);
+                assert.same(result[0], 0);
+            });
+        }
+
         // Comment out the next block for jslint to be "happy".
         if (global.__proto__) {
             delete global.hasOwnPropertyTest;
@@ -1459,4 +1674,46 @@ describe("lolex", function () {
             });
         });
     });
+
+    if (hrtimePresent) {
+        describe("process.hrtime()", function() {
+
+            it("should start at 0", function() {
+                var clock = lolex.createClock(1001);
+                var result = clock.hrtime();
+                assert.same(result[0], 0);
+                assert.same(result[1], 0);
+            });
+
+            it("should run along with clock.tick", function() {
+                var clock = lolex.createClock(0);
+                clock.tick(5001);
+                var prev = clock.hrtime();
+                clock.tick(5001);
+                var result = clock.hrtime(prev);
+                assert.same(result[0], 5);
+                assert.same(result[1], 1000000);
+            });
+
+            it("should run along with clock.tick when timers set", function() {
+                var clock = lolex.createClock(0);
+                var prev = clock.hrtime();
+                clock.setTimeout(function() {
+                    var result = clock.hrtime(prev);
+                    assert.same(result[0], 2);
+                    assert.same(result[1], 500000000);
+                }, 2500)
+                clock.tick(5000);
+            });
+
+            it("should not move with setSystemTime", function() {
+                var clock = lolex.createClock(0);
+                var prev = clock.hrtime();
+                clock.setSystemTime(50000);
+                var result = clock.hrtime(prev);
+                assert.same(result[0], 0);
+                assert.same(result[1], 0);
+            });
+        });
+    }
 });

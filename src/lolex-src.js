@@ -34,6 +34,7 @@
     var NOOP = function () { return undefined; };
     var timeoutResult = setTimeout(NOOP, 0);
     var addTimerReturnsObject = typeof timeoutResult === "object";
+    var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
     clearTimeout(timeoutResult);
 
     var NativeDate = Date;
@@ -68,6 +69,20 @@
         }
 
         return ms * 1000;
+    }
+
+    /**
+     * Floor function that also works for negative numbers
+     */
+    function fixedFloor(n) {
+        return (n >= 0 ? Math.floor(n) : Math.ceil(n));
+    }
+
+    /**
+     * % operator that also works for negative numbers
+     */
+    function fixedModulo(n, m) {
+        return ((n % m) + m) % m;
     }
 
     /**
@@ -248,6 +263,22 @@
         return timer;
     }
 
+    function lastTimer(clock) {
+        var timers = clock.timers,
+            timer = null,
+            id;
+
+        for (id in timers) {
+            if (timers.hasOwnProperty(id)) {
+                if (!timer || compareTimers(timer, timers[id]) === -1) {
+                    timer = timers[id];
+                }
+            }
+        }
+
+        return timer;
+    }
+
     function callTimer(clock, timer) {
         var exception;
 
@@ -321,16 +352,20 @@
         var method,
             i,
             l;
+        var installedHrTime = "_hrtime"; // make jslint happy
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
             method = clock.methods[i];
-
-            if (target[method].hadOwnProperty) {
-                target[method] = clock["_" + method];
+            if (method === "hrtime") {
+                target.process.hrtime = clock[installedHrTime];
             } else {
-                try {
-                    delete target[method];
-                } catch (ignore) {}
+                if (target[method].hadOwnProperty) {
+                    target[method] = clock["_" + method];
+                } else {
+                    try {
+                        delete target[method];
+                    } catch (ignore) {}
+                }
             }
         }
 
@@ -369,8 +404,12 @@
         clearImmediate: global.clearImmediate,
         setInterval: setInterval,
         clearInterval: clearInterval,
-        Date: Date
+        Date: Date,
     };
+
+    if (hrtimePresent) {
+        timers.hrtime = global.process.hrtime;
+    }
 
     var keys = Object.keys || function (obj) {
         var ks = [],
@@ -387,11 +426,15 @@
 
     exports.timers = timers;
 
-    function createClock(now) {
+    function createClock(now, loopLimit) {
+        loopLimit = loopLimit || 1000;
+
         var clock = {
             now: getEpoch(now),
+            hrNow: 0,
             timeouts: {},
-            Date: createDate()
+            Date: createDate(),
+            loopLimit: loopLimit
         };
 
         clock.Date.clock = clock;
@@ -441,10 +484,16 @@
 
             clock.duringTick = true;
 
+            function updateHrTime(newNow) {
+                clock.hrNow += (newNow - clock.now);
+            }
+
             var firstException;
             while (timer && tickFrom <= tickTo) {
                 if (clock.timers[timer.id]) {
-                    tickFrom = clock.now = timer.callAt;
+                    updateHrTime(timer.callAt);
+                    tickFrom = timer.callAt;
+                    clock.now = timer.callAt;
                     try {
                         oldNow = clock.now;
                         callTimer(clock, timer);
@@ -464,6 +513,7 @@
             }
 
             clock.duringTick = false;
+            updateHrTime(tickTo);
             clock.now = tickTo;
 
             if (firstException) {
@@ -489,6 +539,29 @@
             }
         };
 
+        clock.runAll = function runAll() {
+            var numTimers, i;
+            for (i = 0; i < clock.loopLimit; i++) {
+                numTimers = Object.keys(clock.timers).length;
+                if (numTimers === 0) {
+                    return clock.now;
+                }
+
+                clock.next();
+            }
+
+            throw new Error('Aborting after running ' + clock.loopLimit + 'timers, assuming an infinite loop!');
+        };
+
+        clock.runToLast = function runToLast() {
+            var timer = lastTimer(clock);
+            if (!timer) {
+                return clock.now;
+            }
+
+            return clock.tick(timer.callAt);
+        };
+
         clock.reset = function reset() {
             clock.timers = {};
         };
@@ -512,11 +585,31 @@
             }
         };
 
+        if (hrtimePresent) {
+            clock.hrtime = function (prev) {
+                if (Array.isArray(prev)) {
+                    var oldSecs = (prev[0] + prev[1] / 1e9);
+                    var newSecs = (clock.hrNow / 1000);
+                    var difference = (newSecs - oldSecs);
+                    var secs = fixedFloor(difference);
+                    var nanosecs = fixedModulo(difference * 1e9, 1e9);
+                    return [
+                        secs,
+                        nanosecs
+                    ];
+                }
+                return [
+                    fixedFloor(clock.hrNow / 1000),
+                    fixedModulo(clock.hrNow * 1e6, 1e9)
+                ];
+            };
+        }
+
         return clock;
     }
     exports.createClock = createClock;
 
-    exports.install = function install(target, now, toFake) {
+    exports.install = function install(target, now, toFake, loopLimit) {
         var i,
             l;
 
@@ -530,7 +623,7 @@
             target = global;
         }
 
-        var clock = createClock(now);
+        var clock = createClock(now, loopLimit);
 
         clock.uninstall = function () {
             uninstall(clock, target);
@@ -543,7 +636,13 @@
         }
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
-            hijackMethod(target, clock.methods[i], clock);
+            if (clock.methods[i] === "hrtime") {
+                if (target.process && typeof target.process.hrtime === "function") {
+                    hijackMethod(target.process, clock.methods[i], clock);
+                }
+            } else {
+                hijackMethod(target, clock.methods[i], clock);
+            }
         }
 
         return clock;
