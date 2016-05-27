@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.lolex = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.lolex=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (global){
 /*global global, window*/
 /**
@@ -24,7 +24,7 @@
 
     // setImmediate is not a standard function
     // avoid adding the prop to the window object if not present
-    if (global.setImmediate !== undefined) {
+    if('setImmediate' in global) {
         global.setImmediate = glbl.setImmediate;
         global.clearImmediate = glbl.clearImmediate;
     }
@@ -36,7 +36,6 @@
     var NOOP = function () { return undefined; };
     var timeoutResult = setTimeout(NOOP, 0);
     var addTimerReturnsObject = typeof timeoutResult === "object";
-    var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
     clearTimeout(timeoutResult);
 
     var NativeDate = Date;
@@ -71,20 +70,6 @@
         }
 
         return ms * 1000;
-    }
-
-    /**
-     * Floor function that also works for negative numbers
-     */
-    function fixedFloor(n) {
-        return (n >= 0 ? Math.floor(n) : Math.ceil(n));
-    }
-
-    /**
-     * % operator that also works for negative numbers
-     */
-    function fixedModulo(n, m) {
-        return ((n % m) + m) % m;
     }
 
     /**
@@ -265,22 +250,6 @@
         return timer;
     }
 
-    function lastTimer(clock) {
-        var timers = clock.timers,
-            timer = null,
-            id;
-
-        for (id in timers) {
-            if (timers.hasOwnProperty(id)) {
-                if (!timer || compareTimers(timer, timers[id]) === -1) {
-                    timer = timers[id];
-                }
-            }
-        }
-
-        return timer;
-    }
-
     function callTimer(clock, timer) {
         var exception;
 
@@ -315,11 +284,11 @@
     function timerType(timer) {
         if (timer.immediate) {
             return "Immediate";
-        }
-        if (timer.interval !== undefined) {
+        } else if (typeof timer.interval !== "undefined") {
             return "Interval";
+        } else {
+            return "Timeout";
         }
-        return "Timeout";
     }
 
     function clearTimer(clock, timerId, ttype) {
@@ -345,8 +314,8 @@
             if (timerType(timer) === ttype) {
                 delete clock.timers[timerId];
             } else {
-                throw new Error("Cannot clear timer: timer created with set" + ttype + "() but cleared with clear" + timerType(timer) + "()");
-            }
+				throw new Error("Cannot clear timer: timer created with set" + ttype + "() but cleared with clear" + timerType(timer) + "()");
+			}
         }
     }
 
@@ -354,20 +323,16 @@
         var method,
             i,
             l;
-        var installedHrTime = "_hrtime"; // make jslint happy
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
             method = clock.methods[i];
-            if (method === "hrtime" && target.process) {
-                target.process.hrtime = clock[installedHrTime];
+
+            if (target[method].hadOwnProperty) {
+                target[method] = clock["_" + method];
             } else {
-                if (target[method].hadOwnProperty) {
-                    target[method] = clock["_" + method];
-                } else {
-                    try {
-                        delete target[method];
-                    } catch (ignore) {}
-                }
+                try {
+                    delete target[method];
+                } catch (ignore) {}
             }
         }
 
@@ -406,12 +371,8 @@
         clearImmediate: global.clearImmediate,
         setInterval: setInterval,
         clearInterval: clearInterval,
-        Date: Date,
+        Date: Date
     };
-
-    if (hrtimePresent) {
-        timers.hrtime = global.process.hrtime;
-    }
 
     var keys = Object.keys || function (obj) {
         var ks = [],
@@ -428,15 +389,11 @@
 
     exports.timers = timers;
 
-    function createClock(now, loopLimit) {
-        loopLimit = loopLimit || 1000;
-
+    function createClock(now) {
         var clock = {
             now: getEpoch(now),
-            hrNow: 0,
             timeouts: {},
-            Date: createDate(),
-            loopLimit: loopLimit
+            Date: createDate()
         };
 
         clock.Date.clock = clock;
@@ -486,16 +443,10 @@
 
             clock.duringTick = true;
 
-            function updateHrTime(newNow) {
-                clock.hrNow += (newNow - clock.now);
-            }
-
             var firstException;
             while (timer && tickFrom <= tickTo) {
                 if (clock.timers[timer.id]) {
-                    updateHrTime(timer.callAt);
-                    tickFrom = timer.callAt;
-                    clock.now = timer.callAt;
+                    tickFrom = clock.now = timer.callAt;
                     try {
                         oldNow = clock.now;
                         callTimer(clock, timer);
@@ -515,7 +466,6 @@
             }
 
             clock.duringTick = false;
-            updateHrTime(tickTo);
             clock.now = tickTo;
 
             if (firstException) {
@@ -541,29 +491,6 @@
             }
         };
 
-        clock.runAll = function runAll() {
-            var numTimers, i;
-            for (i = 0; i < clock.loopLimit; i++) {
-                numTimers = Object.keys(clock.timers).length;
-                if (numTimers === 0) {
-                    return clock.now;
-                }
-
-                clock.next();
-            }
-
-            throw new Error('Aborting after running ' + clock.loopLimit + 'timers, assuming an infinite loop!');
-        };
-
-        clock.runToLast = function runToLast() {
-            var timer = lastTimer(clock);
-            if (!timer) {
-                return clock.now;
-            }
-
-            return clock.tick(timer.callAt);
-        };
-
         clock.reset = function reset() {
             clock.timers = {};
         };
@@ -572,46 +499,25 @@
             // determine time difference
             var newNow = getEpoch(now);
             var difference = newNow - clock.now;
-            var id, timer;
 
             // update 'system clock'
             clock.now = newNow;
 
             // update timers and intervals to keep them stable
-            for (id in clock.timers) {
+            for (var id in clock.timers) {
                 if (clock.timers.hasOwnProperty(id)) {
-                    timer = clock.timers[id];
+                    var timer = clock.timers[id];
                     timer.createdAt += difference;
                     timer.callAt += difference;
                 }
             }
         };
 
-        if (hrtimePresent) {
-            clock.hrtime = function (prev) {
-                if (Array.isArray(prev)) {
-                    var oldSecs = (prev[0] + prev[1] / 1e9);
-                    var newSecs = (clock.hrNow / 1000);
-                    var difference = (newSecs - oldSecs);
-                    var secs = fixedFloor(difference);
-                    var nanosecs = fixedModulo(difference * 1e9, 1e9);
-                    return [
-                        secs,
-                        nanosecs
-                    ];
-                }
-                return [
-                    fixedFloor(clock.hrNow / 1000),
-                    fixedModulo(clock.hrNow * 1e6, 1e9)
-                ];
-            };
-        }
-
         return clock;
     }
     exports.createClock = createClock;
 
-    exports.install = function install(target, now, toFake, loopLimit) {
+    exports.install = function install(target, now, toFake) {
         var i,
             l;
 
@@ -625,7 +531,7 @@
             target = global;
         }
 
-        var clock = createClock(now, loopLimit);
+        var clock = createClock(now);
 
         clock.uninstall = function () {
             uninstall(clock, target);
@@ -638,13 +544,7 @@
         }
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
-            if (clock.methods[i] === "hrtime") {
-                if (target.process && typeof target.process.hrtime === "function") {
-                    hijackMethod(target.process, clock.methods[i], clock);
-                }
-            } else {
-                hijackMethod(target, clock.methods[i], clock);
-            }
+            hijackMethod(target, clock.methods[i], clock);
         }
 
         return clock;
