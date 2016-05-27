@@ -359,7 +359,7 @@
             if (method === "hrtime" && target.process) {
                 target.process.hrtime = clock[installedHrTime];
             } else {
-                if (target[method].hadOwnProperty) {
+                if (target[method] && target[method].hadOwnProperty) {
                     target[method] = clock["_" + method];
                 } else {
                     try {

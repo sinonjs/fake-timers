@@ -29,6 +29,21 @@ var GlobalDate = Date;
 var NOOP = function NOOP() { return undefined; };
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
 
+describe("issue #59", function () {
+    var context = {
+        Date: Date,
+        setTimeout: setTimeout,
+        clearTimeout: clearTimeout
+    };
+    var clock;
+
+    it("should install and uninstall the clock on a custom target", function () {
+        clock = lolex.install(context);
+        // this would throw an error before issue #59 was fixed
+        clock.uninstall();
+    });
+});
+
 describe("lolex", function () {
 
     describe("setTimeout", function () {
