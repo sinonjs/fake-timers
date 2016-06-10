@@ -243,6 +243,8 @@ describe("lolex", function () {
             var id = this.clock.setTimeout(callback, 50);
             assert.exception(function () {
                 this.clock.clearImmediate(id);
+            }.bind(this), {
+                message: "Cannot clear timer: timer created with setTimeout() but cleared with clearImmediate()"
             });
             this.clock.tick(55);
 
@@ -255,6 +257,8 @@ describe("lolex", function () {
             var id = this.clock.setInterval(callback, 50);
             assert.exception(function () {
                 this.clock.clearImmediate(id);
+            }.bind(this), {
+                message: "Cannot clear timer: timer created with setInterval() but cleared with clearImmediate()"
             });
             this.clock.tick(55);
 
@@ -998,6 +1002,8 @@ describe("lolex", function () {
             var id = this.clock.setInterval(stub, 50);
             assert.exception(function () {
                 this.clock.clearTimeout(id);
+            }.bind(this), {
+                message: "Cannot clear timer: timer created with setInterval() but cleared with clearTimeout()"
             });
             this.clock.tick(50);
 
@@ -1009,6 +1015,8 @@ describe("lolex", function () {
             var id = this.clock.setImmediate(stub);
             assert.exception(function () {
                 this.clock.clearTimeout(id);
+            }.bind(this), {
+                message: "Cannot clear timer: timer created with setImmediate() but cleared with clearTimeout()"
             });
             this.clock.tick(50);
 
@@ -1146,6 +1154,8 @@ describe("lolex", function () {
             var id = this.clock.setTimeout(stub, 50);
             assert.exception(function () {
                 this.clock.clearInterval(id);
+            }.bind(this), {
+                message: "Cannot clear timer: timer created with setTimeout() but cleared with clearInterval()"
             });
             this.clock.tick(50);
             assert.isTrue(stub.called);
@@ -1156,6 +1166,8 @@ describe("lolex", function () {
             var id = this.clock.setImmediate(stub);
             assert.exception(function () {
                 this.clock.clearInterval(id);
+            }.bind(this), {
+                message: "Cannot clear timer: timer created with setImmediate() but cleared with clearInterval()"
             });
             this.clock.tick(50);
 
