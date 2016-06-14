@@ -803,6 +803,11 @@ describe("lolex", function () {
 
     describe('runAll', function() {
 
+        it('if there are no timers just return', function() {
+            this.clock = lolex.createClock();
+            this.clock.runAll();
+        });
+
         it('runs all timers', function() {
             this.clock = lolex.createClock();
             var spies = [sinon.spy(), sinon.spy()];

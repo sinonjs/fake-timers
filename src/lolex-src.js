@@ -542,6 +542,10 @@
         clock.runAll = function runAll() {
             var numTimers, i;
             for (i = 0; i < clock.loopLimit; i++) {
+                if (!clock.timers) {
+                    return clock.now;
+                }
+
                 numTimers = Object.keys(clock.timers).length;
                 if (numTimers === 0) {
                     return clock.now;
