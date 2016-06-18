@@ -29,6 +29,23 @@ var GlobalDate = Date;
 var NOOP = function NOOP() { return undefined; };
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
 
+describe("lolex clock hook", function () {
+    var context = {
+        Date: Date,
+        setTimeout: setTimeout,
+        clearTimeout: clearTimeout
+    };
+    var clock;
+
+    it("replaces the clock", function () {
+        clock = lolex.install(context);
+    });
+
+    it("restores the original clock", function () {
+        clock.uninstall();
+    });
+});
+
 describe("lolex", function () {
 
     describe("setTimeout", function () {
