@@ -143,22 +143,22 @@
             // Defensive and verbose to avoid potential harm in passing
             // explicit undefined when user does not pass argument
             switch (arguments.length) {
-            case 0:
-                return new NativeDate(ClockDate.clock.now);
-            case 1:
-                return new NativeDate(year);
-            case 2:
-                return new NativeDate(year, month);
-            case 3:
-                return new NativeDate(year, month, date);
-            case 4:
-                return new NativeDate(year, month, date, hour);
-            case 5:
-                return new NativeDate(year, month, date, hour, minute);
-            case 6:
-                return new NativeDate(year, month, date, hour, minute, second);
-            default:
-                return new NativeDate(year, month, date, hour, minute, second, ms);
+                case 0:
+                    return new NativeDate(ClockDate.clock.now);
+                case 1:
+                    return new NativeDate(year);
+                case 2:
+                    return new NativeDate(year, month);
+                case 3:
+                    return new NativeDate(year, month, date);
+                case 4:
+                    return new NativeDate(year, month, date, hour);
+                case 5:
+                    return new NativeDate(year, month, date, hour, minute);
+                case 6:
+                    return new NativeDate(year, month, date, hour, minute, second);
+                default:
+                    return new NativeDate(year, month, date, hour, minute, second, ms);
             }
         }
 
@@ -192,6 +192,7 @@
     }
 
 
+    /* eslint consistent-return: "off" */
     function compareTimers(a, b) {
         // Sort first by absolute timing
         if (a.callAt < b.callAt) {
@@ -292,6 +293,7 @@
             if (typeof timer.func === "function") {
                 timer.func.apply(null, timer.args);
             } else {
+                /* eslint no-eval: "off" */
                 eval(timer.func);
             }
         } catch (e) {
@@ -343,7 +345,8 @@
             if (timerType(timer) === ttype) {
                 delete clock.timers[timerId];
             } else {
-                throw new Error("Cannot clear timer: timer created with set" + timerType(timer) + "() but cleared with clear" + ttype + "()");
+                throw new Error("Cannot clear timer: timer created with set" + timerType(timer)
+                                + "() but cleared with clear" + ttype + "()");
             }
         }
     }
@@ -364,7 +367,7 @@
                 } else {
                     try {
                         delete target[method];
-                    } catch (ignore) {}
+                    } catch (ignore) { /* eslint empty-block: "off" */ }
                 }
             }
         }
@@ -404,7 +407,7 @@
         clearImmediate: global.clearImmediate,
         setInterval: setInterval,
         clearInterval: clearInterval,
-        Date: Date,
+        Date: Date
     };
 
     if (hrtimePresent) {
@@ -554,7 +557,7 @@
                 clock.next();
             }
 
-            throw new Error('Aborting after running ' + clock.loopLimit + 'timers, assuming an infinite loop!');
+            throw new Error("Aborting after running " + clock.loopLimit + "timers, assuming an infinite loop!");
         };
 
         clock.runToLast = function runToLast() {
