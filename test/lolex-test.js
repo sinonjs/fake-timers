@@ -1657,8 +1657,6 @@ describe("lolex", function () {
             refute.defined(Date.now);
         });
 
-        // TODO: The following tests causes test suite instability
-
         it("mirrors custom Date properties", function () {
             var f = function () { return ""; };
             global.Date.format = f;
