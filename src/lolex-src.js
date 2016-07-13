@@ -11,20 +11,17 @@
 
     // Make properties writable in IE, as per
     // http://www.adequatelygood.com/Replacing-setTimeout-Globally.html
-    // JSLint being anal
-    var glbl = global;
-
-    global.setTimeout = glbl.setTimeout;
-    global.clearTimeout = glbl.clearTimeout;
-    global.setInterval = glbl.setInterval;
-    global.clearInterval = glbl.clearInterval;
-    global.Date = glbl.Date;
+    global.setTimeout = global.setTimeout;
+    global.clearTimeout = global.clearTimeout;
+    global.setInterval = global.setInterval;
+    global.clearInterval = global.clearInterval;
+    global.Date = global.Date;
 
     // setImmediate is not a standard function
     // avoid adding the prop to the window object if not present
     if (global.setImmediate !== undefined) {
-        global.setImmediate = glbl.setImmediate;
-        global.clearImmediate = glbl.clearImmediate;
+        global.setImmediate = global.setImmediate;
+        global.clearImmediate = global.clearImmediate;
     }
 
     // node expects setTimeout/setInterval to return a fn object w/ .ref()/.unref()
@@ -143,22 +140,22 @@
             // Defensive and verbose to avoid potential harm in passing
             // explicit undefined when user does not pass argument
             switch (arguments.length) {
-            case 0:
-                return new NativeDate(ClockDate.clock.now);
-            case 1:
-                return new NativeDate(year);
-            case 2:
-                return new NativeDate(year, month);
-            case 3:
-                return new NativeDate(year, month, date);
-            case 4:
-                return new NativeDate(year, month, date, hour);
-            case 5:
-                return new NativeDate(year, month, date, hour, minute);
-            case 6:
-                return new NativeDate(year, month, date, hour, minute, second);
-            default:
-                return new NativeDate(year, month, date, hour, minute, second, ms);
+                case 0:
+                    return new NativeDate(ClockDate.clock.now);
+                case 1:
+                    return new NativeDate(year);
+                case 2:
+                    return new NativeDate(year, month);
+                case 3:
+                    return new NativeDate(year, month, date);
+                case 4:
+                    return new NativeDate(year, month, date, hour);
+                case 5:
+                    return new NativeDate(year, month, date, hour, minute);
+                case 6:
+                    return new NativeDate(year, month, date, hour, minute, second);
+                default:
+                    return new NativeDate(year, month, date, hour, minute, second, ms);
             }
         }
 
@@ -192,6 +189,7 @@
     }
 
 
+    /* eslint consistent-return: "off" */
     function compareTimers(a, b) {
         // Sort first by absolute timing
         if (a.callAt < b.callAt) {
@@ -292,6 +290,7 @@
             if (typeof timer.func === "function") {
                 timer.func.apply(null, timer.args);
             } else {
+                /* eslint no-eval: "off" */
                 eval(timer.func);
             }
         } catch (e) {
@@ -343,7 +342,8 @@
             if (timerType(timer) === ttype) {
                 delete clock.timers[timerId];
             } else {
-                throw new Error("Cannot clear timer: timer created with set" + timerType(timer) + "() but cleared with clear" + ttype + "()");
+                throw new Error("Cannot clear timer: timer created with set" + timerType(timer)
+                                + "() but cleared with clear" + ttype + "()");
             }
         }
     }
@@ -352,7 +352,7 @@
         var method,
             i,
             l;
-        var installedHrTime = "_hrtime"; // make jslint happy
+        var installedHrTime = "_hrtime";
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
             method = clock.methods[i];
@@ -364,7 +364,7 @@
                 } else {
                     try {
                         delete target[method];
-                    } catch (ignore) {}
+                    } catch (ignore) { /* eslint empty-block: "off" */ }
                 }
             }
         }
@@ -404,7 +404,7 @@
         clearImmediate: global.clearImmediate,
         setInterval: setInterval,
         clearInterval: clearInterval,
-        Date: Date,
+        Date: Date
     };
 
     if (hrtimePresent) {
@@ -554,7 +554,7 @@
                 clock.next();
             }
 
-            throw new Error('Aborting after running ' + clock.loopLimit + 'timers, assuming an infinite loop!');
+            throw new Error("Aborting after running " + clock.loopLimit + "timers, assuming an infinite loop!");
         };
 
         clock.runToLast = function runToLast() {

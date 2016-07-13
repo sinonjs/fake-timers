@@ -15,5 +15,6 @@ env:
 
 script:
   - "./script/ci-test.sh"
+  - 'if [ "x$TRAVIS_NODE_VERSION" = "x4.2" ]; then npm run lint; fi'
   - 'if [ "x$TRAVIS_NODE_VERSION" = "x4.2" ] && [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then npm run test-cloud; fi'
 

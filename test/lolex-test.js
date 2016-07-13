@@ -4,9 +4,6 @@
     afterEach,
     it
 */
-/*jslint
-    todo:true
-*/
 /**
  * @author Christian Johansen (christian@cjohansen.no)
  * @license BSD
@@ -66,7 +63,7 @@ describe("lolex", function () {
         it("returns numeric id or object with numeric id", function () {
             var result = this.clock.setTimeout("");
 
-            if (typeof result === 'object') {
+            if (typeof result === "object") {
                 assert.isNumber(result.id);
             } else {
                 assert.isNumber(result);
@@ -166,7 +163,7 @@ describe("lolex", function () {
         it("returns numeric id or object with numeric id", function () {
             var result = this.clock.setImmediate(NOOP);
 
-            if (typeof result === 'object') {
+            if (typeof result === "object") {
                 assert.isNumber(result.id);
             } else {
                 assert.isNumber(result);
@@ -206,10 +203,10 @@ describe("lolex", function () {
         it("passes extra parameters through to the callback", function () {
             var stub = sinon.stub();
 
-            this.clock.setImmediate(stub, 'value1', 2);
+            this.clock.setImmediate(stub, "value1", 2);
             this.clock.tick(1);
 
-            assert(stub.calledWithExactly('value1', 2));
+            assert(stub.calledWithExactly("value1", 2));
         });
 
         it("calls the given callback before setTimeout", function () {
@@ -816,14 +813,14 @@ describe("lolex", function () {
         });
     });
 
-    describe('runAll', function() {
+    describe("runAll", function () {
 
-        it('if there are no timers just return', function() {
+        it("if there are no timers just return", function () {
             this.clock = lolex.createClock();
             this.clock.runAll();
         });
 
-        it('runs all timers', function() {
+        it("runs all timers", function () {
             this.clock = lolex.createClock();
             var spies = [sinon.spy(), sinon.spy()];
             this.clock.setTimeout(spies[0], 10);
@@ -835,11 +832,11 @@ describe("lolex", function () {
             assert(spies[1].called);
         });
 
-        it('new timers added while running are also run', function() {
+        it("new timers added while running are also run", function () {
             this.clock = lolex.createClock();
             var test = this;
             var spies = [
-                sinon.spy(function() {
+                sinon.spy(function () {
                     test.clock.setTimeout(spies[1], 50);
                 }),
                 sinon.spy()
@@ -854,10 +851,10 @@ describe("lolex", function () {
             assert(spies[1].called);
         });
 
-        it('throws before allowing infinite recursion', function() {
+        it("throws before allowing infinite recursion", function () {
             this.clock = lolex.createClock();
             var test = this;
-            var recursiveCallback = function() {
+            var recursiveCallback = function () {
                 test.clock.setTimeout(recursiveCallback, 10);
             };
 
@@ -868,7 +865,7 @@ describe("lolex", function () {
             });
         });
 
-        it('the loop limit can be set when creating a clock', function() {
+        it("the loop limit can be set when creating a clock", function () {
             this.clock = lolex.createClock(0, 1);
             var test = this;
 
@@ -881,7 +878,7 @@ describe("lolex", function () {
             });
         });
 
-        it('the loop limit can be set when installing a clock', function() {
+        it("the loop limit can be set when installing a clock", function () {
             this.clock = lolex.install(0, null, null, 1);
             var test = this;
 
@@ -898,9 +895,9 @@ describe("lolex", function () {
 
     });
 
-    describe('runToLast', function() {
+    describe("runToLast", function () {
 
-        it('returns current time when there are no timers', function() {
+        it("returns current time when there are no timers", function () {
             this.clock = lolex.createClock();
 
             var time = this.clock.runToLast();
@@ -908,7 +905,7 @@ describe("lolex", function () {
             assert.equals(time, 0);
         });
 
-        it('runs all existing timers', function() {
+        it("runs all existing timers", function () {
             this.clock = lolex.createClock();
             var spies = [sinon.spy(), sinon.spy()];
             this.clock.setTimeout(spies[0], 10);
@@ -920,7 +917,7 @@ describe("lolex", function () {
             assert(spies[1].called);
         });
 
-        it('returns time of the last timer', function() {
+        it("returns time of the last timer", function () {
             this.clock = lolex.createClock();
             var spies = [sinon.spy(), sinon.spy()];
             this.clock.setTimeout(spies[0], 10);
@@ -931,7 +928,7 @@ describe("lolex", function () {
             assert.equals(time, 50);
         });
 
-        it('runs all existing timers when two timers are matched for being last', function() {
+        it("runs all existing timers when two timers are matched for being last", function () {
             this.clock = lolex.createClock();
             var spies = [sinon.spy(), sinon.spy()];
             this.clock.setTimeout(spies[0], 10);
@@ -943,11 +940,11 @@ describe("lolex", function () {
             assert(spies[1].called);
         });
 
-        it('new timers added with a call time later than the last existing timer are NOT run', function() {
+        it("new timers added with a call time later than the last existing timer are NOT run", function () {
             this.clock = lolex.createClock();
             var test = this;
             var spies = [
-                sinon.spy(function() {
+                sinon.spy(function () {
                     test.clock.setTimeout(spies[1], 50);
                 }),
                 sinon.spy()
@@ -962,12 +959,12 @@ describe("lolex", function () {
             assert.isFalse(spies[1].called);
         });
 
-        it('new timers added with a call time ealier than the last existing timer are run', function() {
+        it("new timers added with a call time ealier than the last existing timer are run", function () {
             this.clock = lolex.createClock();
             var test = this;
             var spies = [
                 sinon.spy(),
-                sinon.spy(function() {
+                sinon.spy(function () {
                     test.clock.setTimeout(spies[2], 50);
                 }),
                 sinon.spy()
@@ -984,11 +981,11 @@ describe("lolex", function () {
             assert.isTrue(spies[2].called);
         });
 
-        it('new timers cannot cause an infinite loop', function() {
+        it("new timers cannot cause an infinite loop", function () {
             this.clock = lolex.createClock();
             var test = this;
             var spy = sinon.spy();
-            var recursiveCallback = function() {
+            var recursiveCallback = function () {
                 test.clock.setTimeout(recursiveCallback, 0);
             };
 
@@ -1082,7 +1079,7 @@ describe("lolex", function () {
         it("returns numeric id or object with numeric id", function () {
             var result = this.clock.setInterval("");
 
-            if (typeof result === 'object') {
+            if (typeof result === "object") {
                 assert.isNumber(result.id);
             } else {
                 assert.isNumber(result);
@@ -1230,7 +1227,6 @@ describe("lolex", function () {
 
         it("creates real Date objects when Date constructor is gone", function () {
             var realDate = new Date();
-            // Comment out the next line for jslint to be "happy".
             Date = NOOP;
             global.Date = NOOP;
 
@@ -1282,8 +1278,8 @@ describe("lolex", function () {
         });
 
         it("creates regular date when passing a date as RFC 2822 string", function () {
-            var date = new Date('Sat Apr 12 2014 12:22:00 GMT+1000');
-            var fakeDate = new this.clock.Date('Sat Apr 12 2014 12:22:00 GMT+1000');
+            var date = new Date("Sat Apr 12 2014 12:22:00 GMT+1000");
+            var fakeDate = new this.clock.Date("Sat Apr 12 2014 12:22:00 GMT+1000");
 
             assert.equals(fakeDate.getTime(), date.getTime());
         });
@@ -1390,6 +1386,7 @@ describe("lolex", function () {
         if (Date.now) {
             describe("now", function () {
                 it("returns clock.now", function () {
+                    /* eslint camelcase: "off" */
                     var clock_now = this.clock.Date.now();
                     var global_now = GlobalDate.now();
 
@@ -1497,7 +1494,7 @@ describe("lolex", function () {
 
             var to = setTimeout(stub, 1000);
 
-            if (typeof (setTimeout(NOOP, 0)) === 'object') {
+            if (typeof (setTimeout(NOOP, 0)) === "object") {
                 assert.isNumber(to.id);
                 assert.isFunction(to.ref);
                 assert.isFunction(to.unref);
@@ -1599,15 +1596,15 @@ describe("lolex", function () {
 
         if (Object.getPrototypeOf(global)) {
             delete global.hasOwnPropertyTest;
-            Object.getPrototypeOf(global).hasOwnPropertyTest = function() {};
+            Object.getPrototypeOf(global).hasOwnPropertyTest = function () {};
 
             if (!global.hasOwnProperty("hasOwnPropertyTest")) {
                 it("deletes global property on uninstall if it was inherited onto the global object", function () {
                     // Give the global object an inherited 'tick' method
                     delete global.tick;
-                    Object.getPrototypeOf(global).tick = function() { };
+                    Object.getPrototypeOf(global).tick = function () { };
 
-                    this.clock = lolex.install(0, ['tick']);
+                    this.clock = lolex.install(0, ["tick"]);
                     assert.isTrue(global.hasOwnProperty("tick"));
                     this.clock.uninstall();
 
@@ -1623,7 +1620,7 @@ describe("lolex", function () {
             // Directly give the global object a tick method
             global.tick = NOOP;
 
-            this.clock = lolex.install(0, ['tick']);
+            this.clock = lolex.install(0, ["tick"]);
             assert.isTrue(global.hasOwnProperty("tick"));
             this.clock.uninstall();
 
@@ -1659,8 +1656,6 @@ describe("lolex", function () {
 
             refute.defined(Date.now);
         });
-
-        // TODO: The following tests causes test suite instability
 
         it("mirrors custom Date properties", function () {
             var f = function () { return ""; };
@@ -1708,16 +1703,16 @@ describe("lolex", function () {
     });
 
     if (hrtimePresent) {
-        describe("process.hrtime()", function() {
+        describe("process.hrtime()", function () {
 
-            it("should start at 0", function() {
+            it("should start at 0", function () {
                 var clock = lolex.createClock(1001);
                 var result = clock.hrtime();
                 assert.same(result[0], 0);
                 assert.same(result[1], 0);
             });
 
-            it("should run along with clock.tick", function() {
+            it("should run along with clock.tick", function () {
                 var clock = lolex.createClock(0);
                 clock.tick(5001);
                 var prev = clock.hrtime();
@@ -1727,10 +1722,10 @@ describe("lolex", function () {
                 assert.same(result[1], 1000000);
             });
 
-            it("should run along with clock.tick when timers set", function() {
+            it("should run along with clock.tick when timers set", function () {
                 var clock = lolex.createClock(0);
                 var prev = clock.hrtime();
-                clock.setTimeout(function() {
+                clock.setTimeout(function () {
                     var result = clock.hrtime(prev);
                     assert.same(result[0], 2);
                     assert.same(result[1], 500000000);
@@ -1738,7 +1733,7 @@ describe("lolex", function () {
                 clock.tick(5000);
             });
 
-            it("should not move with setSystemTime", function() {
+            it("should not move with setSystemTime", function () {
                 var clock = lolex.createClock(0);
                 var prev = clock.hrtime();
                 clock.setSystemTime(50000);

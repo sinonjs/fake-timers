@@ -1,54 +1,15 @@
 {
+  "critics": {
+    "//": "bitHound only supports running eslint rules greater than 1.0 but lower than 2.0.",
+    "lint": {"engine": "none"}
+  },
+
   "ignore": [
     "lolex.js",
-    "**/deps/**",
-    "**/node_modules/**",
-    "**/thirdparty/**",
-    "**/third_party/**",
-    "**/vendor/**",
-    "**/**-min-**",
-    "**/**-min.**",
-    "**/**.min.**",
-    "**/**jquery.?(ui|effects)-*.*.?(*).?(cs|j)s",
-    "**/**jquery-*.*.?(*).?(cs|j)s",
-    "**/prototype?(*).js",
-    "**/**?(*).ts",
-    "**/mootools*.*.*.js",
-    "**/dojo.js",
-    "**/MochiKit.js",
-    "**/yahoo-*.js",
-    "**/yui*.js",
-    "**/ckeditor*.js",
-    "**/tiny_mce*.js",
-    "**/tiny_mce/?(langs|plugins|themes|utils)/**",
-    "**/MathJax/**",
-    "**/shBrush*.js",
-    "**/shCore.js",
-    "**/shLegacy.js",
-    "**/modernizr.custom.?(*).js",
-    "**/knockout-*.*.*.debug.js",
-    "**/extjs/*.js",
-    "**/extjs/*.xml",
-    "**/extjs/*.txt",
-    "**/extjs/*.html",
-    "**/extjs/*.properties",
-    "**/extjs/.sencha",
-    "**/extjs/docs/**",
-    "**/extjs/builds/**",
-    "**/extjs/cmd/**",
-    "**/extjs/examples/**",
-    "**/extjs/locale/**",
-    "**/extjs/packages/**",
-    "**/extjs/plugins/**",
-    "**/extjs/resources/**",
-    "**/extjs/src/**",
-    "**/extjs/welcome/**",
-    "bower_components/**"
+    "script",
+    "**/node_modules/**"
   ],
   "test": [
-    "**/test/**",
-    "**/tests/**",
-    "**/spec/**",
-    "**/specs/**"
+    "test/**"
   ]
 }
