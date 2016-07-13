@@ -23,12 +23,12 @@
     "prepublish": "npm run bundle"
   },
   "devDependencies": {
-    "browserify": "^12.0.1",
     "eslint": "^3.0.1",
-    "mocha": "^2.3.4",
-    "mochify": "^2.14.3",
+    "browserify": "^13.0.1",
+    "mocha": "^2.5.3",
+    "mochify": "^2.18.0",
     "referee": "^1.2.0",
-    "sinon": "^1.17.2"
+    "sinon": "^1.17.4"
   },
   "main": "./src/lolex-src.js"
 }
