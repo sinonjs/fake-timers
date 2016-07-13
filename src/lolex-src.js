@@ -356,10 +356,10 @@
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
             method = clock.methods[i];
-            if (method === "hrtime") {
+            if (method === "hrtime" && target.process) {
                 target.process.hrtime = clock[installedHrTime];
             } else {
-                if (target[method].hadOwnProperty) {
+                if (target[method] && target[method].hadOwnProperty) {
                     target[method] = clock["_" + method];
                 } else {
                     try {
