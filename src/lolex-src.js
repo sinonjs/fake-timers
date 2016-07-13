@@ -651,5 +651,4 @@
 
         return clock;
     };
-
-}(global || this));
+}(new Function('return this')()));
