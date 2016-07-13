@@ -4,9 +4,6 @@
     afterEach,
     it
 */
-/*jslint
-    todo:true
-*/
 /**
  * @author Christian Johansen (christian@cjohansen.no)
  * @license BSD
@@ -1230,7 +1227,6 @@ describe("lolex", function () {
 
         it("creates real Date objects when Date constructor is gone", function () {
             var realDate = new Date();
-            // Comment out the next line for jslint to be "happy".
             Date = NOOP;
             global.Date = NOOP;
 

@@ -11,20 +11,17 @@
 
     // Make properties writable in IE, as per
     // http://www.adequatelygood.com/Replacing-setTimeout-Globally.html
-    // JSLint being anal
-    var glbl = global;
-
-    global.setTimeout = glbl.setTimeout;
-    global.clearTimeout = glbl.clearTimeout;
-    global.setInterval = glbl.setInterval;
-    global.clearInterval = glbl.clearInterval;
-    global.Date = glbl.Date;
+    global.setTimeout = global.setTimeout;
+    global.clearTimeout = global.clearTimeout;
+    global.setInterval = global.setInterval;
+    global.clearInterval = global.clearInterval;
+    global.Date = global.Date;
 
     // setImmediate is not a standard function
     // avoid adding the prop to the window object if not present
     if (global.setImmediate !== undefined) {
-        global.setImmediate = glbl.setImmediate;
-        global.clearImmediate = glbl.clearImmediate;
+        global.setImmediate = global.setImmediate;
+        global.clearImmediate = global.clearImmediate;
     }
 
     // node expects setTimeout/setInterval to return a fn object w/ .ref()/.unref()
@@ -355,7 +352,7 @@
         var method,
             i,
             l;
-        var installedHrTime = "_hrtime"; // make jslint happy
+        var installedHrTime = "_hrtime";
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
             method = clock.methods[i];
