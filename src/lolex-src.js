@@ -173,7 +173,7 @@
 
         timer.id = uniqueTimerId++;
         timer.createdAt = clock.now;
-        timer.callAt = clock.now + (timer.delay || (clock.duringTick ? 1 : 0));
+        timer.callAt = clock.now + (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
         clock.timers[timer.id] = timer;
 

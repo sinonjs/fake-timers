@@ -90,6 +90,20 @@ describe("lolex", function () {
             assert(stubs[1].called);
         });
 
+        it("parses numeric string times", function () {
+            this.clock.setTimeout(function () { lolex.evalCalled = true; }, "10");
+            this.clock.tick(10);
+
+            assert(lolex.evalCalled);
+        });
+
+        it("parses no-numeric string times", function () {
+            this.clock.setTimeout(function () { lolex.evalCalled = true; }, "string");
+            this.clock.tick(10);
+
+            assert(lolex.evalCalled);
+        });
+
         it("evals non-function callbacks", function () {
             this.clock.setTimeout("lolex.evalCalled = true", 10);
             this.clock.tick(10);
