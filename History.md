@@ -1,8 +1,12 @@
-
-n.n.n / ....
+1.5.1 / 2016-07-26
 ==================
 
-  * Fix up some BitHound warnings
+  * Fix setInterval() behavior with string times
+  * Incorporate test from PR #65
+  * Fix issue #59: context object required 'process'
+  * fixed a case where runAll was called and there are no timers (#70)
+  * Correct the clear{Interval|Timeout|Immediate} error message when calling `set*` for a different type of timer.
+  * Lots of minor changes to tooling and the build process
 
 v1.5.0 / 2016-05-18
 ===================
