@@ -18,10 +18,6 @@ Compile interesting highlights from [`git changelog`](https://github.com/tj/git-
     git add lolex.js AUTHORS History.md
     git commit -m "Prepare for new release"
 
-## Create a new PR
-    The `master` branch is protected.
-    You can merge it yourself.
-
 ## Create a new version
 
 ```
@@ -30,6 +26,9 @@ $ npm version x.y.z
 
 Updates package.json and creates a new tag.
 
+## Create a new PR
+    The `master` branch is protected.
+    You can merge it yourself.
 
 ## Push new commits and tags
 ```
@@ -41,4 +40,9 @@ git push && git push --tags
 ```
 $ npm publish
 ```
+
+## Create a GitHub release
+Create a GitHub release where you highlight
+interesting additions from the changelog.
+Just add a release notes to [the existing tag](https://github.com/sinonjs/lolex/tags).
 
