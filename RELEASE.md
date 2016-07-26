@@ -12,13 +12,24 @@ Compile interesting highlights from [`git changelog`](https://github.com/tj/git-
 
     git authors --list > AUTHORS
 
-## Create a new version
+## Build a new bundle and commit changed files
 
-Update package.json and create a new tag.
+    npm run bundle
+    git add lolex.js AUTHORS History.md
+    git commit -m "Prepare for new release"
+
+## Create a new PR
+    The `master` branch is protected.
+    You can merge it yourself.
+
+## Create a new version
 
 ```
 $ npm version x.y.z
 ```
+
+Updates package.json and creates a new tag.
+
 
 ## Push new commits and tags
 ```
