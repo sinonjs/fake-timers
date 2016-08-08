@@ -27,8 +27,8 @@ $ npm version x.y.z
 Updates package.json and creates a new tag.
 
 ## Create a new PR
-    The `master` branch is protected.
-    You can merge it yourself.
+The `master` branch is protected.
+You can merge it yourself.
 
 ## Push new commits and tags
 ```
