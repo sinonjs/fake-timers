@@ -11,21 +11,17 @@ wait. Lolex is extracted from [Sinon.JS](https://github.com/sinonjs/sinon.js).
 
 ## Installation
 
-Lolex can be installed using `npm`:
+Lolex can be used in both Node and browser environments. Installation is as easy as
 
 ```sh
 npm install lolex
 ```
 
-If you want to use Lolex in a browser, you have a few options. Releases are
-hosted on the [sinonjs.org](http://sinonjs.org/download/) website. You can also
-get the node module and build a file for the browser using browserify:
+If you want to use Lolex in a browser you can use [the pre-built
+version](https://github.com/sinonjs/lolex/edit/master/lolex.js) available in the repo
+and the npm package. Using npm you only need to reference `./node_modules/lolex/lolex.js` in your `<script>` tags.
 
-```sh
-npm install lolex
-npm install browserify # If you don't already have it globally installed
-browserify node_modules/lolex/lolex.js
-```
+You are always free to [build it yourself](https://github.com/sinonjs/lolex/blob/53ea4d9b9e5bcff53cc7c9755dc9aa340368cf1c/package.json#L22), of course.
 
 ## Usage
 
