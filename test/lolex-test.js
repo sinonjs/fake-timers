@@ -4,6 +4,7 @@
     afterEach,
     it
 */
+/* eslint max-nested-callbacks: [0,4] */
 /**
  * @author Christian Johansen (christian@cjohansen.no)
  * @license BSD
@@ -598,7 +599,7 @@ describe("lolex", function () {
             var clock = this.clock;
 
             var callback = function () {
-                ++i;
+                i += 1;
                 clock.setTimeout(function () {
                     callback();
                 }, 100);

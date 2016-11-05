@@ -55,7 +55,7 @@
             throw new Error("tick only understands numbers, 'm:s' and 'h:m:s'. Each part must be two digits");
         }
 
-        while (i--) {
+        while (i--) { // eslint-disable-line no-plusplus
             parsed = parseInt(strings[i], 10);
 
             if (parsed >= 60) {
@@ -171,7 +171,8 @@
             clock.timers = {};
         }
 
-        timer.id = uniqueTimerId++;
+        uniqueTimerId += 1;
+        timer.id = uniqueTimerId;
         timer.createdAt = clock.now;
         timer.callAt = clock.now + (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
@@ -354,7 +355,7 @@
             l;
         var installedHrTime = "_hrtime";
 
-        for (i = 0, l = clock.methods.length; i < l; i++) {
+        for (i = 0, l = clock.methods.length; i < l; i += 1) {
             method = clock.methods[i];
             if (method === "hrtime" && target.process) {
                 target.process.hrtime = clock[installedHrTime];
@@ -541,7 +542,7 @@
 
         clock.runAll = function runAll() {
             var numTimers, i;
-            for (i = 0; i < clock.loopLimit; i++) {
+            for (i = 0; i < clock.loopLimit; i += 1) {
                 if (!clock.timers) {
                     return clock.now;
                 }
@@ -639,7 +640,7 @@
             clock.methods = keys(timers);
         }
 
-        for (i = 0, l = clock.methods.length; i < l; i++) {
+        for (i = 0, l = clock.methods.length; i < l; i += 1) {
             if (clock.methods[i] === "hrtime") {
                 if (target.process && typeof target.process.hrtime === "function") {
                     hijackMethod(target.process, clock.methods[i], clock);
