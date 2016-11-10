@@ -1,21 +1,18 @@
-/*global global, window*/
-/**
- * @author Christian Johansen (christian@cjohansen.no) and contributors
- * @license BSD
- *
- * Copyright (c) 2010-2014 Christian Johansen
- */
-
 (function (global) {
     "use strict";
 
+    var userAgent = global.navigator && global.navigator.userAgent;
+    var isRunningInIE = userAgent && userAgent.indexOf("MSIE ") > -1;
+
     // Make properties writable in IE, as per
     // http://www.adequatelygood.com/Replacing-setTimeout-Globally.html
-    global.setTimeout = global.setTimeout;
-    global.clearTimeout = global.clearTimeout;
-    global.setInterval = global.setInterval;
-    global.clearInterval = global.clearInterval;
-    global.Date = global.Date;
+    if (isRunningInIE) {
+        global.setTimeout = global.setTimeout;
+        global.clearTimeout = global.clearTimeout;
+        global.setInterval = global.setInterval;
+        global.clearInterval = global.clearInterval;
+        global.Date = global.Date;
+    }
 
     // setImmediate is not a standard function
     // avoid adding the prop to the window object if not present
