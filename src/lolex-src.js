@@ -610,8 +610,13 @@ function createClock(now, loopLimit) {
 exports.createClock = createClock;
 
 exports.install = function install(target, now, toFake, loopLimit) {
-    var i,
-        l;
+    var i, l;
+
+    if (target instanceof Date) {
+        toFake = now;
+        now = target.getTime();
+        target = null;
+    }
 
     if (typeof target === "number") {
         toFake = now;

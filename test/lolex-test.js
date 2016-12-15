@@ -41,6 +41,14 @@ describe("issue #59", function () {
     });
 });
 
+describe('issue #73', function() {
+    it('should install with date object', function () {
+        var date = new Date('2015-09-25');
+        var clock = lolex.install(date);
+        assert.same(date.clock, clock);
+    });
+});
+
 describe("lolex", function () {
 
     describe("setTimeout", function () {
