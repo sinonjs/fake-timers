@@ -614,7 +614,7 @@
         var i,
             l;
 
-        if (typeof target === "number") {
+        if (typeof target === "number" || target instanceof Date) {
             toFake = now;
             now = target;
             target = null;
