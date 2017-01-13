@@ -18,7 +18,7 @@ npm install lolex
 ```
 
 If you want to use Lolex in a browser you can use [the pre-built
-version](https://github.com/sinonjs/lolex/edit/master/lolex.js) available in the repo
+version](https://github.com/sinonjs/lolex/blob/master/lolex.js) available in the repo
 and the npm package. Using npm you only need to reference `./node_modules/lolex/lolex.js` in your `<script>` tags.
 
 You are always free to [build it yourself](https://github.com/sinonjs/lolex/blob/53ea4d9b9e5bcff53cc7c9755dc9aa340368cf1c/package.json#L22), of course.
