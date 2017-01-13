@@ -551,7 +551,7 @@
                 clock.next();
             }
 
-            throw new Error("Aborting after running " + clock.loopLimit + "timers, assuming an infinite loop!");
+            throw new Error("Aborting after running " + clock.loopLimit + " timers, assuming an infinite loop!");
         };
 
         clock.runToLast = function runToLast() {
