@@ -41,6 +41,15 @@ describe("issue #59", function () {
     });
 });
 
+describe('issue #73', function() {
+    it('should install with date object', function () {
+        var date = new Date('2015-09-25');
+        var clock = lolex.install(date);
+        assert.same(clock.now, 1443139200000);
+        clock.uninstall();
+    });
+});
+
 describe("lolex", function () {
 
     describe("setTimeout", function () {
@@ -1707,12 +1716,6 @@ describe("lolex", function () {
             assert.same(clearTimeout, lolex.timers.clearTimeout);
             assert.same(setInterval, lolex.timers.setInterval);
             assert.same(clearInterval, lolex.timers.clearInterval);
-        });
-
-        it("does not be able to use date object for now", function () {
-            assert.exception(function () {
-                lolex.install(new Date(2011, 9, 1));
-            });
         });
     });
 
