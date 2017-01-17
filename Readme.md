@@ -147,7 +147,7 @@ Clears the timer given the ID or timer object, as long as it was created using
 
 ### `var id = clock.setImmediate(callback)`
 
-Schedules the callback, to be fired once `0` milliseconds have ticked by. Note
+Schedules the callback to be fired once `0` milliseconds have ticked by. Note
 that you'll still have to call `clock.tick()` for the callback to fire. If
 called during a tick the callback won't fire until `1` millisecond has ticked
 by.
