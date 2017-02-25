@@ -41,9 +41,9 @@ describe("issue #59", function () {
     });
 });
 
-describe('issue #73', function() {
-    it('should install with date object', function () {
-        var date = new Date('2015-09-25');
+describe("issue #73", function () {
+    it("should install with date object", function () {
+        var date = new Date("2015-09-25");
         var clock = lolex.install(date);
         assert.same(clock.now, 1443139200000);
         clock.uninstall();
