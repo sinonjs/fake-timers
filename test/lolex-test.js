@@ -1250,7 +1250,7 @@ describe("lolex", function () {
 
         it("creates real Date objects when Date constructor is gone", function () {
             var realDate = new Date();
-            Date = NOOP;
+            Date = NOOP; // eslint-disable-line no-native-reassign
             global.Date = NOOP;
 
             var date = new this.clock.Date();

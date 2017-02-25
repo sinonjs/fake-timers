@@ -44,8 +44,10 @@ function parseTime(str) {
     }
 
     var strings = str.split(":");
-    var l = strings.length, i = l;
-    var ms = 0, parsed;
+    var l = strings.length;
+    var i = l;
+    var ms = 0;
+    var parsed;
 
     if (l > 3 || !/^(\d\d:){0,2}\d\d?$/.test(str)) {
         throw new Error("tick only understands numbers, 'm:s' and 'h:m:s'. Each part must be two digits");
@@ -223,10 +225,9 @@ function compareTimers(a, b) {
 }
 
 function firstTimerInRange(clock, from, to) {
-    var timers = clock.timers,
-        timer = null,
-        id,
-        isInRange;
+    var timers = clock.timers;
+    var timer = null;
+    var id, isInRange;
 
     for (id in timers) {
         if (timers.hasOwnProperty(id)) {
@@ -242,9 +243,9 @@ function firstTimerInRange(clock, from, to) {
 }
 
 function firstTimer(clock) {
-    var timers = clock.timers,
-        timer = null,
-        id;
+    var timers = clock.timers;
+    var timer = null;
+    var id;
 
     for (id in timers) {
         if (timers.hasOwnProperty(id)) {
@@ -258,9 +259,9 @@ function firstTimer(clock) {
 }
 
 function lastTimer(clock) {
-    var timers = clock.timers,
-        timer = null,
-        id;
+    var timers = clock.timers;
+    var timer = null;
+    var id;
 
     for (id in timers) {
         if (timers.hasOwnProperty(id)) {
@@ -408,8 +409,8 @@ if (hrtimePresent) {
 }
 
 var keys = Object.keys || function (obj) {
-    var ks = [],
-        key;
+    var ks = [];
+    var key;
 
     for (key in obj) {
         if (obj.hasOwnProperty(key)) {
@@ -474,9 +475,11 @@ function createClock(now, loopLimit) {
 
     clock.tick = function tick(ms) {
         ms = typeof ms === "number" ? ms : parseTime(ms);
-        var tickFrom = clock.now, tickTo = clock.now + ms, previous = clock.now;
+        var tickFrom = clock.now;
+        var tickTo = clock.now + ms;
+        var previous = clock.now;
         var timer = firstTimerInRange(clock, tickFrom, tickTo);
-        var oldNow;
+        var oldNow, firstException;
 
         clock.duringTick = true;
 
@@ -484,7 +487,6 @@ function createClock(now, loopLimit) {
             clock.hrNow += (newNow - clock.now);
         }
 
-        var firstException;
         while (timer && tickFrom <= tickTo) {
             if (clock.timers[timer.id]) {
                 updateHrTime(timer.callAt);
@@ -566,9 +568,9 @@ function createClock(now, loopLimit) {
         clock.timers = {};
     };
 
-    clock.setSystemTime = function setSystemTime(now) {
+    clock.setSystemTime = function setSystemTime(systemTime) {
         // determine time difference
-        var newNow = getEpoch(now);
+        var newNow = getEpoch(systemTime);
         var difference = newNow - clock.now;
         var id, timer;
 
