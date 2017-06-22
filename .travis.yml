@@ -3,10 +3,10 @@ language: node_js
 sudo: false
 
 node_js:
-  - "0.10"
-  - "0.12"
-  - "4.2"
-  - "5"
+  # https://github.com/nodejs/LTS
+  - "4" # ends April 2018
+  - "6" # ends April 2019
+  - "8" # ends December 2019
 
 env:
   global:
