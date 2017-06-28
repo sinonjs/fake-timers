@@ -1719,6 +1719,78 @@ describe("lolex", function () {
         });
     });
 
+    describe("shouldAdvanceTime", function () {
+        it("should not advance time by default", function () {
+            var date = new Date("2015-09-25");
+            var clock = lolex.install(date);
+            assert.same(lolex.shouldAdvanceTime, false);
+            clock.uninstall();
+        });
+
+        it("should externally set the flag to true", function () {
+            var date = new Date("2015-09-25");
+            lolex.shouldAdvanceTime = true;
+            var clock = lolex.install(date);
+            assert.same(lolex.shouldAdvanceTime, true);
+            clock.uninstall();
+        });
+
+        it("should create an auto advancing timer", function (done) {
+            var testDelay = 29;
+            var date = new Date("2015-09-25");
+            lolex.shouldAdvanceTime = true;
+            var clock = lolex.install(date);
+            assert.same(lolex.shouldAdvanceTime, true);
+            assert.same(Date.now(), 1443139200000);
+            var timeoutStarted = Date.now();
+
+            setTimeout(function () {
+                var timeDifference = Date.now() - timeoutStarted;
+                assert.same(timeDifference, testDelay);
+                clock.uninstall();
+                done();
+            }, testDelay);
+        });
+
+        it("should test setImmediate", function (done) {
+            var date = new Date("2015-09-25");
+            lolex.shouldAdvanceTime = true;
+            var clock = lolex.install(date);
+            assert.same(lolex.shouldAdvanceTime, true);
+            assert.same(Date.now(), 1443139200000);
+            var timeoutStarted = Date.now();
+
+            setImmediate(function () {
+                var timeDifference = Date.now() - timeoutStarted;
+                assert.same(timeDifference, 0);
+                clock.uninstall();
+                done();
+            });
+        });
+
+        it("should test setInterval", function (done) {
+            var interval = 20;
+            var intervalsTriggered = 0;
+            var cyclesToTrigger = 3;
+            var date = new Date("2015-09-25");
+            lolex.shouldAdvanceTime = true;
+            var clock = lolex.install(date);
+            assert.same(lolex.shouldAdvanceTime, true);
+            assert.same(Date.now(), 1443139200000);
+            var timeoutStarted = Date.now();
+
+            var intervalId = setInterval(function () {
+                if (++intervalsTriggered === cyclesToTrigger) {
+                    clearInterval(intervalId);
+                    var timeDifference = Date.now() - timeoutStarted;
+                    assert.same(timeDifference, interval * cyclesToTrigger);
+                    clock.uninstall();
+                    done();
+                }
+            }, interval);
+        });
+    });
+
     if (hrtimePresent) {
         describe("process.hrtime()", function () {
 
