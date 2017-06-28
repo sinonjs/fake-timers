@@ -35,6 +35,7 @@ clearTimeout(timeoutResult);
 var NativeDate = Date;
 var uniqueTimerId = 1;
 
+var TIME_TICK = 20; // increment the mocked timer on this real interval (ms)
 /**
  * Parse strings like "01:10:00" (meaning 1 hour, 10 minutes, 0 seconds) into
  * number of milliseconds. This is used to support human-readable strings passed
@@ -361,6 +362,9 @@ function uninstall(clock, target) {
         } else {
             if (target[method] && target[method].hadOwnProperty) {
                 target[method] = clock["_" + method];
+                if (method === "clearInterval" && exports.shouldAdvanceTime === true) {
+                    target[method](clock.attachedInterval);
+                }
             } else {
                 try {
                     delete target[method];
@@ -395,6 +399,12 @@ function hijackMethod(target, method, clock) {
     }
 
     target[method].clock = clock;
+}
+
+exports.shouldAdvanceTime = false;
+
+function doIntervalTick(clock) {
+    clock.tick(TIME_TICK);
 }
 
 var timers = {
@@ -659,6 +669,13 @@ exports.install = function install(config) {
                 hijackMethod(target.process, clock.methods[i], clock);
             }
         } else {
+            if (clock.methods[i] === "setInterval" && exports.shouldAdvanceTime === true) {
+                var intervalTick = doIntervalTick.bind(null, clock);
+                var intervalId = target[clock.methods[i]](
+                    intervalTick,
+                    TIME_TICK);
+                clock.attachedInterval = intervalId;
+            }
             hijackMethod(target, clock.methods[i], clock);
         }
     }
