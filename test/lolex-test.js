@@ -44,7 +44,7 @@ describe("issue #59", function () {
 describe("issue #73", function () {
     it("should install with date object", function () {
         var date = new Date("2015-09-25");
-        var clock = lolex.install(date);
+        var clock = lolex.install( { now: date });
         assert.same(clock.now, 1443139200000);
         clock.uninstall();
     });
@@ -305,7 +305,7 @@ describe("lolex", function () {
     describe("tick", function () {
 
         beforeEach(function () {
-            this.clock = lolex.install(0);
+            this.clock = lolex.install({ now: 0 });
         });
 
         afterEach(function () {
@@ -642,7 +642,7 @@ describe("lolex", function () {
     describe("next", function () {
 
         beforeEach(function () {
-            this.clock = lolex.install(0);
+            this.clock = lolex.install({ now: 0 });
         });
 
         afterEach(function () {
@@ -902,7 +902,7 @@ describe("lolex", function () {
         });
 
         it("the loop limit can be set when installing a clock", function () {
-            this.clock = lolex.install(0, null, null, 1);
+            this.clock = lolex.install({ loopLimit: 1 });
             var test = this;
 
             var spies = [sinon.spy(), sinon.spy()];
@@ -1496,7 +1496,7 @@ describe("lolex", function () {
         });
 
         it("sets initial timestamp", function () {
-            this.clock = lolex.install(1400);
+            this.clock = lolex.install({ now: 1400 });
 
             assert.equals(this.clock.now, 1400);
         });
@@ -1627,7 +1627,7 @@ describe("lolex", function () {
                     delete global.tick;
                     Object.getPrototypeOf(global).tick = function () { };
 
-                    this.clock = lolex.install(0, ["tick"]);
+                    this.clock = lolex.install({ now: 0, toFake: ["tick"] });
                     assert.isTrue(global.hasOwnProperty("tick"));
                     this.clock.uninstall();
 
@@ -1643,7 +1643,7 @@ describe("lolex", function () {
             // Directly give the global object a tick method
             global.tick = NOOP;
 
-            this.clock = lolex.install(0, ["tick"]);
+            this.clock = lolex.install({ now: 0, toFake: ["tick"] });
             assert.isTrue(global.hasOwnProperty("tick"));
             this.clock.uninstall();
 
@@ -1652,7 +1652,7 @@ describe("lolex", function () {
         });
 
         it("fakes Date constructor", function () {
-            this.clock = lolex.install(0);
+            this.clock = lolex.install({ now: 0 });
             var now = new Date();
 
             refute.same(Date, lolex.timers.Date);
@@ -1660,7 +1660,7 @@ describe("lolex", function () {
         });
 
         it("fake Date constructor should mirror Date's properties", function () {
-            this.clock = lolex.install(0);
+            this.clock = lolex.install({ now: 0});
 
             assert(!!Date.parse);
             assert(!!Date.UTC);
@@ -1668,14 +1668,14 @@ describe("lolex", function () {
 
         it("decide on Date.now support at call-time when supported", function () {
             global.Date.now = NOOP;
-            this.clock = lolex.install(0);
+            this.clock = lolex.install({ now: 0});
 
             assert.equals(typeof Date.now, "function");
         });
 
         it("decide on Date.now support at call-time when unsupported", function () {
             global.Date.now = undefined;
-            this.clock = lolex.install(0);
+            this.clock = lolex.install({ now: 0});
 
             refute.defined(Date.now);
         });
@@ -1689,21 +1689,21 @@ describe("lolex", function () {
         });
 
         it("uninstalls Date constructor", function () {
-            this.clock = lolex.install(0);
+            this.clock = lolex.install({ now: 0});
             this.clock.uninstall();
 
             assert.same(GlobalDate, lolex.timers.Date);
         });
 
         it("fakes provided methods", function () {
-            this.clock = lolex.install(0, ["setTimeout", "Date", "setImmediate"]);
+            this.clock = lolex.install({ now: 0, toFake: ["setTimeout", "Date", "setImmediate"] });
 
             refute.same(setTimeout, lolex.timers.setTimeout);
             refute.same(Date, lolex.timers.Date);
         });
 
         it("resets faked methods", function () {
-            this.clock = lolex.install(0, ["setTimeout", "Date", "setImmediate"]);
+            this.clock = lolex.install({ now: 0, toFake: ["setTimeout", "Date", "setImmediate"] });
             this.clock.uninstall();
 
             assert.same(setTimeout, lolex.timers.setTimeout);
@@ -1711,7 +1711,7 @@ describe("lolex", function () {
         });
 
         it("does not fake methods not provided", function () {
-            this.clock = lolex.install(0, ["setTimeout", "Date", "setImmediate"]);
+            this.clock = lolex.install({ now: 0, toFake: ["setTimeout", "Date", "setImmediate"] });
 
             assert.same(clearTimeout, lolex.timers.clearTimeout);
             assert.same(setInterval, lolex.timers.setInterval);
