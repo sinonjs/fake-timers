@@ -495,14 +495,15 @@ function createClock(now, loopLimit) {
                 try {
                     oldNow = clock.now;
                     callTimer(clock, timer);
-                    // compensate for any setSystemTime() call during timer callback
-                    if (oldNow !== clock.now) {
-                        tickFrom += clock.now - oldNow;
-                        tickTo += clock.now - oldNow;
-                        previous += clock.now - oldNow;
-                    }
                 } catch (e) {
                     firstException = firstException || e;
+                }
+
+                // compensate for any setSystemTime() call during timer callback
+                if (oldNow !== clock.now) {
+                    tickFrom += clock.now - oldNow;
+                    tickTo += clock.now - oldNow;
+                    previous += clock.now - oldNow;
                 }
             }
 

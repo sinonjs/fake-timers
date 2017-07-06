@@ -637,6 +637,69 @@ describe("lolex", function () {
             var value = clock.tick(200);
             assert.equals(clock.now, value);
         });
+
+        it("is not influenced by forward system clock changes", function () {
+            var clock = this.clock;
+            var callback = function () {
+                clock.setSystemTime((new clock.Date()).getTime() + 1000);
+            };
+            var stub = sinon.stub();
+            clock.setTimeout(callback, 1000);
+            clock.setTimeout(stub, 2000);
+            clock.tick(1990);
+            assert.equals(stub.callCount, 0);
+            clock.tick(20);
+            assert.equals(stub.callCount, 1);
+        });
+
+        it("is not influenced by forward system clock changes", function () {
+            var clock = this.clock;
+            var callback = function () {
+                clock.setSystemTime((new clock.Date()).getTime() - 1000);
+            };
+            var stub = sinon.stub();
+            clock.setTimeout(callback, 1000);
+            clock.setTimeout(stub, 2000);
+            clock.tick(1990);
+            assert.equals(stub.callCount, 0);
+            clock.tick(20);
+            assert.equals(stub.callCount, 1);
+        });
+
+        it("is not influenced by forward system clock changes when an error is thrown", function () {
+            var clock = this.clock;
+            var callback = function () {
+                clock.setSystemTime((new clock.Date()).getTime() + 1000);
+                throw new Error();
+            };
+            var stub = sinon.stub();
+            clock.setTimeout(callback, 1000);
+            clock.setTimeout(stub, 2000);
+            assert.exception(function () {
+                clock.tick(1990);
+            });
+            assert.equals(stub.callCount, 0);
+            clock.tick(20);
+            assert.equals(stub.callCount, 1);
+        });
+
+        it("is not influenced by forward system clock changes when an error is thrown", function () {
+            var clock = this.clock;
+            var callback = function () {
+                clock.setSystemTime((new clock.Date()).getTime() - 1000);
+                throw new Error();
+            };
+            var stub = sinon.stub();
+            clock.setTimeout(callback, 1000);
+            clock.setTimeout(stub, 2000);
+            assert.exception(function () {
+                clock.tick(1990);
+            });
+            assert.equals(stub.callCount, 0);
+            clock.tick(20);
+            assert.equals(stub.callCount, 1);
+        });
+
     });
 
     describe("next", function () {
