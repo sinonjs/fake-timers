@@ -638,6 +638,9 @@ function withGlobal(_global) {
             return ks;
         };
 
+
+    var globalSetImmediate = global.setImmediate;
+
     /**
      * @param start {Date|number} the system time - non-integer values are floored
      * @param loopLimit {number}  maximum number of timers that will be run when calling runAll()
@@ -810,10 +813,7 @@ function withGlobal(_global) {
             runJobs(clock);
         };
 
-        /**
-         * @param {tickValue} {String|Number} number of milliseconds or a human-readable value like "01:11:15"
-         */
-        clock.tick = function tick(tickValue) {
+        function doTick(tickValue, isAsync, resolve, reject) {
             var msFloat =
                 typeof tickValue === "number"
                     ? tickValue
@@ -836,7 +836,7 @@ function withGlobal(_global) {
             nanos = nanosTotal;
             var tickFrom = clock.now;
             var previous = clock.now;
-            var timer, firstException, oldNow;
+            var timer, firstException, oldNow, nextPromiseTick, compensationCheck, postTimerCall;
 
             clock.duringTick = true;
 
@@ -849,62 +849,118 @@ function withGlobal(_global) {
                 tickTo += clock.now - oldNow;
             }
 
-            // perform each timer in the requested range
-            timer = firstTimerInRange(clock, tickFrom, tickTo);
-            while (timer && tickFrom <= tickTo) {
-                if (clock.timers[timer.id]) {
-                    tickFrom = timer.callAt;
-                    clock.now = timer.callAt;
-                    oldNow = clock.now;
+            function doTickInner() {
+                // perform each timer in the requested range
+                timer = firstTimerInRange(clock, tickFrom, tickTo);
+                while (timer && tickFrom <= tickTo) {
+                    if (clock.timers[timer.id]) {
+                        tickFrom = timer.callAt;
+                        clock.now = timer.callAt;
+                        oldNow = clock.now;
+                        try {
+                            runJobs(clock);
+                            callTimer(clock, timer);
+                        } catch (e) {
+                            firstException = firstException || e;
+                        }
+
+                        if (isAsync) {
+                            // finish up after native setImmediate callback to allow
+                            // all native es6 promises to process their callbacks after
+                            // each timer fires.
+                            globalSetImmediate(nextPromiseTick);
+                            return;
+                        }
+
+                        compensationCheck();
+                    }
+
+                    postTimerCall();
+                }
+
+                // perform process.nextTick()s again
+                oldNow = clock.now;
+                runJobs(clock);
+                if (oldNow !== clock.now) {
+                    // compensate for any setSystemTime() call during process.nextTick() callback
+                    tickFrom += clock.now - oldNow;
+                    tickTo += clock.now - oldNow;
+                }
+                clock.duringTick = false;
+
+                // corner case: during runJobs, new timers were scheduled which could be in the range [clock.now, tickTo]
+                timer = firstTimerInRange(clock, tickFrom, tickTo);
+                if (timer) {
                     try {
-                        runJobs(clock);
-                        callTimer(clock, timer);
+                        clock.tick(tickTo - clock.now); // do it all again - for the remainder of the requested range
                     } catch (e) {
                         firstException = firstException || e;
                     }
+                } else {
+                    // no timers remaining in the requested range: move the clock all the way to the end
+                    clock.now = tickTo;
 
-                    // compensate for any setSystemTime() call during timer callback
-                    if (oldNow !== clock.now) {
-                        tickFrom += clock.now - oldNow;
-                        tickTo += clock.now - oldNow;
-                        previous += clock.now - oldNow;
-                    }
+                    // update nanos
+                    nanos = nanosTotal;
+                }
+                if (firstException) {
+                    throw firstException;
                 }
 
+                if (isAsync) {
+                    resolve(clock.now);
+                } else {
+                    return clock.now;
+                }
+            }
+
+            nextPromiseTick = isAsync && function () {
+                try {
+                    compensationCheck();
+                    postTimerCall();
+                    doTickInner();
+                } catch (e) {
+                    reject(e);
+                }
+            };
+
+            compensationCheck = function () {
+                // compensate for any setSystemTime() call during timer callback
+                if (oldNow !== clock.now) {
+                    tickFrom += clock.now - oldNow;
+                    tickTo += clock.now - oldNow;
+                    previous += clock.now - oldNow;
+                }
+            };
+
+            postTimerCall = function () {
                 timer = firstTimerInRange(clock, previous, tickTo);
                 previous = tickFrom;
-            }
+            };
 
-            // perform process.nextTick()s again
-            oldNow = clock.now;
-            runJobs(clock);
-            if (oldNow !== clock.now) {
-                // compensate for any setSystemTime() call during process.nextTick() callback
-                tickFrom += clock.now - oldNow;
-                tickTo += clock.now - oldNow;
-            }
-            clock.duringTick = false;
+            return doTickInner();
+        }
 
-            // corner case: during runJobs, new timers were scheduled which could be in the range [clock.now, tickTo]
-            timer = firstTimerInRange(clock, tickFrom, tickTo);
-            if (timer) {
-                try {
-                    clock.tick(tickTo - clock.now); // do it all again - for the remainder of the requested range
-                } catch (e) {
-                    firstException = firstException || e;
-                }
-            } else {
-                // no timers remaining in the requested range: move the clock all the way to the end
-                clock.now = tickTo;
-
-                // update nanos
-                nanos = nanosTotal;
-            }
-            if (firstException) {
-                throw firstException;
-            }
-            return clock.now;
+        /**
+         * @param {tickValue} {String|Number} number of milliseconds or a human-readable value like "01:11:15"
+         */
+        clock.tick = function tick(tickValue) {
+            return doTick(tickValue, false);
         };
+
+        if (typeof global.Promise !== "undefined") {
+            clock.tickAsync = function tickAsync(ms) {
+                return new global.Promise(function (resolve, reject) {
+                    globalSetImmediate(function () {
+                        try {
+                            doTick(ms, true, resolve, reject);
+                        } catch (e) {
+                            reject(e);
+                        }
+                    });
+                });
+            };
+        }
 
         clock.next = function next() {
             runJobs(clock);
@@ -923,6 +979,42 @@ function withGlobal(_global) {
                 clock.duringTick = false;
             }
         };
+
+        if (typeof global.Promise !== "undefined") {
+            clock.nextAsync = function nextAsync() {
+                return new global.Promise(function (resolve, reject) {
+                    globalSetImmediate(function () {
+                        try {
+                            var timer = firstTimer(clock);
+                            if (!timer) {
+                                resolve(clock.now);
+                                return;
+                            }
+
+                            var err;
+                            clock.duringTick = true;
+                            clock.now = timer.callAt;
+                            try {
+                                callTimer(clock, timer);
+                            } catch (e) {
+                                err = e;
+                            }
+                            clock.duringTick = false;
+
+                            globalSetImmediate(function () {
+                                if (err) {
+                                    reject(err);
+                                } else {
+                                    resolve(clock.now);
+                                }
+                            });
+                        } catch (e) {
+                            reject(e);
+                        }
+                    });
+                });
+            };
+        }
 
         clock.runAll = function runAll() {
             var numTimers, i;
@@ -951,6 +1043,46 @@ function withGlobal(_global) {
             return clock.tick(getTimeToNextFrame());
         };
 
+        if (typeof global.Promise !== "undefined") {
+            clock.runAllAsync = function runAllAsync() {
+                return new global.Promise(function (resolve, reject) {
+                    var i = 0;
+                    function doRun() {
+                        globalSetImmediate(function () {
+                            try {
+                                var numTimers;
+                                if (i < clock.loopLimit) {
+                                    if (!clock.timers) {
+                                        resolve(clock.now);
+                                        return;
+                                    }
+
+                                    numTimers = Object.keys(clock.timers).length;
+                                    if (numTimers === 0) {
+                                        resolve(clock.now);
+                                        return;
+                                    }
+
+                                    clock.next();
+
+                                    i++;
+
+                                    doRun();
+                                    return;
+                                }
+
+                                reject(new Error("Aborting after running " + clock.loopLimit
+                                    + " timers, assuming an infinite loop!"));
+                            } catch (e) {
+                                reject(e);
+                            }
+                        });
+                    }
+                    doRun();
+                });
+            };
+        }
+
         clock.runToLast = function runToLast() {
             var timer = lastTimer(clock);
             if (!timer) {
@@ -960,6 +1092,25 @@ function withGlobal(_global) {
 
             return clock.tick(timer.callAt - clock.now);
         };
+
+        if (typeof global.Promise !== "undefined") {
+            clock.runToLastAsync = function runToLastAsync() {
+                return new global.Promise(function (resolve, reject) {
+                    globalSetImmediate(function () {
+                        try {
+                            var timer = lastTimer(clock);
+                            if (!timer) {
+                                resolve(clock.now);
+                            }
+
+                            resolve(clock.tickAsync(timer.callAt));
+                        } catch (e) {
+                            reject(e);
+                        }
+                    });
+                });
+            };
+        }
 
         clock.reset = function reset() {
             nanos = 0;
