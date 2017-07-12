@@ -23,8 +23,10 @@ if (typeof require === "function" && typeof module === "object") {
 var assert = referee.assert;
 var refute = referee.refute;
 var GlobalDate = Date;
+
 var NOOP = function NOOP() { return undefined; };
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
+var performancePresent = (global.performance && typeof global.performance.now === "function");
 
 describe("issue #59", function () {
     var context = {
@@ -1616,6 +1618,25 @@ describe("lolex", function () {
                 assert.same(result[0], 0);
             });
         }
+        if (performancePresent) {
+            it("replaces global performance.now", function () {
+
+                this.clock = lolex.install();
+                var prev = performance.now();
+                this.clock.tick(1000);
+                var next = performance.now();
+                assert.same(next, 1000);
+                assert.same(prev, 0);
+            });
+
+            it("uninstalls global performance.now", function () {
+                var oldNow = performance.now;
+                this.clock = lolex.install();
+                assert.same(performance.now, this.clock.performance.now);
+                this.clock.uninstall();
+                assert.same(performance.now, oldNow);
+            });
+        }
 
         if (Object.getPrototypeOf(global)) {
             delete global.hasOwnPropertyTest;
@@ -1719,6 +1740,40 @@ describe("lolex", function () {
         });
     });
 
+    if (performancePresent) {
+        describe("performance.now()", function () {
+            it("should start at 0", function () {
+                var clock = lolex.createClock(1001);
+                var result = clock.performance.now();
+                assert.same(result, 0);
+            });
+
+            it("should run along with clock.tick", function () {
+                var clock = lolex.createClock(0);
+                clock.tick(5001);
+                var result = clock.performance.now();
+                assert.same(result, 5001);
+            });
+
+            it("should listen to multiple ticks in performance.now", function () {
+                var clock = lolex.createClock(0);
+                for (var i = 0; i < 10; i++) {
+                    var next = clock.performance.now();
+                    assert.same(next, 1000 * i);
+                    clock.tick(1000);
+                }
+            });
+
+            it("should run with ticks with timers set", function () {
+                var clock = lolex.createClock(0);
+                clock.setTimeout(function () {
+                    var result = clock.performance.now();
+                    assert.same(result, 2500);
+                }, 2500);
+                clock.tick(5000);
+            });
+        });
+    }
     if (hrtimePresent) {
         describe("process.hrtime()", function () {
 
