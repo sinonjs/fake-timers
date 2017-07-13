@@ -637,6 +637,10 @@ exports.createClock = createClock;
  * @param config.loopLimit {number} the maximum number of timers that will be run when calling runAll()
  */
 exports.install = function install(config) {
+    if (typeof config !== "object" && typeof config !== "undefined") {
+        throw new TypeError("lolex.install called with " + String(config) +
+            " lolex 2.0+ requires an object parameter - see https://github.com/sinonjs/lolex");
+    }
     config = typeof config !== "undefined" ? config : {};
 
     var i, l;

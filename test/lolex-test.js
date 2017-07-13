@@ -1560,6 +1560,20 @@ describe("lolex", function () {
             assert.same(Date.clock, this.clock);
         });
 
+        it("takes an object parameter", function () {
+            this.clock = lolex.install({});
+        });
+
+        it("throws a TypeError on a number parameter", function () {
+            try {
+                this.clock = lolex.install(0);
+            } catch (e) {
+                assert(e instanceof TypeError);
+                return;
+            }
+            throw new Error("Installing with a number parameter doesn't throw");
+        });
+
         it("sets initial timestamp", function () {
             this.clock = lolex.install({ now: 1400 });
 
@@ -1835,6 +1849,7 @@ describe("lolex", function () {
                 }, 2500);
                 clock.tick(5000);
             });
+
         });
     }
     if (hrtimePresent) {
@@ -1876,6 +1891,7 @@ describe("lolex", function () {
                 assert.same(result[0], 0);
                 assert.same(result[1], 0);
             });
+
         });
     }
 });
