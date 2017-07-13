@@ -1803,6 +1803,57 @@ describe("lolex", function () {
         });
     });
 
+    describe("shouldAdvanceTime", function () {
+        it("should create an auto advancing timer", function (done) {
+            var testDelay = 29;
+            var date = new Date("2015-09-25");
+            var clock = lolex.install({now: date, shouldAdvanceTime: true});
+            assert.same(Date.now(), 1443139200000);
+            var timeoutStarted = Date.now();
+
+            setTimeout(function () {
+                var timeDifference = Date.now() - timeoutStarted;
+                assert.same(timeDifference, testDelay);
+                clock.uninstall();
+                done();
+            }, testDelay);
+        });
+
+        it("should test setImmediate", function (done) {
+            var date = new Date("2015-09-25");
+            var clock = lolex.install({now: date, shouldAdvanceTime: true});
+            assert.same(Date.now(), 1443139200000);
+            var timeoutStarted = Date.now();
+
+            setImmediate(function () {
+                var timeDifference = Date.now() - timeoutStarted;
+                assert.same(timeDifference, 0);
+                clock.uninstall();
+                done();
+            });
+        });
+
+        it("should test setInterval", function (done) {
+            var interval = 20;
+            var intervalsTriggered = 0;
+            var cyclesToTrigger = 3;
+            var date = new Date("2015-09-25");
+            var clock = lolex.install({now: date, shouldAdvanceTime: true});
+            assert.same(Date.now(), 1443139200000);
+            var timeoutStarted = Date.now();
+
+            var intervalId = setInterval(function () {
+                if (++intervalsTriggered === cyclesToTrigger) {
+                    clearInterval(intervalId);
+                    var timeDifference = Date.now() - timeoutStarted;
+                    assert.same(timeDifference, interval * cyclesToTrigger);
+                    clock.uninstall();
+                    done();
+                }
+            }, interval);
+        });
+    });
+
     if (performancePresent) {
         describe("performance.now()", function () {
             it("should start at 0", function () {
