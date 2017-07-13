@@ -102,19 +102,17 @@ The `now` argument may be a number (in milliseconds) or a Date object.
 
 The `loopLimit` argument sets the maximum number of timers that will be run when calling `runAll()` before assuming that we have an infinite loop and throwing an error. The default is `1000`.
 
-### `var clock = lolex.install([context[, now[, toFake[, loopLimit]]]])`
+### `var clock = lolex.install([options])`
 
-### `var clock = lolex.install([now[, toFake[, loopLimit]]])`
+Creates a clock and installs it onto the `options.target` object, or globally. This method swaps out timer APIs (like `setTimeout`) and replaces them with clock timers. A config option may be passed to `.install` containing the following properties: 
 
-Creates a clock and installs it onto the `context` object, or globally. The
-`now` argument is the same as in `lolex.createClock()`.
 
-`toFake` is an array of the names of the methods that should be faked. You can
-pick from `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`,
-`setInterval`, `clearInterval`, and `Date`. E.g. `lolex.install(["setTimeout",
-"clearTimeout"])`.
-
-The `loopLimit` argument is the same as in `lolex.createClock()`.
+`options` is an options object containing the following properties:
+ - `target` - the target to install timers in (default `window`)
+ - `now` - number or `Date` - a number (in milliseconds) or a Date object to start the clock with (default epoch)
+ - `toFake` - an array of the names of the methods that should be faked. You can pick from `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`, `setInterval`, `clearInterval`, and `Date`. E.g. `lolex.install(["setTimeout",
+"clearTimeout"])`. (defaults to fake all timers)
+ - `loopLimit` - the maximum number of timers that will be run when calling runAll(). (default 1000)
 
 ### `var id = clock.setTimeout(callback, timeout)`
 
