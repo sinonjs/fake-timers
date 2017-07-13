@@ -1877,7 +1877,7 @@ describe("lolex", function () {
                 assert.same(result[1], 0);
             });
 
-            it("should not move with timeouts", function () {
+            it("should move with timeouts", function () {
                 var clock = lolex.createClock();
                 var result = clock.hrtime();
                 assert.same(result[0], 0);
