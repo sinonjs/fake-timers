@@ -484,6 +484,10 @@ function createClock(now, loopLimit) {
         return clearTimer(clock, timerId, "Immediate");
     };
 
+    function updateHrTime(newNow) {
+        clock.hrNow += (newNow - clock.now);
+    }
+
     clock.tick = function tick(ms) {
         ms = typeof ms === "number" ? ms : parseTime(ms);
         var tickFrom = clock.now;
@@ -493,10 +497,6 @@ function createClock(now, loopLimit) {
         var oldNow, firstException;
 
         clock.duringTick = true;
-
-        function updateHrTime(newNow) {
-            clock.hrNow += (newNow - clock.now);
-        }
 
         while (timer && tickFrom <= tickTo) {
             if (clock.timers[timer.id]) {
@@ -541,6 +541,7 @@ function createClock(now, loopLimit) {
 
         clock.duringTick = true;
         try {
+            updateHrTime(timer.callAt);
             clock.now = timer.callAt;
             callTimer(clock, timer);
             return clock.now;

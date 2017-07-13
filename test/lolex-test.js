@@ -1885,8 +1885,8 @@ describe("lolex", function () {
                 clock.setTimeout(function () {}, 1000);
                 clock.runAll();
                 result = clock.hrtime();
-                assert.same(result[0], 0);
-                assert.same(result[1], 1);
+                assert.same(result[0], 1);
+                assert.same(result[1], 0);
             });
         });
     }
