@@ -30,6 +30,8 @@ var NOOP = function () { return undefined; };
 var timeoutResult = setTimeout(NOOP, 0);
 var addTimerReturnsObject = typeof timeoutResult === "object";
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
+var performancePresent = (global.performance && typeof global.performance.now === "function");
+
 clearTimeout(timeoutResult);
 
 var NativeDate = Date;
@@ -410,6 +412,10 @@ if (hrtimePresent) {
     timers.hrtime = global.process.hrtime;
 }
 
+if (performancePresent) {
+    timers.performance = global.performance;
+}
+
 var keys = Object.keys || function (obj) {
     var ks = [];
     var key;
@@ -589,6 +595,12 @@ function createClock(now, loopLimit) {
         }
     };
 
+    if (performancePresent) {
+        clock.performance = Object.create(global.performance);
+        clock.performance.now = function nowTime() {
+            return clock.hrNow;
+        };
+    }
     if (hrtimePresent) {
         clock.hrtime = function (prev) {
             if (Array.isArray(prev)) {

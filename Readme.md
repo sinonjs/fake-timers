@@ -165,6 +165,10 @@ Clears the timer given the ID or timer object, as long as it was created using
 ### `clock.hrtime(prevTime?)`
 Only available in Node.JS, mimicks process.hrtime().
 
+### `clock.performance.now()`
+Only available in browser environments, mimicks performance.now().
+
+
 ### `clock.tick(time)`
 
 Advance the clock, firing callbacks if necessary. `time` may be the number of
@@ -213,6 +217,10 @@ Restores the original methods on the `context` that was passed to
 ### `Date`
 
 Implements the `Date` object but using the clock to provide the correct time.
+
+### `Performance`
+
+Implements the `now` method of the [`Performance`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) object but using the clock to provide the correct time. Only available in environments that support the Performance object (browsers mostly).
 
 ## Running tests
 
