@@ -1,3 +1,26 @@
+
+v2.0.0 / 2017-07-13
+==================
+
+  * New install() signature
+  * Add support for performance.now (#106)
+  * Fix issue with tick(): setSystemClock then throw
+  * Update old dependencies
+
+v1.6.0 / 2017-02-25
+===================
+
+  * Use common Sinon.JS eslint config
+  * Allow install to be called with date object
+  * Remove wrapper function
+  * Fixed typo in clock.runAll error
+
+v1.5.2 / 2016-11-10
+===================
+
+  * Upgrade mocha to latest
+  * Only overwrite globals when running in IE
+
 1.5.1 / 2016-07-26
 ==================
 

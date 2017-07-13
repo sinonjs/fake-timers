@@ -86,6 +86,7 @@ function fixedModulo(n, m) {
 
 /**
  * Used to grok the `now` parameter to createClock.
+ * @param epoch {Date|number} the system time
  */
 function getEpoch(epoch) {
     if (!epoch) { return 0; }
@@ -431,6 +432,10 @@ var keys = Object.keys || function (obj) {
 
 exports.timers = timers;
 
+/**
+ * @param now {Date|number} the system time
+ * @param loopLimit {number}  maximum number of timers that will be run when calling runAll()
+ */
 function createClock(now, loopLimit) {
     loopLimit = loopLimit || 1000;
 
@@ -503,14 +508,15 @@ function createClock(now, loopLimit) {
                 try {
                     oldNow = clock.now;
                     callTimer(clock, timer);
-                    // compensate for any setSystemTime() call during timer callback
-                    if (oldNow !== clock.now) {
-                        tickFrom += clock.now - oldNow;
-                        tickTo += clock.now - oldNow;
-                        previous += clock.now - oldNow;
-                    }
                 } catch (e) {
                     firstException = firstException || e;
+                }
+
+                // compensate for any setSystemTime() call during timer callback
+                if (oldNow !== clock.now) {
+                    tickFrom += clock.now - oldNow;
+                    tickTo += clock.now - oldNow;
+                    previous += clock.now - oldNow;
                 }
             }
 
@@ -597,7 +603,7 @@ function createClock(now, loopLimit) {
 
     if (performancePresent) {
         clock.performance = Object.create(global.performance);
-        clock.performance.now = function nowTime() {
+        clock.performance.now = function lolexNow() {
             return clock.hrNow;
         };
     }
@@ -625,32 +631,25 @@ function createClock(now, loopLimit) {
 }
 exports.createClock = createClock;
 
-exports.install = function install(target, now, toFake, loopLimit) {
+/**
+ * @param config {Object} optional config
+ * @param config.target {Object} the target to install timers in (default `window`)
+ * @param config.now {number|Date}  a number (in milliseconds) or a Date object (default epoch)
+ * @param config.toFake {string[]} names of the methods that should be faked.
+ * @param config.loopLimit {number} the maximum number of timers that will be run when calling runAll()
+ */
+exports.install = function install(config) {
+    config = typeof config !== "undefined" ? config : {};
+
     var i, l;
-
-    if (target instanceof Date) {
-        toFake = now;
-        now = target.getTime();
-        target = null;
-    }
-
-    if (typeof target === "number") {
-        toFake = now;
-        now = target;
-        target = null;
-    }
-
-    if (!target) {
-        target = global;
-    }
-
-    var clock = createClock(now, loopLimit);
+    var target = config.target || global;
+    var clock = createClock(config.now, config.loopLimit);
 
     clock.uninstall = function () {
         uninstall(clock, target);
     };
 
-    clock.methods = toFake || [];
+    clock.methods = config.toFake || [];
 
     if (clock.methods.length === 0) {
         clock.methods = keys(timers);
