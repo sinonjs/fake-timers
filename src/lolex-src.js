@@ -400,8 +400,6 @@ function hijackMethod(target, method, clock) {
     target[method].clock = clock;
 }
 
-exports.shouldAdvanceTime = false;
-
 function doIntervalTick(clock, advanceTimeDelta) {
     clock.tick(advanceTimeDelta);
 }
