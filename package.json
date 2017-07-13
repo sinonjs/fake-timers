@@ -24,13 +24,13 @@
   },
   "devDependencies": {
     "browserify": "^14.1.0",
-    "eslint": "^3.16.1",
-    "eslint-config-sinon": "^1.0.0",
+    "eslint": "^4.2.0",
+    "eslint-config-sinon": "^1.0.3",
     "eslint-plugin-mocha": "^4.8.0",
     "mocha": "^3.2.0",
     "mochify": "^3.0.0",
     "referee": "^1.2.0",
-    "sinon": "^1.17.4"
+    "sinon": "^2.3.7"
   },
   "eslintConfig": {
     "extends": "eslint-config-sinon"
