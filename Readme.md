@@ -208,7 +208,7 @@ for two hours, 34 minutes and ten seconds.
 `time` may be negative, which causes the clock to change but won't fire any
 callbacks.
 
-`clock.next()`
+### `clock.next()`
 
 Advances the clock to the the moment of the first scheduled timer, firing it.
 
