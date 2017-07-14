@@ -1683,7 +1683,6 @@ describe("lolex", function () {
         }
         if (performancePresent) {
             it("replaces global performance.now", function () {
-
                 this.clock = lolex.install();
                 var prev = performance.now();
                 this.clock.tick(1000);
