@@ -6,6 +6,8 @@ v2.0.0 / 2017-07-13
   * Add support for performance.now (#106)
   * Fix issue with tick(): setSystemClock then throw
   * Update old dependencies
+  * Added support to automatically increment time (#85)
+  * Changed internal uninstall method signature
 
 v1.6.0 / 2017-02-25
 ===================

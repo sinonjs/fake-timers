@@ -348,7 +348,7 @@ function clearTimer(clock, timerId, ttype) {
     }
 }
 
-function uninstall(clock, target) {
+function uninstall(clock, target, config) {
     var method,
         i,
         l;
@@ -361,6 +361,9 @@ function uninstall(clock, target) {
         } else {
             if (target[method] && target[method].hadOwnProperty) {
                 target[method] = clock["_" + method];
+                if (method === "clearInterval" && config.shouldAdvanceTime === true) {
+                    target[method](clock.attachedInterval);
+                }
             } else {
                 try {
                     delete target[method];
@@ -395,6 +398,10 @@ function hijackMethod(target, method, clock) {
     }
 
     target[method].clock = clock;
+}
+
+function doIntervalTick(clock, advanceTimeDelta) {
+    clock.tick(advanceTimeDelta);
 }
 
 var timers = {
@@ -636,16 +643,20 @@ exports.createClock = createClock;
  * @param config.now {number|Date}  a number (in milliseconds) or a Date object (default epoch)
  * @param config.toFake {string[]} names of the methods that should be faked.
  * @param config.loopLimit {number} the maximum number of timers that will be run when calling runAll()
+ * @param config.shouldAdvanceTime {Boolean} tells lolex to increment mocked time automatically (default false)
+ * @param config.advanceTimeDelta {Number} increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
  */
 exports.install = function install(config) {
     config = typeof config !== "undefined" ? config : {};
+    config.shouldAdvanceTime = config.shouldAdvanceTime || false;
+    config.advanceTimeDelta = config.advanceTimeDelta || 20;
 
     var i, l;
     var target = config.target || global;
     var clock = createClock(config.now, config.loopLimit);
 
     clock.uninstall = function () {
-        uninstall(clock, target);
+        uninstall(clock, target, config);
     };
 
     clock.methods = config.toFake || [];
@@ -660,6 +671,13 @@ exports.install = function install(config) {
                 hijackMethod(target.process, clock.methods[i], clock);
             }
         } else {
+            if (clock.methods[i] === "setInterval" && config.shouldAdvanceTime === true) {
+                var intervalTick = doIntervalTick.bind(null, clock, config.advanceTimeDelta);
+                var intervalId = target[clock.methods[i]](
+                    intervalTick,
+                    config.advanceTimeDelta);
+                clock.attachedInterval = intervalId;
+            }
             hijackMethod(target, clock.methods[i], clock);
         }
     }
