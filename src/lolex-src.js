@@ -28,6 +28,7 @@ var NOOP = function () { return undefined; };
 var timeoutResult = setTimeout(NOOP, 0);
 var addTimerReturnsObject = typeof timeoutResult === "object";
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
+var nextTickPresent = (global.process && typeof global.process.nextTick === "function");
 var performancePresent = (global.performance && typeof global.performance.now === "function");
 
 clearTimeout(timeoutResult);
@@ -161,6 +162,27 @@ function createDate() {
     }
 
     return mirrorDateProperties(ClockDate, NativeDate);
+}
+
+
+function enqueueJob(clock, job) {
+    // enqueues a microtick-deferred task - ecma262/#sec-enqueuejob
+    if (!clock.jobs) {
+        clock.jobs = [];
+    }
+    clock.jobs.push(job);
+}
+
+function runJobs(clock) {
+    // runs all microtick-deferred tasks - ecma262/#sec-runjobs
+    if (!clock.jobs) {
+        return;
+    }
+    for (var i = 0; i < clock.jobs.length; i++) {
+        var job = clock.jobs[i];
+        job.func.apply(null, job.func.args);
+    }
+    clock.jobs = [];
 }
 
 function addTimer(clock, timer) {
@@ -353,11 +375,14 @@ function uninstall(clock, target, config) {
         i,
         l;
     var installedHrTime = "_hrtime";
+    var installedNextTick = "_nextTick";
 
     for (i = 0, l = clock.methods.length; i < l; i++) {
         method = clock.methods[i];
         if (method === "hrtime" && target.process) {
             target.process.hrtime = clock[installedHrTime];
+        } else if (method === "nextTick" && target.process) {
+            target.process.nextTick = clock[installedNextTick];
         } else {
             if (target[method] && target[method].hadOwnProperty) {
                 target[method] = clock["_" + method];
@@ -378,7 +403,6 @@ function uninstall(clock, target, config) {
 
 function hijackMethod(target, method, clock) {
     var prop;
-
     clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(target, method);
     clock["_" + method] = target[method];
 
@@ -416,6 +440,10 @@ var timers = {
 
 if (hrtimePresent) {
     timers.hrtime = global.process.hrtime;
+}
+
+if (nextTickPresent) {
+    timers.nextTick = global.process.nextTick;
 }
 
 if (performancePresent) {
@@ -465,7 +493,12 @@ function createClock(now, loopLimit) {
     clock.clearTimeout = function clearTimeout(timerId) {
         return clearTimer(clock, timerId, "Timeout");
     };
-
+    clock.nextTick = function nextTick(func) {
+        return enqueueJob(clock, {
+            func: func,
+            args: Array.prototype.slice.call(1)
+        });
+    };
     clock.setInterval = function setInterval(func, timeout) {
         return addTimer(clock, {
             func: func,
@@ -504,6 +537,7 @@ function createClock(now, loopLimit) {
         var oldNow, firstException;
 
         clock.duringTick = true;
+        runJobs(clock);
 
         while (timer && tickFrom <= tickTo) {
             if (clock.timers[timer.id]) {
@@ -511,6 +545,7 @@ function createClock(now, loopLimit) {
                 tickFrom = timer.callAt;
                 clock.now = timer.callAt;
                 try {
+                    runJobs(clock);
                     oldNow = clock.now;
                     callTimer(clock, timer);
                 } catch (e) {
@@ -529,6 +564,7 @@ function createClock(now, loopLimit) {
             previous = tickFrom;
         }
 
+        runJobs(clock);
         clock.duringTick = false;
         updateHrTime(tickTo);
         clock.now = tickTo;
@@ -541,6 +577,7 @@ function createClock(now, loopLimit) {
     };
 
     clock.next = function next() {
+        runJobs(clock);
         var timer = firstTimer(clock);
         if (!timer) {
             return clock.now;
@@ -551,6 +588,7 @@ function createClock(now, loopLimit) {
             updateHrTime(timer.callAt);
             clock.now = timer.callAt;
             callTimer(clock, timer);
+            runJobs(clock);
             return clock.now;
         } finally {
             clock.duringTick = false;
@@ -559,6 +597,7 @@ function createClock(now, loopLimit) {
 
     clock.runAll = function runAll() {
         var numTimers, i;
+        runJobs(clock);
         for (i = 0; i < clock.loopLimit; i++) {
             if (!clock.timers) {
                 return clock.now;
@@ -578,6 +617,7 @@ function createClock(now, loopLimit) {
     clock.runToLast = function runToLast() {
         var timer = lastTimer(clock);
         if (!timer) {
+            runJobs(clock);
             return clock.now;
         }
 
@@ -668,6 +708,10 @@ exports.install = function install(config) {
     for (i = 0, l = clock.methods.length; i < l; i++) {
         if (clock.methods[i] === "hrtime") {
             if (target.process && typeof target.process.hrtime === "function") {
+                hijackMethod(target.process, clock.methods[i], clock);
+            }
+        } else if (clock.methods[i] === "nextTick") {
+            if (target.process && typeof target.process.nextTick === "function") {
                 hijackMethod(target.process, clock.methods[i], clock);
             }
         } else {

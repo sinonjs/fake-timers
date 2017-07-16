@@ -25,6 +25,7 @@ var refute = referee.refute;
 var GlobalDate = Date;
 
 var NOOP = function NOOP() { return undefined; };
+var nextTickPresent = (global.process && typeof global.process.nextTick === "function");
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
 var performancePresent = (global.performance && typeof global.performance.now === "function");
 
@@ -1889,6 +1890,11 @@ describe("lolex", function () {
     }
     if (hrtimePresent) {
         describe("process.hrtime()", function () {
+            afterEach(function () {
+                if (this.clock) {
+                    this.clock.uninstall();
+                }
+            });
 
             it("should start at 0", function () {
                 var clock = lolex.createClock(1001);
@@ -1937,6 +1943,104 @@ describe("lolex", function () {
                 result = clock.hrtime();
                 assert.same(result[0], 1);
                 assert.same(result[1], 0);
+            });
+        });
+    }
+    if (nextTickPresent) {
+        describe("microtask semantics", function () {
+            it("runs without timers", function () {
+                var clock = lolex.createClock();
+                var called = false;
+                clock.nextTick(function () {
+                    called = true;
+                });
+                clock.runAll();
+                assert(called);
+            });
+
+            it("runs with timers - and before them", function () {
+                var clock = lolex.createClock();
+                var last = "";
+                var called = false;
+                clock.nextTick(function () {
+                    called = true;
+                    last = "tick";
+                });
+                clock.setTimeout(function () {
+                    last = "timeout";
+                });
+                clock.runAll();
+                assert(called);
+                assert.equals(last, "timeout");
+            });
+
+            it("runs when time is progressed", function () {
+                var clock = lolex.createClock();
+                var called = false;
+                clock.nextTick(function () {
+                    called = true;
+                });
+                assert(!called);
+                clock.tick(0);
+                assert(called);
+            });
+
+            it("runs between timers", function () {
+                var clock = lolex.createClock();
+                var order = [];
+                clock.setTimeout(function () {
+                    order.push("timer-1");
+                    clock.nextTick(function () {
+                        order.push("tick");
+                    });
+                });
+
+                clock.setTimeout(function () {
+                    order.push("timer-2");
+                });
+                clock.runAll();
+                assert.same(order[0], "timer-1");
+                assert.same(order[1], "tick");
+                assert.same(order[2], "timer-2");
+            });
+
+            it("installs with microticks", function () {
+                this.clock = lolex.install();
+                var called = false;
+                process.nextTick(function () {
+                    called = true;
+                });
+                this.clock.runAll();
+                assert(called);
+            });
+
+            it("installs with microticks and timers in order", function () {
+                var clock = this.clock = lolex.install();
+                var order = [];
+                setTimeout(function () {
+                    order.push("timer-1");
+                    process.nextTick(function () {
+                        order.push("tick");
+                    });
+                });
+                setTimeout(function () {
+                    order.push("timer-2");
+                });
+                clock.runAll();
+                assert.same(order[0], "timer-1");
+                assert.same(order[1], "tick");
+                assert.same(order[2], "timer-2");
+            });
+
+            it("uninstalls", function () {
+                var clock = this.clock = lolex.install();
+                clock.uninstall();
+                var called = false;
+                process.nextTick(function () {
+                    called = true;
+                });
+                clock.runAll();
+                assert(!called);
             });
         });
     }
