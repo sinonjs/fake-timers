@@ -564,7 +564,7 @@ function createClock(now, loopLimit) {
                 return clock.now;
             }
 
-            numTimers = Object.keys(clock.timers).length;
+            numTimers = keys(clock.timers).length;
             if (numTimers === 0) {
                 return clock.now;
             }
