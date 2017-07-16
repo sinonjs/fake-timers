@@ -7,7 +7,9 @@ implementation that gets its time from the clock.
 
 Lolex can be used to simulate passing time in automated tests and other
 situations where you want the scheduling semantics, but don't want to actually
-wait. Lolex is extracted from [Sinon.JS](https://github.com/sinonjs/sinon.js).
+wait (however, from version 2.0 lolex supports those of you who would like to wait too). 
+
+Lolex is extracted from [Sinon.JS](https://github.com/sinonjs/sinon.js).
 
 ## Installation
 
@@ -80,7 +82,7 @@ var lolex = require("lolex");
 var context = {
     setTimeout: setTimeout // By default context.setTimeout uses the global setTimeout
 }
-var clock = lolex.install(context);
+var clock = lolex.install({target: context});
 
 context.setTimeout(fn, 15); // Schedules with clock.setTimeout
 
@@ -90,6 +92,35 @@ clock.uninstall();
 
 Usually you want to install the timers onto the global object, so call `install`
 without arguments.
+
+#### Automatically incrementing mocked time
+Since version 2.0 Lolex supports the possibility to attach the faked timers
+to any change in the real system time. This basically means you no longer need
+to `tick()` the clock in a situation where you won't know **when** to call `tick()`.
+
+Please note that this is achieved using the original setImmediate() API at a certain
+configurable interval `config.advanceTimeDelta` (default: 20ms). Meaning time would
+be incremented every 20ms, not in real time. 
+
+An example would be:
+
+```js
+var lolex = require("lolex");
+var clock = lolex.install({shouldAdvanceTime: true, advanceTimeDelta: 40});
+
+setTimeout(() => {
+    console.log('this just timed out'); //executed after 40ms
+}, 30);
+
+setImmediate(() => {
+    console.log('not so immediate'); //executed after 40ms
+});
+
+setTimeout(() => {
+    console.log('this timed out after'); //executed after 80ms
+    clock.uninstall();
+}, 50);
+```
 
 ## API Reference
 
@@ -102,19 +133,17 @@ The `now` argument may be a number (in milliseconds) or a Date object.
 
 The `loopLimit` argument sets the maximum number of timers that will be run when calling `runAll()` before assuming that we have an infinite loop and throwing an error. The default is `1000`.
 
-### `var clock = lolex.install([context[, now[, toFake[, loopLimit]]]])`
+### `var clock = lolex.install([config])`
+Installs lolex using the specified config (otherwise with epoch `0` on the global scope). The following configuration options are available
 
-### `var clock = lolex.install([now[, toFake[, loopLimit]]])`
-
-Creates a clock and installs it onto the `context` object, or globally. The
-`now` argument is the same as in `lolex.createClock()`.
-
-`toFake` is an array of the names of the methods that should be faked. You can
-pick from `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`,
-`setInterval`, `clearInterval`, and `Date`. E.g. `lolex.install(["setTimeout",
-"clearTimeout"])`.
-
-The `loopLimit` argument is the same as in `lolex.createClock()`.
+Parameter | Type | Default | Description
+--------- | ---- | ------- | ------------
+`config.target`| Object | global | installs lolex onto the specified target context 
+`config.now` | Number/Date | 0 | installs lolex with the specified unix epoch 
+`config.toFake` | String[] | [] | an array with explicit function names to hijack. You can pick from `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`,`setInterval`, `clearInterval`, and `Date`. E.g. `lolex.install({ toFake: ["setTimeout","clearTimeout"]})`
+`config.loopLimit` | Number | 1000 | the maximum number of timers that will be run when calling runAll()
+`config.shouldAdvanceTime` | Boolean | false | tells lolex to increment mocked time automatically based on the real system time shift (e.g. the mocked time will be incremented by 20ms for every 20ms change in the real system time)
+`config.advanceTimeDelta` | Number | 20 | relevant only when using with `shouldAdvanceTime: true`. increment mocked time by `advanceTimeDelta` ms every `advanceTimeDelta` ms change in the real system time.
 
 ### `var id = clock.setTimeout(callback, timeout)`
 
@@ -211,8 +240,8 @@ setSystemTime().
 
 ### `clock.uninstall()`
 
-Restores the original methods on the `context` that was passed to
-`lolex.install`, or the native timers if no `context` was given.
+Restores the original methods on the `target` that was passed to
+`lolex.install`, or the native timers if no `target` was given.
 
 ### `Date`
 

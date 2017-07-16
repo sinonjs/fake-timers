@@ -1565,13 +1565,9 @@ describe("lolex", function () {
         });
 
         it("throws a TypeError on a number parameter", function () {
-            try {
+            assert.exception(function () {
                 this.clock = lolex.install(0);
-            } catch (e) {
-                assert(e instanceof TypeError);
-                return;
-            }
-            throw new Error("Installing with a number parameter doesn't throw");
+            });
         });
 
         it("sets initial timestamp", function () {
@@ -1697,7 +1693,6 @@ describe("lolex", function () {
         }
         if (performancePresent) {
             it("replaces global performance.now", function () {
-
                 this.clock = lolex.install();
                 var prev = performance.now();
                 this.clock.tick(1000);
@@ -1817,6 +1812,57 @@ describe("lolex", function () {
         });
     });
 
+    describe("shouldAdvanceTime", function () {
+        it("should create an auto advancing timer", function (done) {
+            var testDelay = 29;
+            var date = new Date("2015-09-25");
+            var clock = lolex.install({now: date, shouldAdvanceTime: true});
+            assert.same(Date.now(), 1443139200000);
+            var timeoutStarted = Date.now();
+
+            setTimeout(function () {
+                var timeDifference = Date.now() - timeoutStarted;
+                assert.same(timeDifference, testDelay);
+                clock.uninstall();
+                done();
+            }, testDelay);
+        });
+
+        it("should test setImmediate", function (done) {
+            var date = new Date("2015-09-25");
+            var clock = lolex.install({now: date, shouldAdvanceTime: true});
+            assert.same(Date.now(), 1443139200000);
+            var timeoutStarted = Date.now();
+
+            setImmediate(function () {
+                var timeDifference = Date.now() - timeoutStarted;
+                assert.same(timeDifference, 0);
+                clock.uninstall();
+                done();
+            });
+        });
+
+        it("should test setInterval", function (done) {
+            var interval = 20;
+            var intervalsTriggered = 0;
+            var cyclesToTrigger = 3;
+            var date = new Date("2015-09-25");
+            var clock = lolex.install({now: date, shouldAdvanceTime: true});
+            assert.same(Date.now(), 1443139200000);
+            var timeoutStarted = Date.now();
+
+            var intervalId = setInterval(function () {
+                if (++intervalsTriggered === cyclesToTrigger) {
+                    clearInterval(intervalId);
+                    var timeDifference = Date.now() - timeoutStarted;
+                    assert.same(timeDifference, interval * cyclesToTrigger);
+                    clock.uninstall();
+                    done();
+                }
+            }, interval);
+        });
+    });
+
     if (performancePresent) {
         describe("performance.now()", function () {
             it("should start at 0", function () {
@@ -1892,6 +1938,17 @@ describe("lolex", function () {
                 assert.same(result[1], 0);
             });
 
+            it("should move with timeouts", function () {
+                var clock = lolex.createClock();
+                var result = clock.hrtime();
+                assert.same(result[0], 0);
+                assert.same(result[1], 0);
+                clock.setTimeout(function () {}, 1000);
+                clock.runAll();
+                result = clock.hrtime();
+                assert.same(result[0], 1);
+                assert.same(result[1], 0);
+            });
         });
     }
 });
