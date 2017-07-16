@@ -647,7 +647,7 @@ exports.createClock = createClock;
  * @param config.advanceTimeDelta {Number} increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
  */
 exports.install = function install(config) {
-    if (typeof config !== "object" && typeof config !== "undefined") {
+    if ( arguments.length > 1 || config instanceof Date || Array.isArray(config) || typeof config === "number") {
         throw new TypeError("lolex.install called with " + String(config) +
             " lolex 2.0+ requires an object parameter - see https://github.com/sinonjs/lolex");
     }
