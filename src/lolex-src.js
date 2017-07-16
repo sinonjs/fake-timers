@@ -286,26 +286,11 @@ function callTimer(clock, timer) {
         delete clock.timers[timer.id];
     }
 
-    try {
-        if (typeof timer.func === "function") {
-            timer.func.apply(null, timer.args);
-        } else {
-            /* eslint no-eval: "off" */
-            eval(timer.func);
-        }
-    } catch (e) {
-        exception = e;
-    }
-
-    if (!clock.timers[timer.id]) {
-        if (exception) {
-            throw exception;
-        }
-        return;
-    }
-
-    if (exception) {
-        throw exception;
+    if (typeof timer.func === "function") {
+        timer.func.apply(null, timer.args);
+    } else {
+        /* eslint no-eval: "off" */
+        eval(timer.func);
     }
 }
 
