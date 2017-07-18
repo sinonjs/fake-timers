@@ -21,7 +21,7 @@
     "test": "npm run lint && npm run test-node && npm run test-headless",
     "bundle": "browserify -s lolex -o lolex.js src/lolex-src.js",
     "prepublish": "npm run bundle",
-    "precommit": "lint-staged"
+    "precommit": "run-p lint test-node"
   },
   "lint-staged": {
     "*.js": "eslint"
@@ -35,6 +35,7 @@
     "lint-staged": "^4.0.2",
     "mocha": "^3.4.2",
     "mochify": "^3.3.0",
+    "npm-run-all": "^4.0.2",
     "referee": "^1.2.0",
     "sinon": "^2.3.7"
   },
