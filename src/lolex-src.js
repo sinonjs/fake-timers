@@ -180,7 +180,7 @@ function runJobs(clock) {
     }
     for (var i = 0; i < clock.jobs.length; i++) {
         var job = clock.jobs[i];
-        job.func.apply(null, job.func.args);
+        job.func.apply(null, job.args);
     }
     clock.jobs = [];
 }
@@ -479,7 +479,7 @@ function createClock(now, loopLimit) {
     clock.nextTick = function nextTick(func) {
         return enqueueJob(clock, {
             func: func,
-            args: Array.prototype.slice.call(1)
+            args: Array.prototype.slice.call(arguments, 1)
         });
     };
     clock.setInterval = function setInterval(func, timeout) {
