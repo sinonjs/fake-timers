@@ -300,8 +300,6 @@ function lastTimer(clock) {
 }
 
 function callTimer(clock, timer) {
-    var exception;
-
     if (typeof timer.interval === "number") {
         clock.timers[timer.id].callAt += timer.interval;
     } else {

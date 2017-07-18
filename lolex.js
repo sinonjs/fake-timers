@@ -30,6 +30,7 @@ var NOOP = function () { return undefined; };
 var timeoutResult = setTimeout(NOOP, 0);
 var addTimerReturnsObject = typeof timeoutResult === "object";
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
+var nextTickPresent = (global.process && typeof global.process.nextTick === "function");
 var performancePresent = (global.performance && typeof global.performance.now === "function");
 
 clearTimeout(timeoutResult);
@@ -165,6 +166,27 @@ function createDate() {
     return mirrorDateProperties(ClockDate, NativeDate);
 }
 
+
+function enqueueJob(clock, job) {
+    // enqueues a microtick-deferred task - ecma262/#sec-enqueuejob
+    if (!clock.jobs) {
+        clock.jobs = [];
+    }
+    clock.jobs.push(job);
+}
+
+function runJobs(clock) {
+    // runs all microtick-deferred tasks - ecma262/#sec-runjobs
+    if (!clock.jobs) {
+        return;
+    }
+    for (var i = 0; i < clock.jobs.length; i++) {
+        var job = clock.jobs[i];
+        job.func.apply(null, job.func.args);
+    }
+    clock.jobs = [];
+}
+
 function addTimer(clock, timer) {
     if (timer.func === undefined) {
         throw new Error("Callback must be provided to timer calls");
@@ -288,26 +310,11 @@ function callTimer(clock, timer) {
         delete clock.timers[timer.id];
     }
 
-    try {
-        if (typeof timer.func === "function") {
-            timer.func.apply(null, timer.args);
-        } else {
-            /* eslint no-eval: "off" */
-            eval(timer.func);
-        }
-    } catch (e) {
-        exception = e;
-    }
-
-    if (!clock.timers[timer.id]) {
-        if (exception) {
-            throw exception;
-        }
-        return;
-    }
-
-    if (exception) {
-        throw exception;
+    if (typeof timer.func === "function") {
+        timer.func.apply(null, timer.args);
+    } else {
+        /* eslint no-eval: "off" */
+        eval(timer.func);
     }
 }
 
@@ -350,19 +357,25 @@ function clearTimer(clock, timerId, ttype) {
     }
 }
 
-function uninstall(clock, target) {
+function uninstall(clock, target, config) {
     var method,
         i,
         l;
     var installedHrTime = "_hrtime";
+    var installedNextTick = "_nextTick";
 
     for (i = 0, l = clock.methods.length; i < l; i++) {
         method = clock.methods[i];
         if (method === "hrtime" && target.process) {
             target.process.hrtime = clock[installedHrTime];
+        } else if (method === "nextTick" && target.process) {
+            target.process.nextTick = clock[installedNextTick];
         } else {
             if (target[method] && target[method].hadOwnProperty) {
                 target[method] = clock["_" + method];
+                if (method === "clearInterval" && config.shouldAdvanceTime === true) {
+                    target[method](clock.attachedInterval);
+                }
             } else {
                 try {
                     delete target[method];
@@ -377,7 +390,6 @@ function uninstall(clock, target) {
 
 function hijackMethod(target, method, clock) {
     var prop;
-
     clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(target, method);
     clock["_" + method] = target[method];
 
@@ -399,6 +411,10 @@ function hijackMethod(target, method, clock) {
     target[method].clock = clock;
 }
 
+function doIntervalTick(clock, advanceTimeDelta) {
+    clock.tick(advanceTimeDelta);
+}
+
 var timers = {
     setTimeout: setTimeout,
     clearTimeout: clearTimeout,
@@ -411,6 +427,10 @@ var timers = {
 
 if (hrtimePresent) {
     timers.hrtime = global.process.hrtime;
+}
+
+if (nextTickPresent) {
+    timers.nextTick = global.process.nextTick;
 }
 
 if (performancePresent) {
@@ -460,7 +480,12 @@ function createClock(now, loopLimit) {
     clock.clearTimeout = function clearTimeout(timerId) {
         return clearTimer(clock, timerId, "Timeout");
     };
-
+    clock.nextTick = function nextTick(func) {
+        return enqueueJob(clock, {
+            func: func,
+            args: Array.prototype.slice.call(1)
+        });
+    };
     clock.setInterval = function setInterval(func, timeout) {
         return addTimer(clock, {
             func: func,
@@ -486,6 +511,10 @@ function createClock(now, loopLimit) {
         return clearTimer(clock, timerId, "Immediate");
     };
 
+    function updateHrTime(newNow) {
+        clock.hrNow += (newNow - clock.now);
+    }
+
     clock.tick = function tick(ms) {
         ms = typeof ms === "number" ? ms : parseTime(ms);
         var tickFrom = clock.now;
@@ -495,10 +524,7 @@ function createClock(now, loopLimit) {
         var oldNow, firstException;
 
         clock.duringTick = true;
-
-        function updateHrTime(newNow) {
-            clock.hrNow += (newNow - clock.now);
-        }
+        runJobs(clock);
 
         while (timer && tickFrom <= tickTo) {
             if (clock.timers[timer.id]) {
@@ -506,6 +532,7 @@ function createClock(now, loopLimit) {
                 tickFrom = timer.callAt;
                 clock.now = timer.callAt;
                 try {
+                    runJobs(clock);
                     oldNow = clock.now;
                     callTimer(clock, timer);
                 } catch (e) {
@@ -524,6 +551,7 @@ function createClock(now, loopLimit) {
             previous = tickFrom;
         }
 
+        runJobs(clock);
         clock.duringTick = false;
         updateHrTime(tickTo);
         clock.now = tickTo;
@@ -536,6 +564,7 @@ function createClock(now, loopLimit) {
     };
 
     clock.next = function next() {
+        runJobs(clock);
         var timer = firstTimer(clock);
         if (!timer) {
             return clock.now;
@@ -543,8 +572,10 @@ function createClock(now, loopLimit) {
 
         clock.duringTick = true;
         try {
+            updateHrTime(timer.callAt);
             clock.now = timer.callAt;
             callTimer(clock, timer);
+            runJobs(clock);
             return clock.now;
         } finally {
             clock.duringTick = false;
@@ -553,12 +584,13 @@ function createClock(now, loopLimit) {
 
     clock.runAll = function runAll() {
         var numTimers, i;
+        runJobs(clock);
         for (i = 0; i < clock.loopLimit; i++) {
             if (!clock.timers) {
                 return clock.now;
             }
 
-            numTimers = Object.keys(clock.timers).length;
+            numTimers = keys(clock.timers).length;
             if (numTimers === 0) {
                 return clock.now;
             }
@@ -572,6 +604,7 @@ function createClock(now, loopLimit) {
     clock.runToLast = function runToLast() {
         var timer = lastTimer(clock);
         if (!timer) {
+            runJobs(clock);
             return clock.now;
         }
 
@@ -637,16 +670,24 @@ exports.createClock = createClock;
  * @param config.now {number|Date}  a number (in milliseconds) or a Date object (default epoch)
  * @param config.toFake {string[]} names of the methods that should be faked.
  * @param config.loopLimit {number} the maximum number of timers that will be run when calling runAll()
+ * @param config.shouldAdvanceTime {Boolean} tells lolex to increment mocked time automatically (default false)
+ * @param config.advanceTimeDelta {Number} increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
  */
 exports.install = function install(config) {
+    if ( arguments.length > 1 || config instanceof Date || Array.isArray(config) || typeof config === "number") {
+        throw new TypeError("lolex.install called with " + String(config) +
+            " lolex 2.0+ requires an object parameter - see https://github.com/sinonjs/lolex");
+    }
     config = typeof config !== "undefined" ? config : {};
+    config.shouldAdvanceTime = config.shouldAdvanceTime || false;
+    config.advanceTimeDelta = config.advanceTimeDelta || 20;
 
     var i, l;
     var target = config.target || global;
     var clock = createClock(config.now, config.loopLimit);
 
     clock.uninstall = function () {
-        uninstall(clock, target);
+        uninstall(clock, target, config);
     };
 
     clock.methods = config.toFake || [];
@@ -660,7 +701,18 @@ exports.install = function install(config) {
             if (target.process && typeof target.process.hrtime === "function") {
                 hijackMethod(target.process, clock.methods[i], clock);
             }
+        } else if (clock.methods[i] === "nextTick") {
+            if (target.process && typeof target.process.nextTick === "function") {
+                hijackMethod(target.process, clock.methods[i], clock);
+            }
         } else {
+            if (clock.methods[i] === "setInterval" && config.shouldAdvanceTime === true) {
+                var intervalTick = doIntervalTick.bind(null, clock, config.advanceTimeDelta);
+                var intervalId = target[clock.methods[i]](
+                    intervalTick,
+                    config.advanceTimeDelta);
+                clock.attachedInterval = intervalId;
+            }
             hijackMethod(target, clock.methods[i], clock);
         }
     }

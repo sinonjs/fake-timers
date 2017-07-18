@@ -1,4 +1,12 @@
 
+v2.0.1 / 2017-07-18
+==================
+
+  * Throw error on incorrect install use (#112)
+  * Add support for process.nextTick
+  * lolex can now attach itself to the system timers and automatically ad… (#102)
+  * update hrtime when an interval ticks
+
 v2.0.0 / 2017-07-13
 ==================
 
