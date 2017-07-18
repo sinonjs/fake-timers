@@ -20,15 +20,22 @@
     "test-cloud": "mochify --wd",
     "test": "npm run lint && npm run test-node && npm run test-headless",
     "bundle": "browserify -s lolex -o lolex.js src/lolex-src.js",
-    "prepublish": "npm run bundle"
+    "prepublish": "npm run bundle",
+    "precommit": "run-p lint test-node"
+  },
+  "lint-staged": {
+    "*.js": "eslint"
   },
   "devDependencies": {
     "browserify": "^14.4.0",
     "eslint": "^4.2.0",
     "eslint-config-sinon": "^1.0.3",
     "eslint-plugin-mocha": "^4.8.0",
+    "husky": "^0.14.3",
+    "lint-staged": "^4.0.2",
     "mocha": "^3.4.2",
     "mochify": "^3.3.0",
+    "npm-run-all": "^4.0.2",
     "referee": "^1.2.0",
     "sinon": "^2.3.7"
   },
