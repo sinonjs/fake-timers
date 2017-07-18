@@ -2053,6 +2053,17 @@ describe("lolex", function () {
                 clock.runAll();
                 assert(!called);
             });
+
+            it("passes arguments when installed - GitHub#122", function () {
+                var clock = this.clock = lolex.install();
+                var called = false;
+                process.nextTick(function (value) {
+                    called = value;
+                }, true);
+                clock.runAll();
+                assert(called);
+                clock.uninstall();
+            });
         });
     }
 });
