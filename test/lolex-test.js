@@ -2062,7 +2062,6 @@ describe("lolex", function () {
                 }, true);
                 clock.runAll();
                 assert(called);
-                clock.uninstall();
             });
         });
     }
