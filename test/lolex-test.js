@@ -53,6 +53,50 @@ describe("issue #73", function () {
     });
 });
 
+describe("issue #67", function () {
+    // see https://nodejs.org/api/timers.html
+    it("should overflow to 1 on very big timeouts", function () {
+        var clock = lolex.install();
+        var stub1 = sinon.stub();
+        var stub2 = sinon.stub();
+
+        clock.setTimeout(stub1, 100);
+        clock.setTimeout(stub2, 214748334700); //should be called after 1 tick
+
+        clock.tick(1);
+        assert(stub2.called);
+        assert.isFalse(stub1.called);
+
+        clock.tick(99);
+        assert(stub1.called);
+        assert(stub2.called);
+
+        clock.uninstall();
+    });
+
+    it("should overflow to interval 1 on very big timeouts", function () {
+        var clock = lolex.install();
+        var stub = sinon.stub();
+
+        clock.setInterval(stub, 214748334700);
+        clock.tick(3);
+        assert(stub.calledThrice);
+
+        clock.uninstall();
+    });
+
+    it("should execute setTimeout smaller than 1", function () {
+        var clock = lolex.install();
+        var stub1 = sinon.stub();
+
+        clock.setTimeout(stub1, 0.5);
+        clock.tick(1);
+        assert(stub1.calledOnce);
+
+        clock.uninstall();
+    });
+});
+
 describe("lolex", function () {
 
     describe("setTimeout", function () {
