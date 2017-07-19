@@ -1,4 +1,9 @@
 
+v2.1.1 / 2017-07-19
+==================
+
+  * support passing parameters in nextTick (fixes #122)
+
 v2.1.0 / 2017-07-18
 ==================
 
