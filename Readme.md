@@ -5,6 +5,8 @@ JavaScript implementation of the timer APIs; `setTimeout`, `clearTimeout`,
 a clock instance that controls the flow of time. Lolex also provides a `Date`
 implementation that gets its time from the clock.
 
+In addition in browser environment lolex provides a `performance` implementation that gets its time from the clock. In Node environments lolex provides a `nextTick` implementation that is synchronized with the clock - and a `process.hrtime` shim that works with the clock. 
+
 Lolex can be used to simulate passing time in automated tests and other
 situations where you want the scheduling semantics, but don't want to actually
 wait (however, from version 2.0 lolex supports those of you who would like to wait too). 
@@ -192,7 +194,11 @@ Clears the timer given the ID or timer object, as long as it was created using
 `setImmediate`.
 
 ### `clock.hrtime(prevTime?)`
-Only available in Node.JS, mimicks process.hrtime().
+Only available in Node.js, mimicks process.hrtime().
+
+### `clock.nextTick(callback)`
+
+Only available in Node.js, mimics `process.nextTick` to enable completely synchronous testing flows.
 
 ### `clock.performance.now()`
 Only available in browser environments, mimicks performance.now().
