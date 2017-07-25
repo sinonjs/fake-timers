@@ -1,4 +1,10 @@
 
+v2.1.2 / 2017-07-25
+==================
+
+  * - does not fake process.nextTick by default - added .idea folder to .gitignore - fixed documentation - added clock teardowns in tests
+  * overflowing the timer correctly (issue #67)
+
 v2.1.1 / 2017-07-19
 ==================
 

@@ -4,6 +4,7 @@
 
 var userAgent = global.navigator && global.navigator.userAgent;
 var isRunningInIE = userAgent && userAgent.indexOf("MSIE ") > -1;
+var maxTimeout = Math.pow(2, 31) - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
 
 // Make properties writable in IE, as per
 // http://www.adequatelygood.com/Replacing-setTimeout-Globally.html
@@ -190,6 +191,14 @@ function runJobs(clock) {
 function addTimer(clock, timer) {
     if (timer.func === undefined) {
         throw new Error("Callback must be provided to timer calls");
+    }
+
+    if (timer.hasOwnProperty("delay")) {
+        timer.delay = timer.delay > maxTimeout ? 1 : timer.delay;
+    }
+
+    if (timer.hasOwnProperty("interval")) {
+        timer.interval = timer.interval > maxTimeout ? 1 : timer.interval;
     }
 
     if (!clock.timers) {
@@ -691,7 +700,8 @@ exports.install = function install(config) {
     clock.methods = config.toFake || [];
 
     if (clock.methods.length === 0) {
-        clock.methods = keys(timers);
+        // do not fake nextTick by default - GitHub#126
+        clock.methods = keys(timers).filter(function (key) {return key !== "nextTick";});
     }
 
     for (i = 0, l = clock.methods.length; i < l; i++) {
