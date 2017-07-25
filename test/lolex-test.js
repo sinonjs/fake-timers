@@ -2016,17 +2016,18 @@ describe("lolex", function () {
             });
 
             it("installs with microticks", function () {
-                this.clock = lolex.install();
+                var clock = lolex.install({toFake: ["nextTick"]});
                 var called = false;
                 process.nextTick(function () {
                     called = true;
                 });
-                this.clock.runAll();
+                clock.runAll();
                 assert(called);
+                clock.uninstall();
             });
 
             it("installs with microticks and timers in order", function () {
-                var clock = this.clock = lolex.install();
+                var clock = lolex.install({toFake: ["nextTick", "setTimeout"]});
                 var order = [];
                 setTimeout(function () {
                     order.push("timer-1");
@@ -2041,10 +2042,11 @@ describe("lolex", function () {
                 assert.same(order[0], "timer-1");
                 assert.same(order[1], "tick");
                 assert.same(order[2], "timer-2");
+                clock.uninstall();
             });
 
             it("uninstalls", function () {
-                var clock = this.clock = lolex.install();
+                var clock = lolex.install({toFake: ["nextTick"]});
                 clock.uninstall();
                 var called = false;
                 process.nextTick(function () {
@@ -2055,13 +2057,27 @@ describe("lolex", function () {
             });
 
             it("passes arguments when installed - GitHub#122", function () {
-                var clock = this.clock = lolex.install();
+                var clock = lolex.install({toFake: ["nextTick"]});
                 var called = false;
                 process.nextTick(function (value) {
                     called = value;
                 }, true);
                 clock.runAll();
                 assert(called);
+                clock.uninstall();
+            });
+
+            it("does not install by default - GitHub#126", function (done) {
+                var clock = lolex.install();
+                var spy = sinon.spy(clock, "nextTick");
+                var called = false;
+                process.nextTick(function (value) {
+                    called = value;
+                    assert(called);
+                    assert(!spy.called);
+                    clock.uninstall();
+                    done();
+                }, true);
             });
         });
     }

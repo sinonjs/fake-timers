@@ -689,7 +689,8 @@ exports.install = function install(config) {
     clock.methods = config.toFake || [];
 
     if (clock.methods.length === 0) {
-        clock.methods = keys(timers);
+        // do not fake nextTick by default - GitHub#126
+        clock.methods = keys(timers).filter(function (key) {return key !== "nextTick";});
     }
 
     for (i = 0, l = clock.methods.length; i < l; i++) {
