@@ -1092,7 +1092,7 @@ describe("lolex", function () {
             assert.isFalse(spies[1].called);
         });
 
-        it("new timers added with a call time ealier than the last existing timer are run", function () {
+        it("new timers added with a call time earlier than the last existing timer are run", function () {
             this.clock = lolex.createClock();
             var test = this;
             var spies = [
