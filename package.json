@@ -42,5 +42,6 @@
   "eslintConfig": {
     "extends": "eslint-config-sinon"
   },
+  "module": "./lolex.js",
   "main": "./src/lolex-src.js"
 }
