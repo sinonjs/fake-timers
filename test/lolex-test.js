@@ -95,6 +95,18 @@ describe("issue #67", function () {
 
         clock.uninstall();
     });
+
+
+    it("executes setTimeout with negative duration as if it has zero delay", function () {
+        var clock = lolex.install();
+        var stub1 = sinon.stub();
+
+        clock.setTimeout(stub1, -10);
+        clock.tick(1);
+        assert(stub1.calledOnce);
+
+        clock.uninstall();
+    });
 });
 
 describe("lolex", function () {
