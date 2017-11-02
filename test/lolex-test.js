@@ -1942,6 +1942,177 @@ describe("lolex", function () {
         });
     });
 
+    describe("requestAnimationFrame", function () {
+        beforeEach(function () {
+            this.clock = lolex.createClock();
+        });
+
+        it("throws if no arguments", function () {
+            var clock = this.clock;
+
+            assert.exception(function () { clock.requestAnimationFrame(); });
+        });
+
+        it("returns numeric id or object with numeric id", function () {
+            var result = this.clock.requestAnimationFrame(NOOP);
+
+            assert.isNumber(result);
+        });
+
+        it("returns unique id", function () {
+            var id1 = this.clock.requestAnimationFrame(NOOP);
+            var id2 = this.clock.requestAnimationFrame(NOOP);
+
+            refute.equals(id2, id1);
+        });
+
+        it("should run every 16ms", function () {
+            var stub = sinon.stub();
+            this.clock.requestAnimationFrame(stub);
+            this.clock.tick(15);
+
+            assert.equals(0, stub.callCount);
+
+            this.clock.tick(1);
+
+            assert.equals(1, stub.callCount);
+        });
+
+        it("should be called with current time", function () {
+            var stub = sinon.stub();
+            this.clock.requestAnimationFrame(stub);
+            this.clock.tick(16);
+
+            assert(stub.calledWith(16));
+        });
+
+        it("should call callback once", function () {
+            var stub = sinon.stub();
+            this.clock.requestAnimationFrame(stub);
+            this.clock.tick(32);
+
+            assert.equals(stub.callCount, 1);
+        });
+
+        it("should schedule two callbacks before the next frame at the same time", function () {
+            var stub1 = sinon.stub();
+            var stub2 = sinon.stub();
+
+            this.clock.requestAnimationFrame(stub1);
+
+            this.clock.tick(5);
+
+            this.clock.requestAnimationFrame(stub2);
+
+            this.clock.tick(11);
+
+            assert(stub1.calledWith(16));
+            assert(stub2.calledWith(16));
+        });
+
+        it("should properly schedule callback for 3rd frame", function () {
+            var stub1 = sinon.stub();
+            var stub2 = sinon.stub();
+
+            this.clock.requestAnimationFrame(stub1);
+
+            this.clock.tick(57);
+
+            this.clock.requestAnimationFrame(stub2);
+
+            this.clock.tick(10);
+
+            assert(stub1.calledWith(16));
+            assert(stub2.calledWith(64));
+        });
+
+        it("should schedule for next frame if on current frame", function () {
+            var stub = sinon.stub();
+            this.clock.tick(16);
+            this.clock.requestAnimationFrame(stub);
+            this.clock.tick(16);
+
+            assert(stub.calledWith(32));
+        });
+    });
+
+    describe("cancelAnimationFrame", function () {
+
+        beforeEach(function () {
+            this.clock = lolex.createClock();
+        });
+
+        it("removes animation frame", function () {
+            var stub = sinon.stub();
+            var id = this.clock.requestAnimationFrame(stub);
+            this.clock.cancelAnimationFrame(id);
+            this.clock.tick(16);
+
+            assert.isFalse(stub.called);
+        });
+
+        it("does not remove timeout", function () {
+            var stub = sinon.stub();
+            var id = this.clock.setTimeout(stub, 50);
+            assert.exception(function () {
+                this.clock.cancelAnimationFrame(id);
+            }.bind(this), {
+                message: "Cannot clear timer: timer created with setTimeout() but cleared with cancelAnimationFrame()"
+            });
+            this.clock.tick(50);
+
+            assert.isTrue(stub.called);
+        });
+
+        it("does not remove interval", function () {
+            var stub = sinon.stub();
+            var id = this.clock.setInterval(stub, 50);
+            assert.exception(function () {
+                this.clock.cancelAnimationFrame(id);
+            }.bind(this), {
+                message: "Cannot clear timer: timer created with setInterval() but cleared with cancelAnimationFrame()"
+            });
+            this.clock.tick(50);
+
+            assert.isTrue(stub.called);
+        });
+
+        it("does not remove immediate", function () {
+            var stub = sinon.stub();
+            var id = this.clock.setImmediate(stub);
+            assert.exception(function () {
+                this.clock.cancelAnimationFrame(id);
+            }.bind(this), {
+                message: "Cannot clear timer: timer created with setImmediate() but cleared with cancelAnimationFrame()"
+            });
+            this.clock.tick(50);
+
+            assert.isTrue(stub.called);
+        });
+
+        it("ignores null argument", function () {
+            this.clock.cancelAnimationFrame(null);
+            assert(true); // doesn't fail
+        });
+    });
+
+    describe("runToFrame", function () {
+        beforeEach(function () {
+            this.clock = lolex.createClock();
+        });
+
+        it("should tick next frame", function () {
+            this.clock.runToFrame();
+
+            assert.equals(this.clock.now, 16);
+
+            this.clock.tick(3);
+            this.clock.runToFrame();
+
+            assert.equals(this.clock.now, 32);
+        });
+    });
+
     if (performancePresent) {
         describe("performance.now()", function () {
             it("should start at 0", function () {

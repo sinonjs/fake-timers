@@ -1,15 +1,12 @@
 # Lolex [![Build Status](https://secure.travis-ci.org/sinonjs/lolex.png)](http://travis-ci.org/sinonjs/lolex) [![bitHound Overall Score](https://www.bithound.io/github/sinonjs/lolex/badges/score.svg)](https://www.bithound.io/github/sinonjs/lolex)
 
-JavaScript implementation of the timer APIs; `setTimeout`, `clearTimeout`,
-`setImmediate`, `clearImmediate`, `setInterval` and `clearInterval`, along with
-a clock instance that controls the flow of time. Lolex also provides a `Date`
-implementation that gets its time from the clock.
+JavaScript implementation of the timer APIs; `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`, `setInterval`, `clearInterval`, `requestAnimationFrame`, and `clearAnimationFrame`, along with a clock instance that controls the flow of time. Lolex also provides a `Date` implementation that gets its time from the clock.
 
-In addition in browser environment lolex provides a `performance` implementation that gets its time from the clock. In Node environments lolex provides a `nextTick` implementation that is synchronized with the clock - and a `process.hrtime` shim that works with the clock. 
+In addition in browser environment lolex provides a `performance` implementation that gets its time from the clock. In Node environments lolex provides a `nextTick` implementation that is synchronized with the clock - and a `process.hrtime` shim that works with the clock.
 
 Lolex can be used to simulate passing time in automated tests and other
 situations where you want the scheduling semantics, but don't want to actually
-wait (however, from version 2.0 lolex supports those of you who would like to wait too). 
+wait (however, from version 2.0 lolex supports those of you who would like to wait too).
 
 Lolex is extracted from [Sinon.JS](https://github.com/sinonjs/sinon.js).
 
@@ -51,7 +48,7 @@ Upon executing the last line, an interesting fact about the
 the screen. If you want to simulate asynchronous behavior, you have to use your
 imagination when calling the various functions.
 
-The `next`, `runAll`, and `runToLast` methods are available to advance the clock. See the
+The `next`, `runAll`, `runToFrame`, and `runToLast` methods are available to advance the clock. See the
 API Reference for more details.
 
 ### Faking the native timers
@@ -102,7 +99,7 @@ to `tick()` the clock in a situation where you won't know **when** to call `tick
 
 Please note that this is achieved using the original setImmediate() API at a certain
 configurable interval `config.advanceTimeDelta` (default: 20ms). Meaning time would
-be incremented every 20ms, not in real time. 
+be incremented every 20ms, not in real time.
 
 An example would be:
 
@@ -140,8 +137,8 @@ Installs lolex using the specified config (otherwise with epoch `0` on the globa
 
 Parameter | Type | Default | Description
 --------- | ---- | ------- | ------------
-`config.target`| Object | global | installs lolex onto the specified target context 
-`config.now` | Number/Date | 0 | installs lolex with the specified unix epoch 
+`config.target`| Object | global | installs lolex onto the specified target context
+`config.now` | Number/Date | 0 | installs lolex with the specified unix epoch
 `config.toFake` | String[] | ["setTimeout", "clearTimeout", "setImmediate", "clearImmediate","setInterval", "clearInterval", "Date"] | an array with explicit function names to hijack. *When not set, lolex will automatically fake all methods **except** `nextTick`* e.g., `lolex.install({ toFake: ["setTimeout","nextTick"]})` will fake only `setTimeout` and `nextTick`
 `config.loopLimit` | Number | 1000 | the maximum number of timers that will be run when calling runAll()
 `config.shouldAdvanceTime` | Boolean | false | tells lolex to increment mocked time automatically based on the real system time shift (e.g. the mocked time will be incremented by 20ms for every 20ms change in the real system time)
@@ -193,6 +190,16 @@ In browsers a timer ID is returned.
 Clears the timer given the ID or timer object, as long as it was created using
 `setImmediate`.
 
+### `clock.requestAnimationFrame(callback)`
+
+Schedules the callback to be fired on the next animation frame, which runs every
+16 ticks. Returns an `id` which can be used to cancel the callback. This is
+available in both browser & node environments.
+
+### `clock.clearAnimationFrame(id)`
+
+Cancels the callback scheduled by the provided id.
+
 ### `clock.hrtime(prevTime?)`
 Only available in Node.js, mimicks process.hrtime().
 
@@ -225,6 +232,11 @@ This runs all pending timers until there are none remaining. If new timers are a
 This makes it easier to run asynchronous tests to completion without worrying about the number of timers they use, or the delays in those timers.
 
 It runs a maximum of `loopLimit` times after which it assumes there is an infinite loop of timers and throws an error.
+
+### `lock.runToFrame()`
+
+Advances the clock to the next frame, firing all scheduled animation frame callbacks,
+if any, for that frame as well as any other timers scheduled along the way.
 
 ### `clock.runToLast()`
 
