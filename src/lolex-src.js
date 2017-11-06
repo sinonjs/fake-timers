@@ -191,12 +191,15 @@ function addTimer(clock, timer) {
         throw new Error("Callback must be provided to timer calls");
     }
 
+    timer.type = timer.immediate ? "Immediate" : "Timeout";
+
     if (timer.hasOwnProperty("delay")) {
         timer.delay = timer.delay > maxTimeout ? 1 : timer.delay;
         timer.delay = Math.max(0, timer.delay);
     }
 
     if (timer.hasOwnProperty("interval")) {
+        timer.type = "Interval";
         timer.interval = timer.interval > maxTimeout ? 1 : timer.interval;
     }
 
@@ -324,16 +327,6 @@ function callTimer(clock, timer) {
     }
 }
 
-function timerType(timer) {
-    if (timer.immediate) {
-        return "Immediate";
-    }
-    if (timer.interval !== undefined) {
-        return "Interval";
-    }
-    return "Timeout";
-}
-
 function clearTimer(clock, timerId, ttype) {
     if (!timerId) {
         // null appears to be allowed in most browsers, and appears to be
@@ -354,10 +347,10 @@ function clearTimer(clock, timerId, ttype) {
     if (clock.timers.hasOwnProperty(timerId)) {
         // check that the ID matches a timer of the correct type
         var timer = clock.timers[timerId];
-        if (timerType(timer) === ttype) {
+        if (timer.type === ttype) {
             delete clock.timers[timerId];
         } else {
-            throw new Error("Cannot clear timer: timer created with set" + timerType(timer)
+            throw new Error("Cannot clear timer: timer created with set" + timer.type
                             + "() but cleared with clear" + ttype + "()");
         }
     }
