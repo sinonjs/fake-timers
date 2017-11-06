@@ -1172,6 +1172,19 @@ describe("lolex", function () {
             assert.isTrue(stub.called);
         });
 
+        it("does not remove interval with undefined interval", function () {
+            var stub = sinon.stub();
+            var id = this.clock.setInterval(stub);
+            assert.exception(function () {
+                this.clock.clearTimeout(id);
+            }.bind(this), {
+                message: "Cannot clear timer: timer created with setInterval() but cleared with clearTimeout()"
+            });
+            this.clock.tick(50);
+
+            assert.isTrue(stub.called);
+        });
+
         it("does not remove immediate", function () {
             var stub = sinon.stub();
             var id = this.clock.setImmediate(stub);
@@ -1305,6 +1318,15 @@ describe("lolex", function () {
         it("removes interval", function () {
             var stub = sinon.stub();
             var id = this.clock.setInterval(stub, 50);
+            this.clock.clearInterval(id);
+            this.clock.tick(50);
+
+            assert.isFalse(stub.called);
+        });
+
+        it("removes interval with undefined interval", function () {
+            var stub = sinon.stub();
+            var id = this.clock.setInterval(stub);
             this.clock.clearInterval(id);
             this.clock.tick(50);
 
