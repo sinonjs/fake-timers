@@ -1,4 +1,10 @@
 
+v2.2.0 / 2017-11-07
+==================
+
+  * Add support for requestAnimationFrame
+  * fix negative timeout bug
+
 v2.1.3 / 2017-10-03
 ==================
 
