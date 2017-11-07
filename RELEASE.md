@@ -31,8 +31,9 @@ The `master` branch is protected.
 You can merge it yourself.
 
 ## Push new commits and tags
+> Assuming that `origin` points to `github.com/sinonjs/lolex`
 ```
-git push && git push --tags
+git push --follow-tags origin
 ```
 
 ## Publish to NPM
