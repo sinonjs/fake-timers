@@ -203,6 +203,11 @@ function addTimer(clock, timer) {
         timer.interval = timer.interval > maxTimeout ? 1 : timer.interval;
     }
 
+    if (timer.hasOwnProperty("animation")) {
+        timer.type = "AnimationFrame";
+        timer.animation = true;
+    }
+
     if (!clock.timers) {
         clock.timers = {};
     }
@@ -350,8 +355,10 @@ function clearTimer(clock, timerId, ttype) {
         if (timer.type === ttype) {
             delete clock.timers[timerId];
         } else {
-            throw new Error("Cannot clear timer: timer created with set" + timer.type
-                            + "() but cleared with clear" + ttype + "()");
+            var clear = ttype === "AnimationFrame" ? "cancelAnimationFrame" : "clear" + ttype;
+            var schedule = timer.type === "AnimationFrame" ? "requestAnimationFrame" : "set" + timer.type;
+            throw new Error("Cannot clear timer: timer created with " + schedule
+                            + "() but cleared with " + clear + "()");
         }
     }
 }
@@ -421,6 +428,8 @@ var timers = {
     clearImmediate: global.clearImmediate,
     setInterval: setInterval,
     clearInterval: clearInterval,
+    requestAnimationFrame: global.requestAnimationFrame,
+    cancelAnimationFrame: global.cancelAnimationFrame,
     Date: Date
 };
 
@@ -452,14 +461,15 @@ var keys = Object.keys || function (obj) {
 exports.timers = timers;
 
 /**
- * @param now {Date|number} the system time
+ * @param start {Date|number} the system time
  * @param loopLimit {number}  maximum number of timers that will be run when calling runAll()
  */
-function createClock(now, loopLimit) {
+function createClock(start, loopLimit) {
+    start = start || 0;
     loopLimit = loopLimit || 1000;
 
     var clock = {
-        now: getEpoch(now),
+        now: getEpoch(start),
         hrNow: 0,
         timeouts: {},
         Date: createDate(),
@@ -467,6 +477,10 @@ function createClock(now, loopLimit) {
     };
 
     clock.Date.clock = clock;
+
+    function getTimeToNextFrame() {
+        return 16 - ((clock.now - start) % 16);
+    }
 
     clock.setTimeout = function setTimeout(func, timeout) {
         return addTimer(clock, {
@@ -508,6 +522,21 @@ function createClock(now, loopLimit) {
 
     clock.clearImmediate = function clearImmediate(timerId) {
         return clearTimer(clock, timerId, "Immediate");
+    };
+
+    clock.requestAnimationFrame = function requestAnimationFrame(func) {
+        var result = addTimer(clock, {
+            func: func,
+            delay: getTimeToNextFrame(),
+            args: [clock.now + getTimeToNextFrame()],
+            animation: true
+        });
+
+        return result.id || result;
+    };
+
+    clock.cancelAnimationFrame = function cancelAnimationFrame(timerId) {
+        return clearTimer(clock, timerId, "AnimationFrame");
     };
 
     function updateHrTime(newNow) {
@@ -598,6 +627,10 @@ function createClock(now, loopLimit) {
         }
 
         throw new Error("Aborting after running " + clock.loopLimit + " timers, assuming an infinite loop!");
+    };
+
+    clock.runToFrame = function runToFrame() {
+        return clock.tick(getTimeToNextFrame());
     };
 
     clock.runToLast = function runToLast() {
