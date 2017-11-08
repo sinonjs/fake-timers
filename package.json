@@ -34,7 +34,7 @@
     "husky": "^0.14.3",
     "lint-staged": "^4.0.2",
     "mocha": "^4.0.1",
-    "mochify": "^3.3.0",
+    "mochify": "^4.0.0",
     "npm-run-all": "^4.0.2",
     "referee": "^1.2.0",
     "sinon": "^2.3.7"
