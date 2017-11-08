@@ -2305,6 +2305,49 @@ describe("lolex", function () {
                 assert(!called);
             });
 
+            it("returns an empty list of timers on immediate uninstall", function () {
+                var clock = lolex.install();
+                var timers = clock.uninstall();
+                assert.equals(timers, []);
+            });
+
+
+            it("returns a timer if uninstalling before it's called", function () {
+                var clock = lolex.install();
+                clock.setTimeout(function () {}, 100);
+                var timers = clock.uninstall();
+                assert.equals(timers.length, 1);
+                assert.equals(timers[0].createdAt, clock.now);
+                assert.equals(timers[0].callAt, clock.now + 100);
+                assert(typeof timers[0].id !== "undefined");
+            });
+
+            it("does not return already executed timers on uninstall", function () {
+                var clock = lolex.install();
+                clock.setTimeout(function () {}, 100);
+                clock.setTimeout(function () {}, 200);
+                clock.tick(100);
+                var timers = clock.uninstall();
+                assert.equals(timers.length, 1);
+                assert.equals(timers[0].createdAt, clock.now - 100);
+                assert.equals(timers[0].callAt, clock.now + 100);
+                assert(typeof timers[0].id !== "undefined");
+            });
+
+            it("returns multiple timers on uninstall if created", function () {
+                var clock = lolex.install();
+                for (var i = 0; i < 5; i++) {
+                    clock.setTimeout(function () {}, 100 * i);
+                }
+                var timers = clock.uninstall();
+                assert.equals(timers.length, 5);
+                for (i = 0; i < 5; i++) {
+                    assert.equals(timers[i].createdAt, clock.now);
+                    assert.equals(timers[i].callAt, clock.now + 100 * i);
+                }
+                assert(typeof timers[0].id !== "undefined");
+            });
+
             it("passes arguments when installed - GitHub#122", function () {
                 var clock = lolex.install({toFake: ["nextTick"]});
                 var called = false;

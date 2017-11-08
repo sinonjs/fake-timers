@@ -392,6 +392,14 @@ function uninstall(clock, target, config) {
 
     // Prevent multiple executions which will completely remove these props
     clock.methods = [];
+
+    // return pending timers, to enable checking what timers remained on uninstall
+    if (!clock.timers) {
+        return [];
+    }
+    return Object.keys(clock.timers).map(function mapper(key) {
+        return clock.timers[key];
+    });
 }
 
 function hijackMethod(target, method, clock) {
@@ -719,7 +727,7 @@ exports.install = function install(config) {
     var clock = createClock(config.now, config.loopLimit);
 
     clock.uninstall = function () {
-        uninstall(clock, target, config);
+        return uninstall(clock, target, config);
     };
 
     clock.methods = config.toFake || [];
