@@ -37,7 +37,7 @@
     "mochify": "^4.0.0",
     "npm-run-all": "^4.0.2",
     "referee": "^1.2.0",
-    "sinon": "^2.3.7"
+    "sinon": "^4.1.2"
   },
   "eslintConfig": {
     "extends": "eslint-config-sinon"
