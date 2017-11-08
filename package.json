@@ -15,7 +15,7 @@
   "license": "BSD-3-Clause",
   "scripts": {
     "lint": "eslint .",
-    "test-node": "mocha -R dot",
+    "test-node": "mocha -R dot --check-leaks",
     "test-headless": "mochify",
     "test-cloud": "mochify --wd",
     "test": "npm run lint && npm run test-node && npm run test-headless",

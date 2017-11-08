@@ -31,6 +31,8 @@ var addTimerReturnsObject = typeof timeoutResult === "object";
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
 var nextTickPresent = (global.process && typeof global.process.nextTick === "function");
 var performancePresent = (global.performance && typeof global.performance.now === "function");
+var requestAnimationFramePresent = (global.requestAnimationFrame && typeof global.requestAnimationFrame === "function");
+var cancelAnimationFramePresent = (global.cancelAnimationFrame && typeof global.cancelAnimationFrame === "function");
 
 clearTimeout(timeoutResult);
 
@@ -436,8 +438,6 @@ var timers = {
     clearImmediate: global.clearImmediate,
     setInterval: setInterval,
     clearInterval: clearInterval,
-    requestAnimationFrame: global.requestAnimationFrame,
-    cancelAnimationFrame: global.cancelAnimationFrame,
     Date: Date
 };
 
@@ -451,6 +451,14 @@ if (nextTickPresent) {
 
 if (performancePresent) {
     timers.performance = global.performance;
+}
+
+if (requestAnimationFramePresent) {
+    timers.requestAnimationFrame = global.requestAnimationFrame;
+}
+
+if (cancelAnimationFramePresent) {
+    timers.cancelAnimationFrame = global.cancelAnimationFrame;
 }
 
 var keys = Object.keys || function (obj) {
