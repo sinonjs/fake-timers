@@ -1,4 +1,10 @@
 
+v2.3.0 / 2017-11-08
+==================
+
+  * Stops leak of (request|cancel)AnimationFrame into global scope. (#143)
+  * return timers on uninstall
+
 v2.2.0 / 2017-11-07
 ==================
 

@@ -33,6 +33,8 @@ var addTimerReturnsObject = typeof timeoutResult === "object";
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
 var nextTickPresent = (global.process && typeof global.process.nextTick === "function");
 var performancePresent = (global.performance && typeof global.performance.now === "function");
+var requestAnimationFramePresent = (global.requestAnimationFrame && typeof global.requestAnimationFrame === "function");
+var cancelAnimationFramePresent = (global.cancelAnimationFrame && typeof global.cancelAnimationFrame === "function");
 
 clearTimeout(timeoutResult);
 
@@ -394,6 +396,14 @@ function uninstall(clock, target, config) {
 
     // Prevent multiple executions which will completely remove these props
     clock.methods = [];
+
+    // return pending timers, to enable checking what timers remained on uninstall
+    if (!clock.timers) {
+        return [];
+    }
+    return Object.keys(clock.timers).map(function mapper(key) {
+        return clock.timers[key];
+    });
 }
 
 function hijackMethod(target, method, clock) {
@@ -430,8 +440,6 @@ var timers = {
     clearImmediate: global.clearImmediate,
     setInterval: setInterval,
     clearInterval: clearInterval,
-    requestAnimationFrame: global.requestAnimationFrame,
-    cancelAnimationFrame: global.cancelAnimationFrame,
     Date: Date
 };
 
@@ -445,6 +453,14 @@ if (nextTickPresent) {
 
 if (performancePresent) {
     timers.performance = global.performance;
+}
+
+if (requestAnimationFramePresent) {
+    timers.requestAnimationFrame = global.requestAnimationFrame;
+}
+
+if (cancelAnimationFramePresent) {
+    timers.cancelAnimationFrame = global.cancelAnimationFrame;
 }
 
 var keys = Object.keys || function (obj) {
@@ -721,7 +737,7 @@ exports.install = function install(config) {
     var clock = createClock(config.now, config.loopLimit);
 
     clock.uninstall = function () {
-        uninstall(clock, target, config);
+        return uninstall(clock, target, config);
     };
 
     clock.methods = config.toFake || [];
