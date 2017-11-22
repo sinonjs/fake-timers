@@ -224,6 +224,20 @@ describe("lolex", function () {
             assert.equals(stub.callCount, 1);
         });
 
+        it("is not influenced by forward system clock changes during process.nextTick()", function () {
+            var me = this;
+            var stub = sinon.stub();
+            this.clock.setTimeout(stub, 5000);
+            this.clock.tick(1000);
+            this.clock.nextTick(function () {
+                me.clock.setSystemTime(me.clock.now + 1000);
+            });
+            this.clock.tick(3990);
+            assert.equals(stub.callCount, 0);
+            this.clock.tick(20);
+            assert.equals(stub.callCount, 1);
+        });
+
         it("is not influenced by backward system clock changes", function () {
             var stub = sinon.stub();
             this.clock.setTimeout(stub, 5000);
@@ -233,6 +247,44 @@ describe("lolex", function () {
             assert.equals(stub.callCount, 0);
             this.clock.tick(20);
             assert.equals(stub.callCount, 1);
+        });
+
+        it("should work when called from a process.nextTick()", function () {
+            var me = this;
+            var callbackCalled = false;
+            this.clock.nextTick(function () {
+                me.clock.setTimeout(function () {
+                    callbackCalled = true;
+                }, 50);
+            });
+            this.clock.tick(60);
+            assert.equals(callbackCalled, true);
+        });
+        it("should work when called from a process.nextTick() (across the tick())", function () {
+            var me = this;
+            var callbackCalled = false;
+            this.clock.nextTick(function () {
+                me.clock.setTimeout(function () {
+                    callbackCalled = true;
+                }, 100);
+            });
+            this.clock.tick(60);
+            assert.equals(callbackCalled, false);
+            this.clock.tick(41);
+            assert.equals(callbackCalled, true);
+        });
+        it("should work when called from setTimeout(() => process.nextTick())", function () {
+            var me = this;
+            var callbackCalled = false;
+            this.clock.setTimeout(function () {
+                me.clock.nextTick(function () {
+                    me.clock.setTimeout(function () {
+                        callbackCalled = true;
+                    }, 50);
+                });
+            }, 10);
+            this.clock.tick(61);
+            assert.equals(callbackCalled, true);
         });
     });
 
