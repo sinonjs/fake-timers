@@ -564,12 +564,12 @@ function createClock(start, loopLimit) {
         var tickFrom = clock.now;
         var tickTo = clock.now + ms;
         var previous = clock.now;
-        var timer = firstTimerInRange(clock, tickFrom, tickTo);
         var oldNow, firstException;
 
         clock.duringTick = true;
         runJobs(clock);
 
+        var timer = firstTimerInRange(clock, tickFrom, tickTo);
         while (timer && tickFrom <= tickTo) {
             if (clock.timers[timer.id]) {
                 updateHrTime(timer.callAt);

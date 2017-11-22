@@ -234,6 +234,18 @@ describe("lolex", function () {
             this.clock.tick(20);
             assert.equals(stub.callCount, 1);
         });
+
+        it("should work when called from a process.nextTick()", function () {
+            var me = this;
+            var callbackCalled = false;
+            this.clock.nextTick(function () {
+                me.clock.setTimeout(function () {
+                    callbackCalled = true;
+                }, 50);
+            });
+            this.clock.tick(60);
+            assert.equals(callbackCalled, true);
+        });
     });
 
     describe("setImmediate", function () {
