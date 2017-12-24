@@ -1,6 +1,6 @@
 # Lolex [![Build Status](https://secure.travis-ci.org/sinonjs/lolex.png)](http://travis-ci.org/sinonjs/lolex) [![bitHound Overall Score](https://www.bithound.io/github/sinonjs/lolex/badges/score.svg)](https://www.bithound.io/github/sinonjs/lolex)
 
-JavaScript implementation of the timer APIs; `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`, `setInterval`, `clearInterval`, `requestAnimationFrame`, and `clearAnimationFrame`, along with a clock instance that controls the flow of time. Lolex also provides a `Date` implementation that gets its time from the clock.
+JavaScript implementation of the timer APIs; `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`, `setInterval`, `clearInterval`, `requestAnimationFrame`, and `cancelAnimationFrame`, along with a clock instance that controls the flow of time. Lolex also provides a `Date` implementation that gets its time from the clock.
 
 In addition in browser environment lolex provides a `performance` implementation that gets its time from the clock. In Node environments lolex provides a `nextTick` implementation that is synchronized with the clock - and a `process.hrtime` shim that works with the clock.
 
@@ -196,7 +196,7 @@ Schedules the callback to be fired on the next animation frame, which runs every
 16 ticks. Returns an `id` which can be used to cancel the callback. This is
 available in both browser & node environments.
 
-### `clock.clearAnimationFrame(id)`
+### `clock.cancelAnimationFrame(id)`
 
 Cancels the callback scheduled by the provided id.
 
