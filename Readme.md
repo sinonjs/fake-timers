@@ -233,7 +233,7 @@ This makes it easier to run asynchronous tests to completion without worrying ab
 
 It runs a maximum of `loopLimit` times after which it assumes there is an infinite loop of timers and throws an error.
 
-### `lock.runToFrame()`
+### `clock.runToFrame()`
 
 Advances the clock to the next frame, firing all scheduled animation frame callbacks,
 if any, for that frame as well as any other timers scheduled along the way.
