@@ -27,17 +27,17 @@
     "*.js": "eslint"
   },
   "devDependencies": {
-    "browserify": "^14.4.0",
-    "eslint": "^4.2.0",
-    "eslint-config-sinon": "^1.0.3",
-    "eslint-plugin-mocha": "^4.8.0",
-    "husky": "^0.14.3",
-    "lint-staged": "^4.0.2",
-    "mocha": "^4.0.1",
-    "mochify": "^4.0.0",
-    "npm-run-all": "^4.0.2",
-    "referee": "^1.2.0",
-    "sinon": "^4.1.2"
+    "browserify": "14.4.0",
+    "eslint": "4.2.0",
+    "eslint-config-sinon": "1.0.3",
+    "eslint-plugin-mocha": "4.8.0",
+    "husky": "0.14.3",
+    "lint-staged": "4.0.2",
+    "mocha": "4.0.1",
+    "mochify": "4.0.0",
+    "npm-run-all": "4.0.2",
+    "referee": "1.2.0",
+    "sinon": "4.1.2"
   },
   "eslintConfig": {
     "extends": "eslint-config-sinon"
