@@ -30,7 +30,7 @@
     "browserify": "14.4.0",
     "eslint": "4.2.0",
     "eslint-config-sinon": "1.0.3",
-    "eslint-plugin-mocha": "4.8.0",
+    "eslint-plugin-mocha": "4.11.0",
     "husky": "0.14.3",
     "lint-staged": "4.0.2",
     "mocha": "4.0.1",
