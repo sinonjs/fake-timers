@@ -30,6 +30,7 @@
     "browserify": "14.4.0",
     "eslint": "4.2.0",
     "eslint-config-sinon": "1.0.3",
+    "eslint-plugin-ie11": "1.0.0",
     "eslint-plugin-mocha": "4.11.0",
     "husky": "0.14.3",
     "lint-staged": "4.0.2",
@@ -41,17 +42,25 @@
   },
   "eslintConfig": {
     "extends": "eslint-config-sinon",
-    "plugins": ["ie11"],
+    "plugins": [
+      "ie11"
+    ],
     "rules": {
-      "ie11/no-collection-args": [ "error" ],
-      "ie11/no-for-in-const": [ "error" ],
-      "ie11/no-loop-func": [ "warn" ],
-      "ie11/no-weak-collections": [ "error" ]
+      "ie11/no-collection-args": [
+        "error"
+      ],
+      "ie11/no-for-in-const": [
+        "error"
+      ],
+      "ie11/no-loop-func": [
+        "warn"
+      ],
+      "ie11/no-weak-collections": [
+        "error"
+      ]
     }
   },
   "module": "./lolex.js",
   "main": "./src/lolex-src.js",
-  "dependencies": {
-    "eslint-plugin-ie11": "1.0.0"
-  }
+  "dependencies": {}
 }
