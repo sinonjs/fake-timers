@@ -40,8 +40,18 @@
     "sinon": "4.1.2"
   },
   "eslintConfig": {
-    "extends": "eslint-config-sinon"
+    "extends": "eslint-config-sinon",
+    "plugins": ["ie11"],
+    "rules": {
+      "ie11/no-collection-args": [ "error" ],
+      "ie11/no-for-in-const": [ "error" ],
+      "ie11/no-loop-func": [ "warn" ],
+      "ie11/no-weak-collections": [ "error" ]
+    }
   },
   "module": "./lolex.js",
-  "main": "./src/lolex-src.js"
+  "main": "./src/lolex-src.js",
+  "dependencies": {
+    "eslint-plugin-ie11": "1.0.0"
+  }
 }

@@ -1,9 +1,3 @@
-/*global
-    describe,
-    beforeEach,
-    afterEach,
-    it
-*/
 /**
  * @author Christian Johansen (christian@cjohansen.no)
  * @license BSD
@@ -2389,6 +2383,8 @@ describe("lolex", function () {
             it("returns multiple timers on uninstall if created", function () {
                 var clock = lolex.install();
                 for (var i = 0; i < 5; i++) {
+                    // yes, it's silly to create a function in a loop. This is a test, we can live with it
+                    // eslint-disable-next-line ie11/no-loop-func
                     clock.setTimeout(function () {}, 100 * i);
                 }
                 var timers = clock.uninstall();
