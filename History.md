@@ -1,4 +1,10 @@
 
+v2.3.2 / 2018-01-29
+==================
+
+* Add files section to package.json to avoid unnecessary package bloat #154
+* Add missing functions in default `toFake` #150
+
 v2.3.1 / 2017-11-22
 ==================
 
