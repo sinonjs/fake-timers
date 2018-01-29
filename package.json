@@ -26,6 +26,10 @@
   "lint-staged": {
     "*.js": "eslint"
   },
+  "files": [
+    "src/",
+    "lolex.js"
+  ],
   "devDependencies": {
     "browserify": "14.4.0",
     "eslint": "4.2.0",
