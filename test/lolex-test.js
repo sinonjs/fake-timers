@@ -2264,6 +2264,16 @@ describe("lolex", function () {
                 assert(called);
             });
 
+            it("runs when runMicrotasks is called on the clock", function () {
+                var clock = lolex.createClock();
+                var called = false;
+                clock.nextTick(function () {
+                    called = true;
+                });
+                clock.runMicrotasks();
+                assert(called);
+            });
+
             it("runs with timers - and before them", function () {
                 var clock = lolex.createClock();
                 var last = "";
