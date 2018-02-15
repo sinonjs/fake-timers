@@ -738,6 +738,12 @@ function createClock(start, loopLimit) {
 }
 exports.createClock = createClock;
 
+exports.setTimersReturnsObjects = function(value) {
+    var oldValue = addTimerReturnsObject;
+    addTimerReturnsObject = value;
+    return oldValue;
+};
+
 /**
  * @param config {Object} optional config
  * @param config.target {Object} the target to install timers in (default `window`)

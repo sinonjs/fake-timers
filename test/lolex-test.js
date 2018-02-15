@@ -1726,6 +1726,22 @@ describe("lolex", function () {
             }
         });
 
+        it("Configuring the type of timers", function () {
+            this.clock = lolex.install();
+            var stub = sinon.stub();
+
+            var oldValue = lolex.setTimersReturnsObjects(true);
+            var to = setTimeout(stub, 1000);
+            assert.isNumber(to.id);
+            assert.isFunction(to.ref);
+            assert.isFunction(to.unref);
+            var returnValue = lolex.setTimersReturnsObjects(false);
+            assert.isTrue(returnValue);
+            var to = setTimeout(stub, 1000);
+            assert.isNumber(to);
+            lolex.setTimersReturnsObjects(oldValue);
+        });
+
         it("replaces global clearTimeout", function () {
             this.clock = lolex.install();
             var stub = sinon.stub();
