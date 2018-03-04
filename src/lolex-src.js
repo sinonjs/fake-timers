@@ -557,7 +557,7 @@ function createClock(start, loopLimit) {
 
     function updateHrTime(newNow) {
         clock.hrNow += (newNow - clock.now);
-    };
+    }
 
     clock.runMicrotasks = function runMicrotasks() {
         runJobs(clock);
