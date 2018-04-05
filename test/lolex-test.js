@@ -1833,6 +1833,26 @@ describe("lolex", function () {
                 this.clock.uninstall();
                 assert.same(performance.now, oldNow);
             });
+
+            it("keeps original performance's all prototype methods after being installed", function () {
+                // In Phantom.js environment, Performance.prototype has only "now" method.
+                // For testing, some stub functions need to be assigned.
+                Performance.prototype.someFunc1 = function () {};
+                Performance.prototype.someFunc2 = function () {};
+                Performance.prototype.someFunc3 = function () {};
+
+                this.clock = lolex.install();
+
+                assert.isFunction(performance.someFunc1);
+                assert.isFunction(performance.someFunc2);
+                assert.isFunction(performance.someFunc3);
+
+                this.clock.uninstall();
+
+                delete Performance.prototype.someFunc1;
+                delete Performance.prototype.someFunc2;
+                delete Performance.prototype.someFunc3;
+            });
         }
 
         if (Object.getPrototypeOf(global)) {

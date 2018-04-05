@@ -710,6 +710,15 @@ function createClock(start, loopLimit) {
 
     if (performancePresent) {
         clock.performance = Object.create(global.performance);
+
+        var proto = Performance.prototype;
+
+        Object
+            .getOwnPropertyNames(global.Performance.prototype)
+            .forEach(function (name) {
+                clock.performance[name] = proto[name];
+            });
+
         clock.performance.now = function lolexNow() {
             return clock.hrNow;
         };
