@@ -559,6 +559,10 @@ function createClock(start, loopLimit) {
         clock.hrNow += (newNow - clock.now);
     }
 
+    clock.runMicrotasks = function runMicrotasks() {
+        runJobs(clock);
+    };
+
     clock.tick = function tick(ms) {
         ms = typeof ms === "number" ? ms : parseTime(ms);
         var tickFrom = clock.now;

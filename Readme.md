@@ -233,6 +233,10 @@ This makes it easier to run asynchronous tests to completion without worrying ab
 
 It runs a maximum of `loopLimit` times after which it assumes there is an infinite loop of timers and throws an error.
 
+### `clock.runMicrotasks()`
+
+This runs all pending microtasks scheduled with `nextTick` but none of the timers and is mostly useful for libraries using lolex underneath and for running `nextTick` items without any timers.
+
 ### `clock.runToFrame()`
 
 Advances the clock to the next frame, firing all scheduled animation frame callbacks,
