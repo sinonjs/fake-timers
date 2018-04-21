@@ -738,7 +738,9 @@ function withGlobal(_global) {
             Object
                 .getOwnPropertyNames(_global.Performance.prototype)
                 .forEach(function (name) {
-                    clock.performance[name] = proto[name];
+                    if (Object.getOwnPropertyDescriptor(proto, name).writable) {
+                        clock.performance[name] = proto[name];
+                    }
                 });
 
             clock.performance.now = function lolexNow() {
