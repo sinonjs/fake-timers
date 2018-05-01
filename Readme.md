@@ -1,4 +1,4 @@
-# Lolex [![Build Status](https://travis-ci.org/sinonjs/lolex.svg?branch=master)](https://travis-ci.org/sinonjs/lolex) [![bitHound Overall Score](https://www.bithound.io/github/sinonjs/lolex/badges/score.svg)](https://www.bithound.io/github/sinonjs/lolex)
+# Lolex [![Build Status](https://travis-ci.org/sinonjs/lolex.svg?branch=master)](https://travis-ci.org/sinonjs/lolex)
 
 JavaScript implementation of the timer APIs; `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`, `setInterval`, `clearInterval`, `requestAnimationFrame`, and `cancelAnimationFrame`, along with a clock instance that controls the flow of time. Lolex also provides a `Date` implementation that gets its time from the clock.
 
