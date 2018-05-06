@@ -265,6 +265,10 @@ setSystemTime().
 Restores the original methods on the `target` that was passed to
 `lolex.install`, or the native timers if no `target` was given.
 
+### `lolex.setTimersReturnsObjects(boolean)`
+
+Changes whether or not timers should return objects (like Node native timers) or integer IDs (like DOM timers).
+
 ### `Date`
 
 Implements the `Date` object but using the clock to provide the correct time.
