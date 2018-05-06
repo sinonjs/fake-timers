@@ -823,3 +823,4 @@ var defaultImplementation = withGlobal(global || window);
 exports.timers = defaultImplementation.timers;
 exports.createClock = defaultImplementation.createClock;
 exports.install = defaultImplementation.install;
+exports.withGlobal = withGlobal;
