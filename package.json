@@ -15,7 +15,7 @@
   "license": "BSD-3-Clause",
   "scripts": {
     "lint": "eslint .",
-    "test-node": "mocha -R dot --check-leaks",
+    "test-node": "mocha test/ integration-test/ -R dot --check-leaks",
     "test-headless": "mochify",
     "test-cloud": "mochify --wd",
     "test": "npm run lint && npm run test-node && npm run test-headless",
@@ -37,6 +37,7 @@
     "eslint-plugin-ie11": "1.0.0",
     "eslint-plugin-mocha": "4.11.0",
     "husky": "0.14.3",
+    "jsdom": "11.10.0",
     "lint-staged": "7.0.4",
     "mocha": "5.1.0",
     "mochify": "5.6.0",
