@@ -1,4 +1,11 @@
 
+v2.4.0 / 2018-05-08
+==================
+
+  * Add `withGlobal` export
+  * expose runMicrotasks
+  * Fix that performance.mark is undefined after timer install
+
 v2.3.2 / 2018-01-29
 ==================
 
