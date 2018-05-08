@@ -733,7 +733,7 @@ function withGlobal(_global) {
         if (performancePresent) {
             clock.performance = Object.create(_global.performance);
 
-            var proto = Performance.prototype;
+            var proto = _global.Performance.prototype;
 
             Object
                 .getOwnPropertyNames(_global.Performance.prototype)
