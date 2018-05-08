@@ -24,13 +24,14 @@ var sinon = require("sinon");
 var assert = referee.assert;
 
 describe("withGlobal", function () {
-    var jsdomGlobal, withGlobal;
+    var jsdomGlobal, withGlobal, timers;
 
     beforeEach(function () {
         var dom = new jsdom.JSDOM("", {runScripts: "dangerously" });
         jsdomGlobal = dom.window;
 
         withGlobal = lolex.withGlobal(jsdomGlobal);
+        timers = Object.keys(withGlobal.timers);
     });
 
     it("matches the normal lolex API", function () {
@@ -38,7 +39,7 @@ describe("withGlobal", function () {
     });
 
     it("should support basic setTimeout", function () {
-        var clock = withGlobal.install({target: jsdomGlobal});
+        var clock = withGlobal.install({target: jsdomGlobal, toFake: timers});
         var stub = sinon.stub();
 
         jsdomGlobal.setTimeout(stub, 5);
