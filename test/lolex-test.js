@@ -280,6 +280,20 @@ describe("lolex", function () {
             this.clock.tick(61);
             assert.equals(callbackCalled, true);
         });
+        it("handles Infinity and negative Infinity correctly", function () {
+            var calls = [];
+            this.clock.setTimeout(function () {
+                calls.push("NaN");
+            }, NaN);
+            this.clock.setTimeout(function () {
+                calls.push("Infinity");
+            }, Number.POSITIVE_INFINITY);
+            this.clock.setTimeout(function () {
+                calls.push("-Infinity");
+            }, Number.NEGATIVE_INFINITY);
+            this.clock.runAll();
+            assert.equals(calls, ["NaN", "Infinity", "-Infinity"]);
+        });
     });
 
     describe("setImmediate", function () {
