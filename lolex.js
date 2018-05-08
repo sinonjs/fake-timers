@@ -46,6 +46,18 @@ function withGlobal(_global) {
     var NativeDate = Date;
     var uniqueTimerId = 1;
 
+    function isNumberFinite(num) {
+        if (Number.isFinite) {
+            return Number.isFinite(num);
+        }
+
+        if (typeof num !== "number") {
+            return false;
+        }
+
+        return isFinite(num);
+    }
+
     /**
      * Parse strings like "01:10:00" (meaning 1 hour, 10 minutes, 0 seconds) into
      * number of milliseconds. This is used to support human-readable strings passed
@@ -203,6 +215,9 @@ function withGlobal(_global) {
         timer.type = timer.immediate ? "Immediate" : "Timeout";
 
         if (timer.hasOwnProperty("delay")) {
+            if (!isNumberFinite(timer.delay)) {
+                timer.delay = 0;
+            }
             timer.delay = timer.delay > maxTimeout ? 1 : timer.delay;
             timer.delay = Math.max(0, timer.delay);
         }
