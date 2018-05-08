@@ -273,6 +273,10 @@ Implements the `Date` object but using the clock to provide the correct time.
 
 Implements the `now` method of the [`Performance`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) object but using the clock to provide the correct time. Only available in environments that support the Performance object (browsers mostly).
 
+### `lolex.withGlobal`
+
+In order to support creating clocks based on separate or sandboxed environments (such as JSDOM), Lolex exports a factory method which takes single argument `global`, which it inspects to figure out what to mock and what features to support. When invoking this function with a global, you will get back an object with `timers`, `createClock` and `install` - same as the regular Lolex exports only based on the passed in global instead of the global environment.
+
 ## Running tests
 
 Lolex has a comprehensive test suite. If you're thinking of contributing bug
