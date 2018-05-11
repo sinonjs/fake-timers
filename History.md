@@ -1,3 +1,7 @@
+v2.4.2 / 2018-05-11
+===================
+  * Upgrade Mochify to v5.6 (#162) fixed #170
+  * Access `Performance` via `_global` (#168)
 
 v2.4.1 / 2018-05-08
 ==================
