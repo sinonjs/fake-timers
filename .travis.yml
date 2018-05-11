@@ -13,7 +13,16 @@ env:
     - SAUCE_USERNAME=sinonjs
     - secure: "Szc/biR+MJFC/r4IFzDVXJkIt1COglrCyCd/drmBrXj4AE70J2qn8QlU0n3uQUhrDH5k0NtSWnZHcfxuUTHpasvh9yPFGtqnNeqgftZjXQyJFS+rYye4i04cyYGEmc1qxhpljfAXbvCJV+bHDFmWxIF6KSHWMsVk6IbhoD0/Dis="
 
+before_install:
+  # Prevent mochify -> puppeteer install script to run unnecessarily
+  - if [ "x$TRAVIS_NODE_VERSION" != "x8" ]; then npm config set ignore-scripts true; fi
+
+before_script:
+  # Make npm run work for the script phase:
+  - if [ "x$TRAVIS_NODE_VERSION" != "x8" ]; then npm config set ignore-scripts false; fi
+
 script:
-  - "./script/ci-test.sh"
-  - 'if [ "x$TRAVIS_NODE_VERSION" = "x8" ]; then npm run lint; fi'
-  - 'if [ "x$TRAVIS_NODE_VERSION" = "x8" ] && [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then npm run test-cloud; fi'
+  - npm run test-node
+  - if [ "x$TRAVIS_NODE_VERSION" = "x8" ]; then npm run lint; fi
+  - if [ "x$TRAVIS_NODE_VERSION" = "x8" ]; then npm run test-headless -- --allow-chrome-as-root; fi
+  - if [ "x$TRAVIS_NODE_VERSION" = "x8" ] && [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then npm run test-cloud; fi
