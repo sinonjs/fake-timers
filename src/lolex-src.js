@@ -231,7 +231,7 @@ function withGlobal(_global) {
         }
 
         if (!clock.timers) {
-            clock.timers = {};
+            clock.timers = Object.create(null);
         }
 
         timer.id = uniqueTimerId++;
@@ -294,13 +294,11 @@ function withGlobal(_global) {
         var timer = null;
         var id, isInRange;
 
-        for (id in timers) {
-            if (timers.hasOwnProperty(id)) {
-                isInRange = inRange(from, to, timers[id]);
+        for (id in timers) { // eslint-disable-line guard-for-in
+            isInRange = inRange(from, to, timers[id]);
 
-                if (isInRange && (!timer || compareTimers(timer, timers[id]) === 1)) {
-                    timer = timers[id];
-                }
+            if (isInRange && (!timer || compareTimers(timer, timers[id]) === 1)) {
+                timer = timers[id];
             }
         }
 
@@ -312,11 +310,9 @@ function withGlobal(_global) {
         var timer = null;
         var id;
 
-        for (id in timers) {
-            if (timers.hasOwnProperty(id)) {
-                if (!timer || compareTimers(timer, timers[id]) === 1) {
-                    timer = timers[id];
-                }
+        for (id in timers) { // eslint-disable-line guard-for-in
+            if (!timer || compareTimers(timer, timers[id]) === 1) {
+                timer = timers[id];
             }
         }
 
@@ -328,11 +324,9 @@ function withGlobal(_global) {
         var timer = null;
         var id;
 
-        for (id in timers) {
-            if (timers.hasOwnProperty(id)) {
-                if (!timer || compareTimers(timer, timers[id]) === -1) {
-                    timer = timers[id];
-                }
+        for (id in timers) { // eslint-disable-line guard-for-in
+            if (!timer || compareTimers(timer, timers[id]) === -1) {
+                timer = timers[id];
             }
         }
 
@@ -362,7 +356,7 @@ function withGlobal(_global) {
         }
 
         if (!clock.timers) {
-            clock.timers = [];
+            clock.timers = Object.create(null);
         }
 
         // in Node, timerId is an object with .ref()/.unref(), and
@@ -371,7 +365,7 @@ function withGlobal(_global) {
             timerId = timerId.id;
         }
 
-        if (clock.timers.hasOwnProperty(timerId)) {
+        if (clock.timers[timerId]) {
             // check that the ID matches a timer of the correct type
             var timer = clock.timers[timerId];
             if (timer.type === ttype) {
@@ -708,7 +702,7 @@ function withGlobal(_global) {
         };
 
         clock.reset = function reset() {
-            clock.timers = {};
+            clock.timers = Object.create(null);
         };
 
         clock.setSystemTime = function setSystemTime(systemTime) {
@@ -721,12 +715,10 @@ function withGlobal(_global) {
             clock.now = newNow;
 
             // update timers and intervals to keep them stable
-            for (id in clock.timers) {
-                if (clock.timers.hasOwnProperty(id)) {
-                    timer = clock.timers[id];
-                    timer.createdAt += difference;
-                    timer.callAt += difference;
-                }
+            for (id in clock.timers) { // eslint-disable-line guard-for-in
+                timer = clock.timers[id];
+                timer.createdAt += difference;
+                timer.callAt += difference;
             }
         };
 
