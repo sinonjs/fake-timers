@@ -2321,6 +2321,36 @@ describe("lolex", function () {
                 assert(called);
             });
 
+            it("respects loopLimit from below in runMicrotasks", function () {
+                var clock = lolex.createClock(0, 100);
+                for (var i = 0; i < 99; i++) {
+                    // eslint-disable-next-line no-loop-func,ie11/no-loop-func
+                    clock.nextTick(function () {
+                        i--;
+                    });
+                }
+                clock.runMicrotasks();
+                assert.equals(i, 0);
+            });
+
+            it("respects loopLimit from above in runMicrotasks", function () {
+                var clock = lolex.createClock(0, 100);
+                for (var i = 0; i < 120; i++) {
+                    // eslint-disable-next-line ie11/no-loop-func
+                    clock.nextTick(function () { });
+                }
+                assert.exception(function () { clock.runMicrotasks(); });
+            });
+
+
+            it("detects infinite nextTick cycles", function () {
+                var clock = lolex.createClock(0, 1000);
+                clock.nextTick(function repeat() {
+                    clock.nextTick(repeat);
+                });
+                assert.exception(function () { clock.runMicrotasks(); });
+            });
+
             it("runs with timers - and before them", function () {
                 var clock = lolex.createClock();
                 var last = "";

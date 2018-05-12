@@ -198,9 +198,16 @@ function withGlobal(_global) {
         if (!clock.jobs) {
             return;
         }
+        // note, we can't check clock.jobs.length for > loopLimit here since jobs 
+        // may be enqueued while running existing jobs
+        var jobsRan = 0;
         for (var i = 0; i < clock.jobs.length; i++) {
             var job = clock.jobs[i];
             job.func.apply(null, job.args);
+            jobsRan++;
+            if (clock.loopLimit && jobsRan > clock.loopLimit) {
+                throw new Error("Aborting after running " + clock.loopLimit + " timers, assuming an infinite loop!");
+            }
         }
         clock.jobs = [];
     }
