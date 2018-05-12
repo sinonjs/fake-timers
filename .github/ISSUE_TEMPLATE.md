@@ -1,6 +1,6 @@
 <!--
 Are you wondering how to do something with Lolex, or something else that is purely
-usage related? Please post it to StackOverflow using the `sinon` and `lolex`labels.
+usage related? Please post it to StackOverflow using the `sinon` and `lolex` labels.
 This makes it possible for the bigger community to help answer your questions.
 
 The issue tracker is solely meant for posting bugs, feature requests and non-usage related issues.
@@ -19,7 +19,7 @@ The issue tracker is solely meant for posting bugs, feature requests and non-usa
 **What actually happens**
 
 **How to reproduce**
-> Describe *with code* how to reproduce the faulty behaviour,
+> Describe *with code* how to reproduce the faulty behaviour
 > or link to code on JSBin or similar
 
 <!-- Delete the section below if it is irrelevant to your issue -->
