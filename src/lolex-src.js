@@ -398,6 +398,11 @@ function withGlobal(_global) {
                 target.process.hrtime = clock[installedHrTime];
             } else if (method === "nextTick" && target.process) {
                 target.process.nextTick = clock[installedNextTick];
+            } else if (method === "performance") {
+                Object.defineProperty(target, method, {
+                    writeable: false,
+                    value: clock["_" + method]
+                });
             } else {
                 if (target[method] && target[method].hadOwnProperty) {
                     target[method] = clock["_" + method];
@@ -432,6 +437,11 @@ function withGlobal(_global) {
         if (method === "Date") {
             var date = mirrorDateProperties(clock[method], target[method]);
             target[method] = date;
+        } else if (method === "performance") {
+            Object.defineProperty(target, method, {
+                writeable: false,
+                value: clock[method]
+            });
         } else {
             target[method] = function () {
                 return clock[method].apply(clock, arguments);
