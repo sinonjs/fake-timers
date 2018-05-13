@@ -1,7 +1,7 @@
 {
   "name": "lolex",
   "description": "Fake JavaScript timers",
-  "version": "2.4.2",
+  "version": "2.5.0",
   "homepage": "http://github.com/sinonjs/lolex",
   "author": "Christian Johansen",
   "repository": {
