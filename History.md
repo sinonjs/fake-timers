@@ -1,3 +1,10 @@
+
+v2.5.0 / 2018-05-13
+==================
+
+  * feat: respect loopLimit in runMicrotasks (#172)
+  * assign performance as a property, not as a function
+
 v2.4.2 / 2018-05-11
 ===================
   * Upgrade Mochify to v5.6 (#162) fixed #170
