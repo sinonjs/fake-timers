@@ -41,7 +41,7 @@ function withGlobal(_global) {
 
     _global.clearTimeout(timeoutResult);
 
-    var NativeDate = Date;
+    var NativeDate = _global.Date;
     var uniqueTimerId = 1;
 
     function isNumberFinite(num) {
