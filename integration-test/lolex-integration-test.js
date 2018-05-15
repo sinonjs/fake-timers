@@ -48,4 +48,14 @@ describe("withGlobal", function () {
 
         clock.uninstall();
     });
+
+    it("Date is instanceof itself", function () {
+        assert(new jsdomGlobal.Date() instanceof jsdomGlobal.Date);
+
+        var clock = withGlobal.install({target: jsdomGlobal, toFake: timers});
+
+        assert(new jsdomGlobal.Date() instanceof jsdomGlobal.Date);
+
+        clock.uninstall();
+    });
 });
