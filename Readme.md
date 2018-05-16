@@ -225,6 +225,10 @@ callbacks.
 
 Advances the clock to the the moment of the first scheduled timer, firing it.
 
+### `clock.reset()`
+
+Removes all timers and ticks without firing them, and sets `now` to `0`. Useful to reset the state of the clock without having to `uninstall` and `install` it.
+
 ### `clock.runAll()`
 
 This runs all pending timers until there are none remaining. If new timers are added while it is executing they will be run as well.

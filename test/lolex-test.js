@@ -1272,11 +1272,14 @@ describe("lolex", function () {
 
         it("empties timeouts queue", function () {
             var stub = sinon.stub();
+            this.clock.setSystemTime(1000);
             this.clock.setTimeout(stub);
+            this.clock.nextTick(stub);
             this.clock.reset();
             this.clock.tick(0);
 
             assert.isFalse(stub.called);
+            assert.equals(this.clock.Date.now(), 0);
         });
     });
 
