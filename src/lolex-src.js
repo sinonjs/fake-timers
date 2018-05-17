@@ -31,9 +31,8 @@ function withGlobal(_global) {
     var addTimerReturnsObject = typeof timeoutResult === "object";
     var hrtimePresent = (_global.process && typeof _global.process.hrtime === "function");
     var nextTickPresent = (_global.process && typeof _global.process.nextTick === "function");
-    var performancePresent = (_global.performance &&
-        _global.Performance &&
-        typeof _global.performance.now === "function");
+    var performancePresent = (_global.performance && typeof _global.performance.now === "function");
+    var performanceConstructorExists = (_global.Performance && typeof _global.Performance === "function");
     var requestAnimationFramePresent = (
         _global.requestAnimationFrame && typeof _global.requestAnimationFrame === "function"
     );
@@ -752,13 +751,15 @@ function withGlobal(_global) {
 
             var proto = _global.Performance.prototype;
 
-            Object
-                .getOwnPropertyNames(_global.Performance.prototype)
-                .forEach(function (name) {
-                    if (Object.getOwnPropertyDescriptor(proto, name).writable) {
-                        clock.performance[name] = proto[name];
-                    }
-                });
+            if (performanceConstructorExists) {
+                Object
+                    .getOwnPropertyNames(_global.Performance.prototype)
+                    .forEach(function (name) {
+                        if (Object.getOwnPropertyDescriptor(proto, name).writable) {
+                            clock.performance[name] = proto[name];
+                        }
+                    });
+            }
 
             clock.performance.now = function lolexNow() {
                 return clock.hrNow;
