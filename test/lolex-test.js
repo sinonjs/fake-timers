@@ -1285,7 +1285,7 @@ describe("lolex", function () {
         it("resets to the time install with - issue #183", function () {
             var clock = lolex.install({now: 10000});
             clock.reset();
-            assert.equals(clock.now, 1000);
+            assert.equals(clock.now, 10000);
             clock.uninstall();
         });
     });
