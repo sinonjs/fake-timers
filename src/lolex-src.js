@@ -724,7 +724,7 @@ function withGlobal(_global) {
         clock.reset = function reset() {
             clock.timers = {};
             clock.jobs = [];
-            clock.now = 0;
+            clock.now = getEpoch(start);
         };
 
         clock.setSystemTime = function setSystemTime(systemTime) {
