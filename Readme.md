@@ -227,7 +227,9 @@ Advances the clock to the the moment of the first scheduled timer, firing it.
 
 ### `clock.reset()`
 
-Removes all timers and ticks without firing them, and sets `now` to `0`. Useful to reset the state of the clock without having to `uninstall` and `install` it.
+Removes all timers and ticks without firing them, and sets `now` to `config.now`
+that was provided to `lolex.install` or to `0` if `config.now` was not provided.
+Useful to reset the state of the clock without having to `uninstall` and `install` it.
 
 ### `clock.runAll()`
 
