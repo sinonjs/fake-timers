@@ -366,7 +366,7 @@ function withGlobal(_global) {
         }
 
         if (!clock.timers) {
-            clock.timers = [];
+            clock.timers = {};
         }
 
         // in Node, timerId is an object with .ref()/.unref(), and
