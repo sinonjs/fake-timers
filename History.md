@@ -1,10 +1,16 @@
 
+v2.7.0 / 2018-05-25
+==================
+
+  * reset clock to start
+  * check Performance exists before touching it
+
 v2.6.0 / 2018-05-16
 ==================
 
   * Fix `reset` and document it publicly Clear microtick jobs and set now to 0 in reset (#179)
   * Access Date on `_global` (#178)
-  
+
 v2.5.0 / 2018-05-13
 ==================
 
