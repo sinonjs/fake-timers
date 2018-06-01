@@ -245,11 +245,13 @@ function withGlobal(_global) {
         clock.timers[timer.id] = timer;
 
         if (addTimerReturnsObject) {
-            return {
+            var res = {
                 id: timer.id,
-                ref: NOOP,
-                unref: NOOP
+                ref: function () { return res; },
+                unref: function () { return res; },
+                refresh: function () { return res; }
             };
+            return res;
         }
 
         return timer.id;
