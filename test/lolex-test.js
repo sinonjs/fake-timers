@@ -1750,6 +1750,30 @@ describe("lolex", function () {
             }
         });
 
+        it("global fake setTimeout().ref() should return timer", function () {
+            this.clock = lolex.install();
+            var stub = sinon.stub();
+
+            if (typeof (setTimeout(NOOP, 0)) === "object") {
+                var to = setTimeout(stub, 1000).ref();
+                assert.isNumber(to.id);
+                assert.isFunction(to.ref);
+                assert.isFunction(to.unref);
+            }
+        });
+
+        it("global fake setTimeout().unref() should return timer", function () {
+            this.clock = lolex.install();
+            var stub = sinon.stub();
+
+            if (typeof (setTimeout(NOOP, 0)) === "object") {
+                var to = setTimeout(stub, 1000).unref();
+                assert.isNumber(to.id);
+                assert.isFunction(to.ref);
+                assert.isFunction(to.unref);
+            }
+        });
+
         it("replaces global clearTimeout", function () {
             this.clock = lolex.install();
             var stub = sinon.stub();
