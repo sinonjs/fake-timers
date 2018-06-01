@@ -1774,6 +1774,18 @@ describe("lolex", function () {
             }
         });
 
+        it("global fake setTimeout().refresh() should return timer", function () {
+            this.clock = lolex.install();
+            var stub = sinon.stub();
+
+            if (typeof (setTimeout(NOOP, 0)) === "object") {
+                var to = setTimeout(stub, 1000).refresh();
+                assert.isNumber(to.id);
+                assert.isFunction(to.ref);
+                assert.isFunction(to.refresh);
+            }
+        });
+
         it("replaces global clearTimeout", function () {
             this.clock = lolex.install();
             var stub = sinon.stub();

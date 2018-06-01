@@ -248,7 +248,8 @@ function withGlobal(_global) {
             var res = {
                 id: timer.id,
                 ref: function () { return res; },
-                unref: function () { return res; }
+                unref: function () { return res; },
+                refresh: function () { return res; }
             };
             return res;
         }
