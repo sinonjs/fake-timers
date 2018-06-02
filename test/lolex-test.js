@@ -2057,9 +2057,9 @@ describe("lolex", function () {
 
             nativeSetTimeout(function () {
                 var timeDifference = Date.now() - timeoutStarted;
-                var nativeTimeDiffernce = nativeDateNow() - timeoutStarted;
+                var nativeTimeDifference = nativeDateNow() - timeoutStarted;
                 assert.same(timeDifference, testDelta * testFactor);
-                assert.isTrue(Math.abs(nativeTimeDiffernce - testDelay) <= 5); // 0~5 admissible error
+                assert.isTrue(Math.abs(nativeTimeDifference - testDelay) <= 5); // 0~5 admissible error
                 clock.uninstall();
                 done();
             }, testDelay);
