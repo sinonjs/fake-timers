@@ -43,7 +43,7 @@
     "mochify": "5.6.0",
     "npm-run-all": "4.1.2",
     "referee": "1.2.0",
-    "sinon": "4.5.0"
+    "sinon": "5.0.10"
   },
   "eslintConfig": {
     "extends": "eslint-config-sinon",

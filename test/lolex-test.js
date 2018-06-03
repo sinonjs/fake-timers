@@ -352,8 +352,8 @@ describe("lolex", function () {
         });
 
         it("calls the given callback before setTimeout", function () {
-            var stub1 = sinon.stub.create();
-            var stub2 = sinon.stub.create();
+            var stub1 = sinon.stub();
+            var stub2 = sinon.stub();
 
             this.clock.setTimeout(stub1, 0);
             this.clock.setImmediate(stub2);
