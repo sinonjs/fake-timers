@@ -17,11 +17,9 @@ if (!jsdom) {
     return;
 }
 
-var referee = require("referee");
+var assert = require("@sinonjs/referee-sinon").assert;
 var lolex = require("../src/lolex-src");
-var sinon = require("sinon");
-
-var assert = referee.assert;
+var sinon = require("@sinonjs/referee-sinon").sinon;
 
 describe("withGlobal", function () {
     var jsdomGlobal, withGlobal, timers;
