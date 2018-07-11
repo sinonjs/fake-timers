@@ -2079,6 +2079,27 @@ describe("lolex", function () {
                 }
             }, interval);
         });
+
+        it("should test advanceTimeFactor", function (done) {
+            var testDelay = 29;
+            var testDelta = 20;
+            var testFactor = 3;
+            var nativeSetTimeout = setTimeout;
+            var nativeDateNow = Date.now;
+            var clock = lolex.install({
+                now: Date.now(), shouldAdvanceTime: true, advanceTimeDelta: testDelta, advanceTimeFactor: testFactor
+            });
+            var timeoutStarted = Date.now();
+
+            nativeSetTimeout(function () {
+                var timeDifference = Date.now() - timeoutStarted;
+                var nativeTimeDifference = nativeDateNow() - timeoutStarted;
+                assert.same(timeDifference, testDelta * testFactor);
+                assert.isTrue(Math.abs(nativeTimeDifference - testDelay) <= 5); // 0~5 admissible error
+                clock.uninstall();
+                done();
+            }, testDelay);
+        });
     });
 
     describe("requestAnimationFrame", function () {

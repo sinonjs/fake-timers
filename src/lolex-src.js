@@ -457,8 +457,8 @@ function withGlobal(_global) {
         target[method].clock = clock;
     }
 
-    function doIntervalTick(clock, advanceTimeDelta) {
-        clock.tick(advanceTimeDelta);
+    function doIntervalTick(clock, advanceTimeAmount) {
+        clock.tick(advanceTimeAmount);
     }
 
     var timers = {
@@ -793,6 +793,7 @@ function withGlobal(_global) {
      * @param config.loopLimit {number} the maximum number of timers that will be run when calling runAll()
      * @param config.shouldAdvanceTime {Boolean} tells lolex to increment mocked time automatically (default false)
      * @param config.advanceTimeDelta {Number} increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
+     * @param config.advanceTimeFactor {Number} increment mocked time with <<advanceTimeFactor>> times (default: 1)
      */
     function install(config) {
         if ( arguments.length > 1 || config instanceof Date || Array.isArray(config) || typeof config === "number") {
@@ -802,6 +803,7 @@ function withGlobal(_global) {
         config = typeof config !== "undefined" ? config : {};
         config.shouldAdvanceTime = config.shouldAdvanceTime || false;
         config.advanceTimeDelta = config.advanceTimeDelta || 20;
+        config.advanceTimeFactor = config.advanceTimeFactor || 1;
 
         var i, l;
         var target = config.target || _global;
@@ -829,7 +831,8 @@ function withGlobal(_global) {
                 }
             } else {
                 if (clock.methods[i] === "setInterval" && config.shouldAdvanceTime === true) {
-                    var intervalTick = doIntervalTick.bind(null, clock, config.advanceTimeDelta);
+                    var advanceTimeAmount = config.advanceTimeDelta * config.advanceTimeFactor;
+                    var intervalTick = doIntervalTick.bind(null, clock, advanceTimeAmount);
                     var intervalId = target[clock.methods[i]](
                         intervalTick,
                         config.advanceTimeDelta);
