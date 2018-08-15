@@ -441,7 +441,14 @@ function withGlobal(_global) {
             var date = mirrorDateProperties(clock[method], target[method]);
             target[method] = date;
         } else if (method === "performance") {
-            target[method] = clock[method];
+            try {
+            target[method] = clock[method]; // try this way, works on iOS 9.3
+            } catch (e) {
+                Object.defineProperty(target, method, { // this works on jsdom
+                    writeable: false,
+                    value: clock["_" + method]
+                });
+            }
         } else {
             target[method] = function () {
                 return clock[method].apply(clock, arguments);
@@ -850,7 +857,7 @@ function withGlobal(_global) {
     };
 }
 
-var defaultImplementation = withGlobal(global || window);
+var defaultImplementation = withGlobal(typeof global !== 'undefined' ? global : window);
 
 exports.timers = defaultImplementation.timers;
 exports.createClock = defaultImplementation.createClock;
