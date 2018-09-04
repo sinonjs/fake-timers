@@ -31,6 +31,7 @@
     "lolex.js"
   ],
   "devDependencies": {
+    "@sinonjs/referee-sinon": "4.1.0",
     "browserify": "16.2.0",
     "eslint": "4.19.1",
     "eslint-config-sinon": "1.0.3",
@@ -40,10 +41,8 @@
     "jsdom": "11.10.0",
     "lint-staged": "7.0.4",
     "mocha": "5.1.0",
-    "mochify": "5.6.0",
-    "npm-run-all": "4.1.2",
-    "referee": "1.2.0",
-    "sinon": "5.0.10"
+    "mochify": "5.8.0",
+    "npm-run-all": "4.1.2"
   },
   "eslintConfig": {
     "extends": "eslint-config-sinon",

@@ -7,15 +7,14 @@
 "use strict";
 
 if (typeof require === "function" && typeof module === "object") {
-    var referee = require("referee");
+    var assert = require("@sinonjs/referee-sinon").assert;
+    var refute = require("@sinonjs/referee-sinon").refute;
     var lolex = require("../src/lolex-src");
-    var sinon = require("sinon");
+    var sinon = require("@sinonjs/referee-sinon").sinon;
 
     global.lolex = lolex; // For testing eval
 }
 
-var assert = referee.assert;
-var refute = referee.refute;
 var GlobalDate = Date;
 
 var NOOP = function NOOP() { return undefined; };
