@@ -1,4 +1,14 @@
 
+v2.7.2 / 2018-09-04
+==================
+
+  * fix(setInterval): parse `timeout` arg to integer (#202)
+  * Upgrade insecure dependencies with npm audit fix
+
+v2.7.1 / 2018-07-06
+==================
+  * Fix performance replacement on iOS 9.3
+
 v2.7.0 / 2018-05-25
 ==================
 
