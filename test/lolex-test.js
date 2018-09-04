@@ -601,6 +601,15 @@ describe("lolex", function () {
             assert.equals(spy.callCount, 38);
         });
 
+        it("fires timer in intervals of '13'", function () {
+            var spy = sinon.spy();
+            this.clock.setInterval(spy, "13");
+
+            this.clock.tick(500);
+
+            assert.equals(spy.callCount, 38);
+        });
+
         it("fires timers in correct order", function () {
             var spy13 = sinon.spy();
             var spy10 = sinon.spy();
