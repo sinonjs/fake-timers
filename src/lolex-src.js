@@ -544,7 +544,7 @@ function withGlobal(_global) {
             });
         };
         clock.setInterval = function setInterval(func, timeout) {
-            timeout = parseInt(timeout);
+            timeout = parseInt(timeout, 10);
             return addTimer(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 2),
