@@ -744,7 +744,7 @@ function withGlobal(_global) {
         };
 
         if (performancePresent) {
-            clock.performance = Object.create(_global.performance);
+            clock.performance = Object.create(null);
 
             if (hasPerformancePrototype) {
                 var proto = _global.Performance.prototype;
@@ -752,9 +752,7 @@ function withGlobal(_global) {
                 Object
                     .getOwnPropertyNames(proto)
                     .forEach(function (name) {
-                        if (Object.getOwnPropertyDescriptor(proto, name).writable) {
-                            clock.performance[name] = NOOP;
-                        }
+                        clock.performance[name] = NOOP;
                     });
             }
 
