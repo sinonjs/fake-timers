@@ -1,4 +1,9 @@
 
+v2.7.4 / 2018-09-05
+==================
+
+  * performance.mark related fixes for failing Safari, IE 10 and IE 11 tests
+
 v2.7.3 / 2018-09-05
 ==================
 
