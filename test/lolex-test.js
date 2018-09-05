@@ -1902,13 +1902,13 @@ describe("lolex", function () {
                 assert.same(performance.now, oldNow);
             });
 
-            it("keeps the performance.mark method after being installed (#136)", function () {
+            it("should let performance.mark still be a method after being installed (#136)", function () {
                 var originalMark = Performance.prototype.mark;
                 Performance.prototype.mark = function () {};
 
                 assert.same(global.performance.mark, Performance.prototype.mark);
                 this.clock = lolex.install();
-                assert.same(global.performance.mark, Performance.prototype.mark);
+                assert.isFunction(global.performance.mark);
                 this.clock.uninstall();
                 assert.same(global.performance.mark, Performance.prototype.mark);
 
