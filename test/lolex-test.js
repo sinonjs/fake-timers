@@ -20,7 +20,8 @@ var GlobalDate = Date;
 var NOOP = function NOOP() { return undefined; };
 var nextTickPresent = (global.process && typeof global.process.nextTick === "function");
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
-var performancePresent = (global.performance && typeof global.performance.now === "function");
+var performanceNowPresent = (global.performance && typeof global.performance.now === "function");
+var performanceMarkPresent = (global.performance && typeof global.performance.mark === "function");
 
 describe("issue #59", function () {
     var context = {
@@ -1884,7 +1885,8 @@ describe("lolex", function () {
                 assert.same(result[0], 0);
             });
         }
-        if (performancePresent) {
+
+        if (performanceNowPresent) {
             it("replaces global performance.now", function () {
                 this.clock = lolex.install();
                 var prev = performance.now();
@@ -1902,10 +1904,15 @@ describe("lolex", function () {
                 assert.same(performance.now, oldNow);
             });
 
-            it("should let performance.mark still be a method after being installed (#136)", function () {
-                this.clock = lolex.install();
-                assert.isFunction(global.performance.mark);
-            });
+            /* For instance, Safari 9 has performance.now(), but no performance.mark() */
+            if (performanceMarkPresent) {
+                it("should let performance.mark still be callable after lolex.install() (#136)", function () {
+                    this.clock = lolex.install();
+                    refute.exception(function () {
+                        global.performance.mark("a name");
+                    });
+                });
+            }
 
             it("should not alter the global performance properties and methods", function () {
                 // In Phantom.js environment, Performance.prototype has only "now" method.
@@ -1925,14 +1932,6 @@ describe("lolex", function () {
                 delete Performance.prototype.someFunc1;
                 delete Performance.prototype.someFunc2;
                 delete Performance.prototype.someFunc3;
-            });
-
-            it("should not throw an error on calling performance.mark", function () {
-                this.clock = lolex.install();
-                assert.isFunction(global.performance.mark);
-                refute.exception(function () {
-                    global.performance.mark("a name");
-                });
             });
         }
 
@@ -2260,7 +2259,7 @@ describe("lolex", function () {
         });
     });
 
-    if (performancePresent) {
+    if (performanceNowPresent) {
         describe("performance.now()", function () {
             it("should start at 0", function () {
                 var clock = lolex.createClock(1001);
