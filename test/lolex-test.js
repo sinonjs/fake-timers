@@ -1903,16 +1903,8 @@ describe("lolex", function () {
             });
 
             it("should let performance.mark still be a method after being installed (#136)", function () {
-                var originalMark = Performance.prototype.mark;
-                Performance.prototype.mark = function () {};
-
-                assert.same(global.performance.mark, Performance.prototype.mark);
                 this.clock = lolex.install();
                 assert.isFunction(global.performance.mark);
-                this.clock.uninstall();
-                assert.same(global.performance.mark, Performance.prototype.mark);
-
-                Performance.prototype.mark = originalMark;
             });
 
             it("should not alter the global performance properties and methods", function () {
