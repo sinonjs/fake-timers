@@ -1934,6 +1934,14 @@ describe("lolex", function () {
                 delete Performance.prototype.someFunc2;
                 delete Performance.prototype.someFunc3;
             });
+
+            it("should not throw an error on calling performance.mark", function () {
+                this.clock = lolex.install();
+                assert.isFunction(global.performance.mark);
+                refute.exception(function () {
+                    global.performance.mark("a name");
+                });
+            });
         }
 
         if (Object.getPrototypeOf(global)) {
