@@ -756,7 +756,7 @@ function withGlobal(_global) {
                     .getOwnPropertyNames(proto)
                     .forEach(function (name) {
                         if (Object.getOwnPropertyDescriptor(proto, name).writable) {
-                            clock.performance[name] = proto[name];
+                            clock.performance[name] = NOOP;
                         }
                     });
             }
