@@ -103,6 +103,17 @@ describe("issue #67", function () {
     });
 });
 
+describe("issue sinon#1852", function () {
+    it("throws when creating a clock and global has no Date", function () {
+        var clock = lolex.withGlobal({
+            setTimeout: function () {},
+            clearTimeout: function () {}
+        });
+        assert.exception(function () { clock.createClock(); });
+        assert.exception(function () { clock.install(); });
+    });
+});
+
 describe("lolex", function () {
 
     describe("setTimeout", function () {
