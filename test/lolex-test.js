@@ -1225,21 +1225,17 @@ describe("lolex", function () {
         it("should support clocks with start time", function () {
             var startingPoint = new Date("2018-01-01").getTime();
             this.clock = lolex.createClock(startingPoint);
-            var runOrder = [];
             var that = this;
+            var invocations = 0;
 
             this.clock.setTimeout(function cb() {
-                runOrder.push("mock1");
-                that.clock.setTimeout(cb, 49);
+                invocations++;
+                that.clock.setTimeout(cb, 50);
             }, 50);
-
-            this.clock.setTimeout(function cb() {
-                runOrder.push("mock2");
-            }, 100);
 
             this.clock.runToLast();
 
-            assert.equals(runOrder, ["mock1", "mock1", "mock2"]);
+            assert.equals(invocations, 1);
         });
 
     });
