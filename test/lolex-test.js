@@ -1222,6 +1222,26 @@ describe("lolex", function () {
             assert.isTrue(spy.called);
         });
 
+        it("should support clocks with start time", function () {
+            var startingPoint = new Date("2018-01-01").getTime();
+            this.clock = lolex.createClock(startingPoint);
+            var runOrder = [];
+            var that = this;
+
+            this.clock.setTimeout(function cb() {
+                runOrder.push("mock1");
+                that.clock.setTimeout(cb, 49);
+            }, 50);
+
+            this.clock.setTimeout(function cb() {
+                runOrder.push("mock2");
+            }, 100);
+
+            this.clock.runToLast();
+
+            assert.equals(runOrder, ["mock1", "mock1", "mock2"]);
+        });
+
     });
 
     describe("clearTimeout", function () {
