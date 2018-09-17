@@ -1223,8 +1223,7 @@ describe("lolex", function () {
         });
 
         it("should support clocks with start time", function () {
-            var startingPoint = new Date("2018-01-01").getTime();
-            this.clock = lolex.createClock(startingPoint);
+            this.clock = lolex.createClock(200);
             var that = this;
             var invocations = 0;
 
