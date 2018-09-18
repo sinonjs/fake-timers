@@ -720,7 +720,7 @@ function withGlobal(_global) {
                 return clock.now;
             }
 
-            return clock.tick(timer.callAt);
+            return clock.tick(timer.callAt - clock.now);
         };
 
         clock.reset = function reset() {

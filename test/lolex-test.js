@@ -1222,6 +1222,21 @@ describe("lolex", function () {
             assert.isTrue(spy.called);
         });
 
+        it("should support clocks with start time", function () {
+            this.clock = lolex.createClock(200);
+            var that = this;
+            var invocations = 0;
+
+            this.clock.setTimeout(function cb() {
+                invocations++;
+                that.clock.setTimeout(cb, 50);
+            }, 50);
+
+            this.clock.runToLast();
+
+            assert.equals(invocations, 1);
+        });
+
     });
 
     describe("clearTimeout", function () {
