@@ -2384,6 +2384,14 @@ describe("lolex", function () {
                 assert.same(result[0], 1);
                 assert.same(result[1], 0);
             });
+
+            it("should handle floating point", function () {
+                var clock = lolex.createClock();
+                clock.tick(1022.7791);
+                var result = clock.hrtime([0, 20000000]);
+
+                assert.equals(result, [1, 2779100]);
+            });
         });
     }
     if (nextTickPresent) {
