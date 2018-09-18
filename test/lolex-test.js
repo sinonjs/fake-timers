@@ -1308,6 +1308,14 @@ describe("lolex", function () {
             assert.equals(clock.now, 10000);
             clock.uninstall();
         });
+
+        it("resets hrTime - issue #206", function () {
+            var clock = lolex.createClock();
+            clock.tick(100);
+            assert.equals(clock.hrNow, 100);
+            clock.reset();
+            assert.equals(clock.hrNow, 0);
+        });
     });
 
     describe("setInterval", function () {
