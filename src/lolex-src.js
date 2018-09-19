@@ -101,7 +101,7 @@ function withGlobal(_global) {
      * % operator that also works for negative numbers
      */
     function fixedModulo(n, m) {
-        return ((n % m) + m) % m;
+        return Math.round(((n % m) + m) % m);
     }
 
     /**
