@@ -103,7 +103,7 @@ function withGlobal(_global) {
      * % operator that also works for negative numbers
      */
     function fixedModulo(n, m) {
-        return ((n % m) + m) % m;
+        return Math.round(((n % m) + m) % m);
     }
 
     /**
@@ -514,6 +514,11 @@ function withGlobal(_global) {
         start = start || 0;
         loopLimit = loopLimit || 1000;
 
+        if (NativeDate === undefined) {
+            throw new Error("The global scope doesn't have a `Date` object"
+                + " (see https://github.com/sinonjs/sinon/issues/1852#issuecomment-419622780)");
+        }
+
         var clock = {
             now: getEpoch(start),
             hrNow: 0,
@@ -717,13 +722,14 @@ function withGlobal(_global) {
                 return clock.now;
             }
 
-            return clock.tick(timer.callAt);
+            return clock.tick(timer.callAt - clock.now);
         };
 
         clock.reset = function reset() {
             clock.timers = {};
             clock.jobs = [];
             clock.now = getEpoch(start);
+            clock.hrNow = 0;
         };
 
         clock.setSystemTime = function setSystemTime(systemTime) {

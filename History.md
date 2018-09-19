@@ -1,3 +1,9 @@
+v2.7.5 / 2018-09-19
+==================
+
+  * fix: handle floating point in hrtime (#210)
+  * fix: reset high resolution timer on clock.reset (#209)
+  * Add an error when creating a clock with no Date object (#205)
 
 v2.7.4 / 2018-09-05
 ==================
