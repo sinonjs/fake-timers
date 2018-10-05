@@ -105,6 +105,17 @@ function withGlobal(_global) {
     }
 
     /**
+     * @returns the remaining number of nanoseconds.
+     *
+     * Example: nanoRemainer(123.456789) -> 456789
+     */
+    function nanoRemainder(msFloat){
+        var modulo = 1e6;
+        var remainder = (msFloat * 1e6) % modulo;
+        return remainder < 0 ? remainder + modulo: remainder;
+    }
+
+    /**
      * Used to grok the `now` parameter to createClock.
      * @param epoch {Date|number} the system time
      */
@@ -505,12 +516,13 @@ function withGlobal(_global) {
     };
 
     /**
-     * @param start {Date|number} the system time
+     * @param start {Date|number} the system time - non-integer values are floored
      * @param loopLimit {number}  maximum number of timers that will be run when calling runAll()
      */
     function createClock(start, loopLimit) {
-        start = start || 0;
+        start = Math.floor(getEpoch(start));
         loopLimit = loopLimit || 1000;
+        var nanos = 0;
 
         if (NativeDate === undefined) {
             throw new Error("The global scope doesn't have a `Date` object"
@@ -518,11 +530,10 @@ function withGlobal(_global) {
         }
 
         var clock = {
-            now: getEpoch(start),
-            hrNow: 0,
+            now: start,
             timeouts: {},
             Date: createDate(),
-            loopLimit: loopLimit
+            loopLimit: loopLimit,
         };
 
         clock.Date.clock = clock;
@@ -589,18 +600,28 @@ function withGlobal(_global) {
             return clearTimer(clock, timerId, "AnimationFrame");
         };
 
-        function updateHrTime(newNow) {
-            clock.hrNow += (newNow - clock.now);
-        }
-
         clock.runMicrotasks = function runMicrotasks() {
             runJobs(clock);
         };
 
-        clock.tick = function tick(ms) {
-            ms = typeof ms === "number" ? ms : parseTime(ms);
-            var tickFrom = clock.now;
+        /**
+         * @param {tickValue} {String|Number} number of milliseconds or a human-readable value like "01:11:15"
+        */
+        clock.tick = function tick(tickValue) {
+            var msFloat = typeof tickValue === "number" ? tickValue: parseTime(tickValue);
+            var ms = Math.floor(msFloat);
+            var remainder = nanoRemainder(msFloat)
+            var nanosTotal = nanos + remainder;
             var tickTo = clock.now + ms;
+
+            // adjust for positive overflow
+            if(nanosTotal >= 1e6) {
+                tickTo +=1;
+                nanosTotal -= 1e6;
+            }
+
+            nanos = nanosTotal;
+            var tickFrom = clock.now;
             var previous = clock.now;
             var timer, firstException, oldNow;
 
@@ -619,7 +640,6 @@ function withGlobal(_global) {
             timer = firstTimerInRange(clock, tickFrom, tickTo);
             while (timer && tickFrom <= tickTo) {
                 if (clock.timers[timer.id]) {
-                    updateHrTime(timer.callAt);
                     tickFrom = timer.callAt;
                     clock.now = timer.callAt;
                     oldNow = clock.now;
@@ -662,7 +682,6 @@ function withGlobal(_global) {
                 }
             } else {
                 // no timers remaining in the requested range: move the clock all the way to the end
-                updateHrTime(tickTo);
                 clock.now = tickTo;
             }
             if (firstException) {
@@ -680,7 +699,6 @@ function withGlobal(_global) {
 
             clock.duringTick = true;
             try {
-                updateHrTime(timer.callAt);
                 clock.now = timer.callAt;
                 callTimer(clock, timer);
                 runJobs(clock);
@@ -724,10 +742,10 @@ function withGlobal(_global) {
         };
 
         clock.reset = function reset() {
+            nanos = 0;
             clock.timers = {};
             clock.jobs = [];
-            clock.now = getEpoch(start);
-            clock.hrNow = 0;
+            clock.now = start;
         };
 
         clock.setSystemTime = function setSystemTime(systemTime) {
@@ -769,21 +787,27 @@ function withGlobal(_global) {
 
         if (hrtimePresent) {
             clock.hrtime = function (prev) {
+                var millisSinceStart = clock.now - start;
+                var secsSinceStart = Math.floor( millisSinceStart / 1000);
+                var remainderInNanos = (millisSinceStart - secsSinceStart * 1e3 ) * 1e6 + nanos;
+
                 if (Array.isArray(prev)) {
-                    var oldSecs = (prev[0] + prev[1] / 1e9);
-                    var newSecs = (clock.hrNow / 1000);
-                    var difference = (newSecs - oldSecs);
-                    var secs = fixedFloor(difference);
-                    var nanosecs = fixedModulo(difference * 1e9, 1e9);
-                    return [
-                        secs,
-                        nanosecs
-                    ];
+                    if( prev[1] > 1e9 ) {
+                        throw new TypeError("Number of nanoseconds can't exceed a billion");
+                    }
+
+                    var oldSecs = prev[0];
+                    var nanoDiff = remainderInNanos - prev[1];
+                    var secDiff = secsSinceStart - oldSecs;
+
+                    if (nanoDiff < 0) {
+                        nanoDiff += 1*1e9;
+                        secDiff -= 1;
+                    }
+
+                    return [ secDiff, nanoDiff ];
                 }
-                return [
-                    fixedFloor(clock.hrNow / 1000),
-                    fixedModulo(clock.hrNow * 1e6, 1e9)
-                ];
+                return [ secsSinceStart, remainderInNanos ];
             };
         }
 
