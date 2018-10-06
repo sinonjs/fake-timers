@@ -91,15 +91,19 @@ function withGlobal(_global) {
     }
 
     /**
+     * Get the decimal part of the millisecond value as nanoseconds
+     *
      * @param {Number} msFloat the number of milliseconds
-     * @returns the remaining number of nanoseconds in the range [0,1e6)
+     * @returns {Number} an integer number of nanoseconds in the range [0,1e6)
      *
      * Example: nanoRemainer(123.456789) -> 456789
      */
     function nanoRemainder(msFloat) {
         var modulo = 1e6;
         var remainder = (msFloat * 1e6) % modulo;
-        return remainder < 0 ? remainder + modulo : remainder;
+        var positiveRemainder = remainder < 0 ? remainder + modulo : remainder;
+
+        return Math.floor(positiveRemainder);
     }
 
     /**

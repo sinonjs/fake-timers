@@ -142,6 +142,14 @@ describe("issue #207 - nanosecond round-off errors on high-res timer", function 
             var nanos = clock.hrtime(start)[1];
             assert.equals(nanos, 123493000);
         });
+
+        it("should truncate sub-nanosecond ticks", function () {
+            clock = lolex.install();
+            clock.tick(0.123456789);
+
+            var nanos = clock.hrtime()[1];
+            assert.equals(nanos, 123456);
+        });
     }
 
     it("should always set 'now' to an integer value when ticking with sub-millisecond precision", function () {
