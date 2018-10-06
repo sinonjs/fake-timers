@@ -626,6 +626,10 @@ function withGlobal(_global) {
             var nanosTotal = nanos + remainder;
             var tickTo = clock.now + ms;
 
+            if (msFloat < 0) {
+                throw new TypeError("Negative ticks are not supported");
+            }
+
             // adjust for positive overflow
             if (nanosTotal >= 1e6) {
                 tickTo += 1;

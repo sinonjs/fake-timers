@@ -918,6 +918,13 @@ describe("lolex", function () {
             assert.equals(stub.callCount, 1);
         });
 
+        it("throws on negative ticks", function () {
+            var clock = this.clock;
+
+            assert.exception(function () {
+                clock.tick(-500);
+            }, {message: "Negative ticks are not supported"});
+        });
     });
 
     describe("next", function () {
