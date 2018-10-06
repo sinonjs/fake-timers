@@ -91,28 +91,15 @@ function withGlobal(_global) {
     }
 
     /**
-     * Floor function that also works for negative numbers
-     */
-    function fixedFloor(n) {
-        return (n >= 0 ? Math.floor(n) : Math.ceil(n));
-    }
-
-    /**
-     * % operator that also works for negative numbers
-     */
-    function fixedModulo(n, m) {
-        return Math.round(((n % m) + m) % m);
-    }
-
-    /**
-     * @returns the remaining number of nanoseconds.
+     * @param {Number} msFloat the number of milliseconds
+     * @returns the remaining number of nanoseconds in the range [0,1e6)
      *
      * Example: nanoRemainer(123.456789) -> 456789
      */
-    function nanoRemainder(msFloat){
+    function nanoRemainder(msFloat) {
         var modulo = 1e6;
         var remainder = (msFloat * 1e6) % modulo;
-        return remainder < 0 ? remainder + modulo: remainder;
+        return remainder < 0 ? remainder + modulo : remainder;
     }
 
     /**
@@ -523,7 +510,7 @@ function withGlobal(_global) {
         start = Math.floor(getEpoch(start));
         loopLimit = loopLimit || 1000;
         var nanos = 0;
-        var adjustedSystemTime = [0,0]; // [millis, nanoremainder]
+        var adjustedSystemTime = [0, 0]; // [millis, nanoremainder]
 
         if (NativeDate === undefined) {
             throw new Error("The global scope doesn't have a `Date` object"
@@ -534,13 +521,37 @@ function withGlobal(_global) {
             now: start,
             timeouts: {},
             Date: createDate(),
-            loopLimit: loopLimit,
+            loopLimit: loopLimit
         };
 
         clock.Date.clock = clock;
 
         function getTimeToNextFrame() {
             return 16 - ((clock.now - start) % 16);
+        }
+
+        function hrtime(prev) {
+            var millisSinceStart = clock.now - adjustedSystemTime[0] - start;
+            var secsSinceStart = Math.floor( millisSinceStart / 1000);
+            var remainderInNanos = (millisSinceStart - secsSinceStart * 1e3 ) * 1e6 + nanos - adjustedSystemTime[1];
+
+            if (Array.isArray(prev)) {
+                if ( prev[1] > 1e9 ) {
+                    throw new TypeError("Number of nanoseconds can't exceed a billion");
+                }
+
+                var oldSecs = prev[0];
+                var nanoDiff = remainderInNanos - prev[1];
+                var secDiff = secsSinceStart - oldSecs;
+
+                if (nanoDiff < 0) {
+                    nanoDiff += 1e9;
+                    secDiff -= 1;
+                }
+
+                return [secDiff, nanoDiff];
+            }
+            return [secsSinceStart, remainderInNanos];
         }
 
         clock.setTimeout = function setTimeout(func, timeout) {
@@ -609,15 +620,15 @@ function withGlobal(_global) {
          * @param {tickValue} {String|Number} number of milliseconds or a human-readable value like "01:11:15"
         */
         clock.tick = function tick(tickValue) {
-            var msFloat = typeof tickValue === "number" ? tickValue: parseTime(tickValue);
+            var msFloat = typeof tickValue === "number" ? tickValue : parseTime(tickValue);
             var ms = Math.floor(msFloat);
-            var remainder = nanoRemainder(msFloat)
+            var remainder = nanoRemainder(msFloat);
             var nanosTotal = nanos + remainder;
             var tickTo = clock.now + ms;
 
             // adjust for positive overflow
-            if(nanosTotal >= 1e6) {
-                tickTo +=1;
+            if (nanosTotal >= 1e6) {
+                tickTo += 1;
                 nanosTotal -= 1e6;
             }
 
@@ -788,34 +799,15 @@ function withGlobal(_global) {
             }
 
             clock.performance.now = function lolexNow() {
-                return clock.hrNow;
+                var hrt = hrtime();
+                var millis = (hrt[0] * 1000 + hrt[1] / 1e6);
+                return millis;
             };
         }
 
+
         if (hrtimePresent) {
-            clock.hrtime = function (prev) {
-                var millisSinceStart = clock.now - adjustedSystemTime[0] - start;
-                var secsSinceStart = Math.floor( millisSinceStart / 1000);
-                var remainderInNanos = (millisSinceStart - secsSinceStart * 1e3 ) * 1e6 + nanos - adjustedSystemTime[1];
-
-                if (Array.isArray(prev)) {
-                    if( prev[1] > 1e9 ) {
-                        throw new TypeError("Number of nanoseconds can't exceed a billion");
-                    }
-
-                    var oldSecs = prev[0];
-                    var nanoDiff = remainderInNanos - prev[1];
-                    var secDiff = secsSinceStart - oldSecs;
-
-                    if (nanoDiff < 0) {
-                        nanoDiff += 1*1e9;
-                        secDiff -= 1;
-                    }
-
-                    return [ secDiff, nanoDiff ];
-                }
-                return [ secsSinceStart, remainderInNanos ];
-            };
+            clock.hrtime = hrtime;
         }
 
         return clock;
