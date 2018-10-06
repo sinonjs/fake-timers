@@ -523,6 +523,7 @@ function withGlobal(_global) {
         start = Math.floor(getEpoch(start));
         loopLimit = loopLimit || 1000;
         var nanos = 0;
+        var adjustedSystemTime = [0,0]; // [millis, nanoremainder]
 
         if (NativeDate === undefined) {
             throw new Error("The global scope doesn't have a `Date` object"
@@ -683,6 +684,9 @@ function withGlobal(_global) {
             } else {
                 // no timers remaining in the requested range: move the clock all the way to the end
                 clock.now = tickTo;
+
+                // update nanos
+                nanos = nanosTotal;
             }
             if (firstException) {
                 throw firstException;
@@ -754,8 +758,11 @@ function withGlobal(_global) {
             var difference = newNow - clock.now;
             var id, timer;
 
+            adjustedSystemTime[0] = difference;
+            adjustedSystemTime[1] = nanos;
             // update 'system clock'
             clock.now = newNow;
+            nanos = 0;
 
             // update timers and intervals to keep them stable
             for (id in clock.timers) {
@@ -787,9 +794,9 @@ function withGlobal(_global) {
 
         if (hrtimePresent) {
             clock.hrtime = function (prev) {
-                var millisSinceStart = clock.now - start;
+                var millisSinceStart = clock.now - adjustedSystemTime[0] - start;
                 var secsSinceStart = Math.floor( millisSinceStart / 1000);
-                var remainderInNanos = (millisSinceStart - secsSinceStart * 1e3 ) * 1e6 + nanos;
+                var remainderInNanos = (millisSinceStart - secsSinceStart * 1e3 ) * 1e6 + nanos - adjustedSystemTime[1];
 
                 if (Array.isArray(prev)) {
                     if( prev[1] > 1e9 ) {
