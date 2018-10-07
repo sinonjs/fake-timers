@@ -200,6 +200,11 @@ available in both browser & node environments.
 
 Cancels the callback scheduled by the provided id.
 
+### `clock.countTimers()`
+
+Returns the number of waiting timers. This can be used to assert that a test
+finishes without leaking any timers.
+
 ### `clock.hrtime(prevTime?)`
 Only available in Node.js, mimicks process.hrtime().
 
