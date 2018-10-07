@@ -257,7 +257,6 @@ function withGlobal(_global) {
         return timer.id;
     }
 
-
     /* eslint consistent-return: "off" */
     function compareTimers(a, b) {
         // Sort first by absolute timing
@@ -572,6 +571,10 @@ function withGlobal(_global) {
 
         clock.clearImmediate = function clearImmediate(timerId) {
             return clearTimer(clock, timerId, "Immediate");
+        };
+
+        clock.countTimers = function countTimers() {
+            return Object.keys(clock.timers).length;
         };
 
         clock.requestAnimationFrame = function requestAnimationFrame(func) {

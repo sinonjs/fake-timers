@@ -432,6 +432,22 @@ describe("lolex", function () {
 
     });
 
+    describe("countTimers", function () {
+
+        beforeEach(function () {
+            this.clock = lolex.createClock();
+        });
+
+        it("counts remaining timers", function () {
+            this.clock.setTimeout(NOOP, 100);
+            this.clock.setTimeout(NOOP, 200);
+            this.clock.setTimeout(NOOP, 300);
+            this.clock.tick(150);
+            assert.equals(this.clock.countTimers(), 2);
+        });
+
+    });
+
     describe("tick", function () {
 
         beforeEach(function () {
