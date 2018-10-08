@@ -91,17 +91,19 @@ function withGlobal(_global) {
     }
 
     /**
-     * Floor function that also works for negative numbers
+     * Get the decimal part of the millisecond value as nanoseconds
+     *
+     * @param {Number} msFloat the number of milliseconds
+     * @returns {Number} an integer number of nanoseconds in the range [0,1e6)
+     *
+     * Example: nanoRemainer(123.456789) -> 456789
      */
-    function fixedFloor(n) {
-        return (n >= 0 ? Math.floor(n) : Math.ceil(n));
-    }
+    function nanoRemainder(msFloat) {
+        var modulo = 1e6;
+        var remainder = (msFloat * 1e6) % modulo;
+        var positiveRemainder = remainder < 0 ? remainder + modulo : remainder;
 
-    /**
-     * % operator that also works for negative numbers
-     */
-    function fixedModulo(n, m) {
-        return Math.round(((n % m) + m) % m);
+        return Math.floor(positiveRemainder);
     }
 
     /**
@@ -505,12 +507,14 @@ function withGlobal(_global) {
     };
 
     /**
-     * @param start {Date|number} the system time
+     * @param start {Date|number} the system time - non-integer values are floored
      * @param loopLimit {number}  maximum number of timers that will be run when calling runAll()
      */
     function createClock(start, loopLimit) {
-        start = start || 0;
+        start = Math.floor(getEpoch(start));
         loopLimit = loopLimit || 1000;
+        var nanos = 0;
+        var adjustedSystemTime = [0, 0]; // [millis, nanoremainder]
 
         if (NativeDate === undefined) {
             throw new Error("The global scope doesn't have a `Date` object"
@@ -518,8 +522,7 @@ function withGlobal(_global) {
         }
 
         var clock = {
-            now: getEpoch(start),
-            hrNow: 0,
+            now: start,
             timeouts: {},
             Date: createDate(),
             loopLimit: loopLimit
@@ -529,6 +532,30 @@ function withGlobal(_global) {
 
         function getTimeToNextFrame() {
             return 16 - ((clock.now - start) % 16);
+        }
+
+        function hrtime(prev) {
+            var millisSinceStart = clock.now - adjustedSystemTime[0] - start;
+            var secsSinceStart = Math.floor( millisSinceStart / 1000);
+            var remainderInNanos = (millisSinceStart - secsSinceStart * 1e3 ) * 1e6 + nanos - adjustedSystemTime[1];
+
+            if (Array.isArray(prev)) {
+                if ( prev[1] > 1e9 ) {
+                    throw new TypeError("Number of nanoseconds can't exceed a billion");
+                }
+
+                var oldSecs = prev[0];
+                var nanoDiff = remainderInNanos - prev[1];
+                var secDiff = secsSinceStart - oldSecs;
+
+                if (nanoDiff < 0) {
+                    nanoDiff += 1e9;
+                    secDiff -= 1;
+                }
+
+                return [secDiff, nanoDiff];
+            }
+            return [secsSinceStart, remainderInNanos];
         }
 
         clock.setTimeout = function setTimeout(func, timeout) {
@@ -589,18 +616,32 @@ function withGlobal(_global) {
             return clearTimer(clock, timerId, "AnimationFrame");
         };
 
-        function updateHrTime(newNow) {
-            clock.hrNow += (newNow - clock.now);
-        }
-
         clock.runMicrotasks = function runMicrotasks() {
             runJobs(clock);
         };
 
-        clock.tick = function tick(ms) {
-            ms = typeof ms === "number" ? ms : parseTime(ms);
-            var tickFrom = clock.now;
+        /**
+         * @param {tickValue} {String|Number} number of milliseconds or a human-readable value like "01:11:15"
+        */
+        clock.tick = function tick(tickValue) {
+            var msFloat = typeof tickValue === "number" ? tickValue : parseTime(tickValue);
+            var ms = Math.floor(msFloat);
+            var remainder = nanoRemainder(msFloat);
+            var nanosTotal = nanos + remainder;
             var tickTo = clock.now + ms;
+
+            if (msFloat < 0) {
+                throw new TypeError("Negative ticks are not supported");
+            }
+
+            // adjust for positive overflow
+            if (nanosTotal >= 1e6) {
+                tickTo += 1;
+                nanosTotal -= 1e6;
+            }
+
+            nanos = nanosTotal;
+            var tickFrom = clock.now;
             var previous = clock.now;
             var timer, firstException, oldNow;
 
@@ -619,7 +660,6 @@ function withGlobal(_global) {
             timer = firstTimerInRange(clock, tickFrom, tickTo);
             while (timer && tickFrom <= tickTo) {
                 if (clock.timers[timer.id]) {
-                    updateHrTime(timer.callAt);
                     tickFrom = timer.callAt;
                     clock.now = timer.callAt;
                     oldNow = clock.now;
@@ -662,8 +702,10 @@ function withGlobal(_global) {
                 }
             } else {
                 // no timers remaining in the requested range: move the clock all the way to the end
-                updateHrTime(tickTo);
                 clock.now = tickTo;
+
+                // update nanos
+                nanos = nanosTotal;
             }
             if (firstException) {
                 throw firstException;
@@ -680,7 +722,6 @@ function withGlobal(_global) {
 
             clock.duringTick = true;
             try {
-                updateHrTime(timer.callAt);
                 clock.now = timer.callAt;
                 callTimer(clock, timer);
                 runJobs(clock);
@@ -724,10 +765,10 @@ function withGlobal(_global) {
         };
 
         clock.reset = function reset() {
+            nanos = 0;
             clock.timers = {};
             clock.jobs = [];
-            clock.now = getEpoch(start);
-            clock.hrNow = 0;
+            clock.now = start;
         };
 
         clock.setSystemTime = function setSystemTime(systemTime) {
@@ -736,8 +777,11 @@ function withGlobal(_global) {
             var difference = newNow - clock.now;
             var id, timer;
 
+            adjustedSystemTime[0] = difference;
+            adjustedSystemTime[1] = nanos;
             // update 'system clock'
             clock.now = newNow;
+            nanos = 0;
 
             // update timers and intervals to keep them stable
             for (id in clock.timers) {
@@ -763,28 +807,15 @@ function withGlobal(_global) {
             }
 
             clock.performance.now = function lolexNow() {
-                return clock.hrNow;
+                var hrt = hrtime();
+                var millis = (hrt[0] * 1000 + hrt[1] / 1e6);
+                return millis;
             };
         }
 
+
         if (hrtimePresent) {
-            clock.hrtime = function (prev) {
-                if (Array.isArray(prev)) {
-                    var oldSecs = (prev[0] + prev[1] / 1e9);
-                    var newSecs = (clock.hrNow / 1000);
-                    var difference = (newSecs - oldSecs);
-                    var secs = fixedFloor(difference);
-                    var nanosecs = fixedModulo(difference * 1e9, 1e9);
-                    return [
-                        secs,
-                        nanosecs
-                    ];
-                }
-                return [
-                    fixedFloor(clock.hrNow / 1000),
-                    fixedModulo(clock.hrNow * 1e6, 1e9)
-                ];
-            };
+            clock.hrtime = hrtime;
         }
 
         return clock;

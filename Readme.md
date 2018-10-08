@@ -218,9 +218,6 @@ milliseconds to advance the clock by or a human-readable string. Valid string
 formats are `"08"` for eight seconds, `"01:00"` for one minute and `"02:34:10"`
 for two hours, 34 minutes and ten seconds.
 
-`time` may be negative, which causes the clock to change but won't fire any
-callbacks.
-
 ### `clock.next()`
 
 Advances the clock to the the moment of the first scheduled timer, firing it.
