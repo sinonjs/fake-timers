@@ -1,3 +1,14 @@
+
+3.0.0 / 2018-10-08
+==================
+
+  * Add countTimers method
+  * Disallow negative ticks (breaking API change!)
+  * Avoid exposing hrNow
+  * Fix #207 - round-off errors in `hrtime`
+  * Truncate sub-nanosecond values for `hrtime`
+  * Truncate sub-millisceond values for `Date.now()`
+
 v2.7.5 / 2018-09-19
 ==================
 
