@@ -19,6 +19,7 @@ var GlobalDate = Date;
 
 var NOOP = function NOOP() { return undefined; };
 var nextTickPresent = (global.process && typeof global.process.nextTick === "function");
+var queueMicrotaskPresent = (typeof global.queueMicrotask === "function");
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
 var performanceNowPresent = (global.performance && typeof global.performance.now === "function");
 var performanceMarkPresent = (global.performance && typeof global.performance.mark === "function");
@@ -2518,8 +2519,46 @@ describe("lolex", function () {
         });
     });
 
-    describe("microtask semantics", function () {
+    describe("queueMicrotask semantics", function () {
+        // adapted from Node's tests
+        var clock, called;
+        before( function () {
+            if (!queueMicrotaskPresent) { this.skip(); }
+        });
+        beforeEach( function () {
+            clock = lolex.createClock();
+            called = false;
+        });
+        it("runs without timers", function () {
+            clock.queueMicrotask(function () {
+                called = true;
+            });
+            clock.runAll();
+            assert(called);
+        });
+        it("runs when runMicrotasks is called on the clock", function () {
+            clock.queueMicrotask(function () {
+                called = true;
+            });
+            clock.runMicrotasks();
+            assert(called);
+        });
+        it("runs with timers and before them", function () {
+            var last = "";
+            clock.runMicrotasks(function () {
+                called = true;
+                last = "tick";
+            });
+            clock.setTimeout(function () {
+                last = "timeout";
+            });
+            clock.runAll();
+            assert(called);
+            assert.equals(last, "timeout");
+        });
+    });
 
+    describe("nextTick semantics", function () {
         before( function () {
             if (!nextTickPresent) { this.skip(); }
         });
