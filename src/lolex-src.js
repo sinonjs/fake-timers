@@ -33,6 +33,7 @@ function withGlobal(_global) {
     var nextTickPresent = (_global.process && typeof _global.process.nextTick === "function");
     var performancePresent = (_global.performance && typeof _global.performance.now === "function");
     var hasPerformancePrototype = (_global.Performance && (typeof _global.Performance).match(/^(function|object)$/));
+    var queueMicrotaskPresent = (typeof _global.queueMicrotask === "function");
     var requestAnimationFramePresent = (
         _global.requestAnimationFrame && typeof _global.requestAnimationFrame === "function"
     );
@@ -487,6 +488,9 @@ function withGlobal(_global) {
     if (requestAnimationFramePresent) {
         timers.requestAnimationFrame = _global.requestAnimationFrame;
     }
+    if (queueMicrotaskPresent) {
+        timers.queueMicrotask = _global.queueMicrotask;
+    }
 
     if (cancelAnimationFramePresent) {
         timers.cancelAnimationFrame = _global.cancelAnimationFrame;
@@ -574,6 +578,9 @@ function withGlobal(_global) {
                 args: Array.prototype.slice.call(arguments, 1)
             });
         };
+        clock.queueMicrotask = function queueMicrotask(func) {
+            return clock.nextTick(func); // explicitly drop additional arguments
+        };
         clock.setInterval = function setInterval(func, timeout) {
             timeout = parseInt(timeout, 10);
             return addTimer(clock, {
@@ -650,11 +657,11 @@ function withGlobal(_global) {
 
             clock.duringTick = true;
 
-            // perform process.nextTick()s
+            // perform microtasks
             oldNow = clock.now;
             runJobs(clock);
             if (oldNow !== clock.now) {
-                // compensate for any setSystemTime() call during process.nextTick() callback
+                // compensate for any setSystemTime() call during microtask callback
                 tickFrom += clock.now - oldNow;
                 tickTo += clock.now - oldNow;
             }
