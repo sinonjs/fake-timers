@@ -7,7 +7,7 @@ wait.
 * Implements global functions like `setTimeout`, `setInterval` and so on
 * Provides a `Date` object
 
-In addition in browser environment lolex provides a `performance` implementation that gets its time from the clock. In Node environments lolex provides a `nextTick` implementation that is synchronized with the clock - and a `process.hrtime` shim that works with the clock.
+In addition in browser environment lolex provides a `performance` implementation that gets its time from the clock. In Node.js environments lolex provides a `nextTick` implementation that is synchronized with the clock - and a `process.hrtime` shim that works with the clock.
 
 
 ## Documentation

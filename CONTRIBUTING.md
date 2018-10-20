@@ -4,11 +4,11 @@
 
 ### Running tests
 
-Lolex has a comprehensive test suite. If you're thinking of contributing bug
-fixes or suggesting new features, you need to make sure you have not broken any
-tests. You are also expected to add tests for any new behavior.
+Lolex has a comprehensive test suite.
+When contributing bug fixes it is important to make sure no tests were broken.
+New features also require tests to be added so we can make sure they do not break between versions.
 
-#### On node:
+#### On Node.js:
 
 ```sh
 npm test
@@ -17,7 +17,7 @@ npm test
 Or, if you prefer more verbose output:
 
 ```
-$(npm bin)/mocha ./test/lolex-test.js
+npx mocha ./test/lolex-test.js
 ```
 
 #### In the browser

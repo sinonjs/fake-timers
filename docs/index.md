@@ -1,6 +1,6 @@
 # lolex
 
-> JavaScript implementation of the timer APIs
+JavaScript implementation of timing related web APIs.
 
 **Implements:**
 
@@ -12,7 +12,10 @@
 * [`clearInterval`](#clearintervalid)
 * [`requestAnimationFrame`](#requestanimationframecallback)
 * [`cancelAnimationFrame`](#cancelanimationframeid)
-* and many more ...
+* [`Date`](#date)
+* [`nextTick`](#nexttickcallback-args)
+* [`queueMicrotask`](#queuemicrotaskcallback)
+* [`performance.now`](#performancenow)
 
 along with a clock instance that controls the flow of time.
 **lolex** also provides a [`Date`](#date) implementation that gets its time from the clock.
@@ -21,7 +24,7 @@ along with a clock instance that controls the flow of time.
 situations where you want the scheduling semantics, but don't want to actually
 wait (however, from version 2.0 **lolex** supports those of you who would like to wait too).
 
-**lolex** is extracted from [Sinon.JS](https://github.com/sinonjs/sinon.js).
+**lolex** is a part of [Sinon.JS](https://github.com/sinonjs/sinon.js).
 
 ## Installation
 
@@ -29,14 +32,14 @@ wait (however, from version 2.0 **lolex** supports those of you who would like t
 npm install lolex --save-dev
 ```
 
-You are always free to [build it yourself](https://github.com/sinonjs/lolex/blob/53ea4d9b9e5bcff53cc7c9755dc9aa340368cf1c/package.json#L22), of course.
+You are always free to [build it yourself](https://github.com/sinonjs/lolex/blob/master/package.json#L22), of course.
 
 ## Usage
 
-**lolex** can be used in both Node and browser environments!
+**lolex** can be used in both Node.js and browser environments.
 
 In addition in browser environment **lolex** provides a [`performance`](#performancenow) implementation that gets its time from the clock.
-In Node environments **lolex** provides a [`nextTick`](#nexttick) implementation that is synchronized with the clock - and a [`process.hrtime`](#hrtimeprevtime) shim that works with the clock.
+In Node.js environments **lolex** provides a [`nextTick`](#nexttick) implementation that is synchronized with the clock - and a [`process.hrtime`](#hrtimeprevtime) shim that works with the clock.
 
 If you want to use **lolex** in a browser you can use
 [the pre-built version](https://github.com/sinonjs/lolex/blob/master/lolex.js)
@@ -45,7 +48,7 @@ available in the repo and the npm package.
 Using npm you only need to reference **lolex** in your `<script>` tags.
 
 ```html
-<script src="./node_modules/lolex/lolex.js">
+<script type="text/javascript" src="https://unpkg.com/lolex@1.4.0/src/lolex.js">
 ...
 </script>
 ```
@@ -76,7 +79,7 @@ imagination when calling the various functions.
 The [`next`](#next), [`runAll`](#runall), [`runToFrame`](#runtoframe), and [`runToLast`](#runtolast) methods are available to advance the clock.
 See the [clock API Reference](#clock-api) for more details.
 
-### Faking the native timers
+### Faking native timers
 
 When using **lolex** to test timers, you will most likely want to replace the native
 timers such that calling `setTimeout` actually schedules a callback with your
@@ -94,6 +97,8 @@ var clock = lolex.install();
 // var clock = lolex.install(typeof global !== "undefined" ? global : window);
 
 setTimeout(fn, 15); // Schedules with clock.setTimeout
+
+clock.tick(15); // fn is called
 
 clock.uninstall();
 // setTimeout is restored to the native implementation
@@ -120,7 +125,7 @@ without arguments.
 
 #### Automatically incrementing mocked time
 
-Since version 2.0 **lolex** supports the possibility to attach the faked timers
+Since version 2.0 **lolex** supports the possibility to attach fake timers
 to any change in the real system time. This basically means you no longer need
 to `tick()` the clock in a situation where you won't know **when** to call `tick()`.
 
@@ -254,6 +259,10 @@ Only available in Node.js.
 
 Implements the [`now`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) method of the [`Performance`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) object but using the clock to provide the correct time.
 Only available in environments that support the Performance object (browsers mostly).
+
+### `queueMicrotask(callback)`
+
+This is essentially a [`nextTick`] that drops arguments which we already support.
 
 
 ### `tick(time)`
