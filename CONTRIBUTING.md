@@ -22,8 +22,7 @@ npx mocha ./test/lolex-test.js
 
 #### In the browser
 
-[Mochify](https://github.com/mantoni/mochify.js) is used to run the tests in
-PhantomJS. Make sure you have `phantomjs` installed. Then:
+[Mochify](https://github.com/mantoni/mochify.js) is used to run the tests in PhantomJS.
 
 ```sh
 npm test-headless
