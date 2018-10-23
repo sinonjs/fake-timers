@@ -2239,7 +2239,6 @@ describe("lolex", function () {
         });
     });
 
-
     describe("requestAnimationFrame", function () {
         beforeEach(function () {
             this.clock = lolex.createClock();
