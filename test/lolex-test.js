@@ -2411,7 +2411,7 @@ describe("lolex", function () {
         });
     });
 
-    describe("x.now()", function () {
+    describe("performance.now()", function () {
 
         before(function () {
             if (!performanceNowPresent) { this.skip(); }
