@@ -2239,6 +2239,7 @@ describe("lolex", function () {
         });
     });
 
+
     describe("requestAnimationFrame", function () {
         beforeEach(function () {
             this.clock = lolex.createClock();
@@ -2410,7 +2411,7 @@ describe("lolex", function () {
         });
     });
 
-    describe("performance.now()", function () {
+    describe("x.now()", function () {
 
         before(function () {
             if (!performanceNowPresent) { this.skip(); }
@@ -2767,6 +2768,48 @@ describe("lolex", function () {
                 clock.uninstall();
                 done();
             }, true);
+        });
+    });
+
+    describe("requestIdleCallback", function () {
+
+        beforeEach(function () {
+            this.clock = lolex.createClock();
+        });
+
+        it("throws if no arguments", function () {
+            var clock = this.clock;
+
+            assert.exception(function () { clock.requestIdleCallback(); });
+        });
+
+        it("returns numeric id", function () {
+            var result = this.clock.requestIdleCallback(NOOP);
+
+            assert.isNumber(result);
+        });
+
+        it("returns unique id", function () {
+            var id1 = this.clock.requestIdleCallback(NOOP);
+            var id2 = this.clock.requestIdleCallback(NOOP);
+
+            refute.equals(id2, id1);
+        });
+
+    });
+
+    describe("cancelIdleCallback", function () {
+
+        beforeEach(function () {
+            this.clock = lolex.createClock();
+        });
+
+        it("removes idle callback", function () {
+            var stub = sinon.stub();
+            var callbackId = this.clock.requestIdleCallback(stub);
+            this.clock.cancelIdleCallback(callbackId);
+
+            assert.isFalse(stub.called);
         });
     });
 });
