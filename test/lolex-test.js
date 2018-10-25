@@ -2791,8 +2791,17 @@ describe("lolex", function () {
         it("returns unique id", function () {
             var id1 = this.clock.requestIdleCallback(NOOP);
             var id2 = this.clock.requestIdleCallback(NOOP);
+            this.clock.runAll();
 
             refute.equals(id2, id1);
+        });
+
+        it("runs after all timers", function () {
+            var spy = sinon.spy();
+            this.clock.requestIdleCallback(spy);
+            this.clock.runAll();
+
+            assert(spy.called);
         });
 
     });
@@ -2805,8 +2814,9 @@ describe("lolex", function () {
 
         it("removes idle callback", function () {
             var stub = sinon.stub();
-            var callbackId = this.clock.requestIdleCallback(stub);
+            var callbackId = this.clock.requestIdleCallback(stub, 0);
             this.clock.cancelIdleCallback(callbackId);
+            this.clock.runAll();
 
             assert.isFalse(stub.called);
         });
