@@ -1,0 +1,23 @@
+title: lolex
+description: Fake JavaScript timers
+url: 'https://lolex.sinonjs.org'
+github_username: sinonjs
+lolex:
+  current_release: v3.0.0
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: none
+  syntax_highlighter_opts:
+    disable: true
+keep_files:
+  - assets
+exclude:
+  - .sass-cache
+collections:
+  api:
+    output: true
+    permalink: '/:collection/:path/'
+sass:
+  sass_dir: _sass
+  style: compressed

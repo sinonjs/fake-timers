@@ -1,0 +1,11 @@
+version: "3"
+services:
+  lolex_docs:
+    # Use jekyll 3.3.1 as requested by
+    # github-pages 111
+    image: jekyll/jekyll:stable
+    command: jekyll serve
+    ports:
+      - 4000:4000
+    volumes:
+      - .:/srv/jekyll
