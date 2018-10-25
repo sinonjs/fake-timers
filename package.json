@@ -24,8 +24,7 @@
     "precommit": "run-p lint test-node",
     "preversion": "./scripts/preversion.sh",
     "version": "./scripts/version.sh",
-    "postversion": "./scripts/postversion.sh",
-    "serve-docs": "docker-compose --file ./docs/serve-docs.yml up"
+    "postversion": "./scripts/postversion.sh"
   },
   "lint-staged": {
     "*.js": "eslint"
