@@ -575,9 +575,18 @@ function withGlobal(_global) {
         }
 
         clock.requestIdleCallback = function requestIdleCallback(func, timeout) {
-            if (typeof timeout === undefined) {
-                timeout = 50;
+            var timeToNextIdlePeriod = 0;
+
+            if (clock.countTimers() > 0) {
+                timeToNextIdlePeriod = 50; // const for now
             }
+
+            if (typeof timeout === "undefined") {
+                timeout = timeToNextIdlePeriod;
+            } else {
+                timeout = Math.min(timeout, timeToNextIdlePeriod);
+            }
+
             var result = addTimer(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 2),
