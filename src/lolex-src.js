@@ -576,7 +576,7 @@ function withGlobal(_global) {
 
         clock.requestIdleCallback = function requestIdleCallback(func, timeout) {
             if (typeof timeout === undefined) {
-                timeout = 50.0 - (clock.now - start);
+                timeout = 50;
             }
             var result = addTimer(clock, {
                 func: func,
