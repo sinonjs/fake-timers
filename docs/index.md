@@ -1,8 +1,12 @@
 # lolex
 
-JavaScript implementation of timing related web APIs.
+**lolex** is a JavaScript package within [Sinon.JS](https://github.com/sinonjs/sinon.js)
+that uses timing related web APIs.
 
-**Implements:**
+For example, use **lolex** to simulate a system clock in your testing environment to control
+the flow of time when your testing scenario requires scheduling semantics.
+
+**lolex** implemnts the following methods:
 
 * [`setTimeout`](#settimeoutcallback-timeout-args)
 * [`clearTimeout`](#cleartimeoutid)
@@ -17,22 +21,17 @@ JavaScript implementation of timing related web APIs.
 * [`queueMicrotask`](#queuemicrotaskcallback)
 * [`performance.now`](#performancenow)
 
-along with a clock instance that controls the flow of time.
-**lolex** also provides a [`Date`](#date) implementation that gets its time from the clock.
-
-**lolex** can be used to simulate passing time in automated tests and other
-situations where you want the scheduling semantics, but don't want to actually
-wait (however, from version 2.0 **lolex** supports those of you who would like to wait too).
-
-**lolex** is a part of [Sinon.JS](https://github.com/sinonjs/sinon.js).
 
 ## Installation
+
+To install **lolex**, enter the following into the command line:
 
 ```shell
 npm install lolex --save-dev
 ```
 
-You are always free to [build it yourself](https://github.com/sinonjs/lolex/blob/master/package.json#L22), of course.
+Alternately, you can [build the package yourself](https://github.com/sinonjs/lolex/blob/master/package.json#L22).
+
 
 ## Usage
 
@@ -53,8 +52,9 @@ Using npm you only need to reference **lolex** in your `<script>` tags.
 </script>
 ```
 
-To use **lolex**, create a new clock, schedule events on it using the timer
-functions and pass time using the [`tick`](#tick) method.
+The following code sample creates a new clock, schedules an event with the
+[`setTimeout` ](#setTimeout) function, and moves the clock ahead using the
+[`tick`](#tick) method:
 
 ```js
 // In the browser distribution, a global lolex is already available
@@ -71,13 +71,16 @@ clock.setTimeout(function () {
 clock.tick(15);
 ```
 
-Upon executing the last line, an interesting fact about the
-[Poblano](http://en.wikipedia.org/wiki/Poblano) will be printed synchronously to
-the screen. If you want to simulate asynchronous behavior, you have to use your
-imagination when calling the various functions.
+**NOTE:**  In the browser distribution, a global **lolex** clock is available by default.
 
-The [`next`](#next), [`runAll`](#runall), [`runToFrame`](#runtoframe), and [`runToLast`](#runtolast) methods are available to advance the clock.
-See the [clock API Reference](#clock-api) for more details.
+After the last line is executed, an interesting fact about the [Poblano](http://en.wikipedia.org/wiki/Poblano)
+pepper is displayed on the screen.
+If you want to simulate asynchronous behavior, you have to use your imagination when calling the various functions.
+
+In addition to the [`tick`](#tick) method, the [`next`](#next), [`runAll`](#runall), [`runToFrame`](#runtoframe),
+and [`runToLast`](#runtolast) methods are available to advance the clock.
+See the [`clock API Reference`](#clock-api) for more details.
+
 
 ### Faking native timers
 
