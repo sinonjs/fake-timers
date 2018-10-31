@@ -44,10 +44,10 @@ If you want to use **lolex** in a browser you can use
 [the pre-built version](https://github.com/sinonjs/lolex/blob/master/lolex.js)
 available in the repo and the npm package.
 
-Using npm you only need to reference **lolex** in your `<script>` tags.
+Using `unpkg` you only need to reference **lolex** in your `<script>` tags.
 
 ```html
-<script type="text/javascript" src="https://unpkg.com/lolex@1.4.0/src/lolex.js">
+<script type="text/javascript" src="https://unpkg.com/lolex/lolex.js">
 ...
 </script>
 ```
