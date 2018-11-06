@@ -25,5 +25,5 @@ npx mocha ./test/lolex-test.js
 [Mochify](https://github.com/mantoni/mochify.js) is used to run the tests in Headless Chrome.
 
 ```sh
-npm test-headless
+npm  run test-headless
 ```
