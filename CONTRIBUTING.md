@@ -22,7 +22,7 @@ npx mocha ./test/lolex-test.js
 
 #### In the browser
 
-[Mochify](https://github.com/mantoni/mochify.js) is used to run the tests in PhantomJS.
+[Mochify](https://github.com/mantoni/mochify.js) is used to run the tests in Headless Chrome.
 
 ```sh
 npm test-headless
