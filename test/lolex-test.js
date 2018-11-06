@@ -2804,6 +2804,32 @@ describe("lolex", function () {
             assert(spy.called);
         });
 
+        it("runs immediately with timeout option if there isn't any timer", function () {
+            var spy = sinon.spy();
+            this.clock.requestIdleCallback(spy, 20);
+            this.clock.tick(1);
+
+            assert(spy.called);
+        });
+
+        it("runs no later than timeout option even if there are any timers", function () {
+            var spy = sinon.spy();
+            this.clock.setTimeout(NOOP, 10);
+            this.clock.setTimeout(NOOP, 30);
+            this.clock.requestIdleCallback(spy, 20);
+            this.clock.tick(20);
+
+            assert(spy.called);
+        });
+
+        it("doesn't runs if there are any timers and no timeout option", function () {
+            var spy = sinon.spy();
+            this.clock.setTimeout(NOOP, 30);
+            this.clock.requestIdleCallback(spy);
+            this.clock.tick(35);
+
+            assert.isFalse(spy.called);
+        });
     });
 
     describe("cancelIdleCallback", function () {
