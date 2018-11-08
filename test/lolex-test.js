@@ -2771,7 +2771,6 @@ describe("lolex", function () {
     });
 
     describe("requestIdleCallback", function () {
-
         beforeEach(function () {
             this.clock = lolex.createClock();
         });
@@ -2833,7 +2832,6 @@ describe("lolex", function () {
     });
 
     describe("cancelIdleCallback", function () {
-
         beforeEach(function () {
             this.clock = lolex.createClock();
         });

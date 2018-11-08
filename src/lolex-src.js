@@ -581,16 +581,10 @@ function withGlobal(_global) {
                 timeToNextIdlePeriod = 50; // const for now
             }
 
-            if (typeof timeout === "undefined") {
-                timeout = timeToNextIdlePeriod;
-            } else {
-                timeout = Math.min(timeout, timeToNextIdlePeriod);
-            }
-
             var result = addTimer(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 2),
-                delay: timeout
+                delay: typeof timeout === "undefined" ? timeToNextIdlePeriod : Math.min(timeout, timeToNextIdlePeriod)
             });
 
             return result.id || result;
