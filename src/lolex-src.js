@@ -31,7 +31,8 @@ function withGlobal(_global) {
     var addTimerReturnsObject = typeof timeoutResult === "object";
     var hrtimePresent = (_global.process && typeof _global.process.hrtime === "function");
     var nextTickPresent = (_global.process && typeof _global.process.nextTick === "function");
-    var symbolUtilPromisifyCustom = (_global.process && typeof require === "function" && require("util") && require("util").promisify.custom);
+    var nodeUtil = (_global.process && typeof require === "function" && require("util"));
+    var symbolUtilPromisifyCustom = nodeUtil && nodeUtil.promisify && nodeUtil.promisify.custom;
     var performancePresent = (_global.performance && typeof _global.performance.now === "function");
     var hasPerformancePrototype = (_global.Performance && (typeof _global.Performance).match(/^(function|object)$/));
     var queueMicrotaskPresent = (typeof _global.queueMicrotask === "function");

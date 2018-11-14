@@ -20,7 +20,7 @@ var GlobalDate = Date;
 var NOOP = function NOOP() { return undefined; };
 var nextTickPresent = (global.process && typeof global.process.nextTick === "function");
 var queueMicrotaskPresent = (typeof global.queueMicrotask === "function");
-var utilPromisify = (global.process && typeof require === "function" && require('util') && require("util").promisify);
+var utilPromisify = (global.process && typeof require === "function" && require("util") && require("util").promisify);
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
 var performanceNowPresent = (global.performance && typeof global.performance.now === "function");
 var performanceMarkPresent = (global.performance && typeof global.performance.mark === "function");
@@ -207,13 +207,10 @@ describe("lolex", function () {
 
     describe("setTimeout", function () {
 
+        var evalCalled;
         beforeEach(function () {
             this.clock = lolex.createClock();
-            lolex.evalCalled = false;
-        });
-
-        afterEach(function () {
-            delete lolex.evalCalled;
+            evalCalled = false;
         });
 
         it("throws if no arguments", function () {
@@ -253,24 +250,28 @@ describe("lolex", function () {
         });
 
         it("parses numeric string times", function () {
-            this.clock.setTimeout(function () { lolex.evalCalled = true; }, "10");
+            this.clock.setTimeout(function () { evalCalled = true; }, "10");
             this.clock.tick(10);
 
-            assert(lolex.evalCalled);
+            assert(evalCalled);
         });
 
         it("parses no-numeric string times", function () {
-            this.clock.setTimeout(function () { lolex.evalCalled = true; }, "string");
+            this.clock.setTimeout(function () { evalCalled = true; }, "string");
             this.clock.tick(10);
 
-            assert(lolex.evalCalled);
+            assert(evalCalled);
         });
 
         it("evals non-function callbacks", function () {
-            this.clock.setTimeout("lolex.evalCalled = true", 10);
+            global.evalFn = function () {
+                evalCalled = true;
+            };
+            this.clock.setTimeout("evalFn()", 10);
             this.clock.tick(10);
 
-            assert(lolex.evalCalled);
+            assert(evalCalled);
+            delete global.evalFn;
         });
 
         it("passes setTimeout parameters", function () {
@@ -395,9 +396,11 @@ describe("lolex", function () {
             assert.equals(calls, ["NaN", "Infinity", "-Infinity"]);
         });
         it("Handles promisification of setTimeout", function () {
-            if(!utilPromisify) this.skip();
-            let timeout = utilPromisify(this.clock.setTimeout);
-            return Promise.resolve().then(function () {
+            if (!utilPromisify) {
+                this.skip();
+            }
+            var timeout = utilPromisify(this.clock.setTimeout);
+            return global.Promise.resolve().then(function () {
                 var p1 = timeout(1e6);
                 this.clock.tick(1e6);
                 return p1;
@@ -1930,6 +1933,19 @@ describe("lolex", function () {
                 assert.isFunction(to.ref);
                 assert.isFunction(to.unref);
             }
+        });
+
+        it("global fake setTimeout with util promisify should work", function () {
+            if (!utilPromisify) {
+                this.skip();
+            }
+            this.clock = lolex.install();
+            var delay = utilPromisify(setTimeout);
+            return global.Promise.resolve().then(function () {
+                var p = delay(1e6);
+                this.clock.tick(1e6);
+                return p;
+            }.bind(this));
         });
 
         it("global fake setTimeout().unref() should return timer", function () {
