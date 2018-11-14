@@ -31,6 +31,7 @@ function withGlobal(_global) {
     var addTimerReturnsObject = typeof timeoutResult === "object";
     var hrtimePresent = (_global.process && typeof _global.process.hrtime === "function");
     var nextTickPresent = (_global.process && typeof _global.process.nextTick === "function");
+    var symbolUtilPromisifyCustom = (_global.process && typeof require === "function" && require("util") && require("util").promisify.custom);
     var performancePresent = (_global.performance && typeof _global.performance.now === "function");
     var hasPerformancePrototype = (_global.Performance && (typeof _global.Performance).match(/^(function|object)$/));
     var queueMicrotaskPresent = (typeof _global.queueMicrotask === "function");
@@ -568,6 +569,13 @@ function withGlobal(_global) {
                 delay: timeout
             });
         };
+        if (symbolUtilPromisifyCustom) {
+            clock.setTimeout[symbolUtilPromisifyCustom] = function (delay) {
+                return new _global.Promise(function (resolve) {
+                    return clock.setTimeout(resolve, delay);
+                });
+            };
+        }
 
         clock.clearTimeout = function clearTimeout(timerId) {
             return clearTimer(clock, timerId, "Timeout");

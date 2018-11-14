@@ -20,6 +20,7 @@ var GlobalDate = Date;
 var NOOP = function NOOP() { return undefined; };
 var nextTickPresent = (global.process && typeof global.process.nextTick === "function");
 var queueMicrotaskPresent = (typeof global.queueMicrotask === "function");
+var utilPromisify = (global.process && typeof require === "function" && require('util') && require("util").promisify);
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
 var performanceNowPresent = (global.performance && typeof global.performance.now === "function");
 var performanceMarkPresent = (global.performance && typeof global.performance.mark === "function");
@@ -392,6 +393,15 @@ describe("lolex", function () {
             }, Number.NEGATIVE_INFINITY);
             this.clock.runAll();
             assert.equals(calls, ["NaN", "Infinity", "-Infinity"]);
+        });
+        it("Handles promisification of setTimeout", function () {
+            if(!utilPromisify) this.skip();
+            let timeout = utilPromisify(this.clock.setTimeout);
+            return Promise.resolve().then(function () {
+                var p1 = timeout(1e6);
+                this.clock.tick(1e6);
+                return p1;
+            }.bind(this));
         });
     });
 
@@ -2545,7 +2555,7 @@ describe("lolex", function () {
         });
         it("runs with timers and before them", function () {
             var last = "";
-            clock.runMicrotasks(function () {
+            clock.queueMicrotask(function () {
                 called = true;
                 last = "tick";
             });
