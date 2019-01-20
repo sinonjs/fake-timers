@@ -40,6 +40,12 @@ function withGlobal(_global) {
     var cancelAnimationFramePresent = (
         _global.cancelAnimationFrame && typeof _global.cancelAnimationFrame === "function"
     );
+    var requestIdleCallbackPresent = (
+        _global.requestIdleCallback && typeof _global.requestIdleCallback === "function"
+    );
+    var cancelIdleCallbackPresent = (
+        _global.cancelIdleCallback && typeof _global.cancelIdleCallback === "function"
+    );
 
     _global.clearTimeout(timeoutResult);
 
@@ -187,7 +193,6 @@ function withGlobal(_global) {
 
         return mirrorDateProperties(ClockDate, NativeDate);
     }
-
 
     function enqueueJob(clock, job) {
         // enqueues a microtick-deferred task - ecma262/#sec-enqueuejob
@@ -496,6 +501,14 @@ function withGlobal(_global) {
         timers.cancelAnimationFrame = _global.cancelAnimationFrame;
     }
 
+    if (requestIdleCallbackPresent) {
+        timers.requestIdleCallback = _global.requestIdleCallback;
+    }
+
+    if (cancelIdleCallbackPresent) {
+        timers.cancelIdleCallback = _global.cancelIdleCallback;
+    }
+
     var keys = Object.keys || function (obj) {
         var ks = [];
         var key;
@@ -561,6 +574,26 @@ function withGlobal(_global) {
             return [secsSinceStart, remainderInNanos];
         }
 
+        clock.requestIdleCallback = function requestIdleCallback(func, timeout) {
+            var timeToNextIdlePeriod = 0;
+
+            if (clock.countTimers() > 0) {
+                timeToNextIdlePeriod = 50; // const for now
+            }
+
+            var result = addTimer(clock, {
+                func: func,
+                args: Array.prototype.slice.call(arguments, 2),
+                delay: typeof timeout === "undefined" ? timeToNextIdlePeriod : Math.min(timeout, timeToNextIdlePeriod)
+            });
+
+            return result.id || result;
+        };
+
+        clock.cancelIdleCallback = function cancelIdleCallback(timerId) {
+            return clearTimer(clock, timerId, "Timeout");
+        };
+
         clock.setTimeout = function setTimeout(func, timeout) {
             return addTimer(clock, {
                 func: func,
@@ -572,15 +605,18 @@ function withGlobal(_global) {
         clock.clearTimeout = function clearTimeout(timerId) {
             return clearTimer(clock, timerId, "Timeout");
         };
+
         clock.nextTick = function nextTick(func) {
             return enqueueJob(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 1)
             });
         };
+
         clock.queueMicrotask = function queueMicrotask(func) {
             return clock.nextTick(func); // explicitly drop additional arguments
         };
+
         clock.setInterval = function setInterval(func, timeout) {
             timeout = parseInt(timeout, 10);
             return addTimer(clock, {

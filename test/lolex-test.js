@@ -2769,4 +2769,80 @@ describe("lolex", function () {
             }, true);
         });
     });
+
+    describe("requestIdleCallback", function () {
+        beforeEach(function () {
+            this.clock = lolex.createClock();
+        });
+
+        it("throws if no arguments", function () {
+            var clock = this.clock;
+
+            assert.exception(function () { clock.requestIdleCallback(); });
+        });
+
+        it("returns numeric id", function () {
+            var result = this.clock.requestIdleCallback(NOOP);
+
+            assert.isNumber(result);
+        });
+
+        it("returns unique id", function () {
+            var id1 = this.clock.requestIdleCallback(NOOP);
+            var id2 = this.clock.requestIdleCallback(NOOP);
+            this.clock.runAll();
+
+            refute.equals(id2, id1);
+        });
+
+        it("runs after all timers", function () {
+            var spy = sinon.spy();
+            this.clock.requestIdleCallback(spy);
+            this.clock.runAll();
+
+            assert(spy.called);
+        });
+
+        it("runs immediately with timeout option if there isn't any timer", function () {
+            var spy = sinon.spy();
+            this.clock.requestIdleCallback(spy, 20);
+            this.clock.tick(1);
+
+            assert(spy.called);
+        });
+
+        it("runs no later than timeout option even if there are any timers", function () {
+            var spy = sinon.spy();
+            this.clock.setTimeout(NOOP, 10);
+            this.clock.setTimeout(NOOP, 30);
+            this.clock.requestIdleCallback(spy, 20);
+            this.clock.tick(20);
+
+            assert(spy.called);
+        });
+
+        it("doesn't runs if there are any timers and no timeout option", function () {
+            var spy = sinon.spy();
+            this.clock.setTimeout(NOOP, 30);
+            this.clock.requestIdleCallback(spy);
+            this.clock.tick(35);
+
+            assert.isFalse(spy.called);
+        });
+    });
+
+    describe("cancelIdleCallback", function () {
+        beforeEach(function () {
+            this.clock = lolex.createClock();
+        });
+
+        it("removes idle callback", function () {
+            var stub = sinon.stub();
+            var callbackId = this.clock.requestIdleCallback(stub, 0);
+            this.clock.cancelIdleCallback(callbackId);
+            this.clock.runAll();
+
+            assert.isFalse(stub.called);
+        });
+    });
 });
