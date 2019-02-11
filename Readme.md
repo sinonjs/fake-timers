@@ -1,6 +1,6 @@
 # Lolex [![Build Status](https://travis-ci.org/sinonjs/lolex.svg?branch=master)](https://travis-ci.org/sinonjs/lolex)
 
-JavaScript implementation of the timer APIs; `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`, `setInterval`, `clearInterval`, `requestAnimationFrame`, and `cancelAnimationFrame`, along with a clock instance that controls the flow of time. Lolex also provides a `Date` implementation that gets its time from the clock.
+JavaScript implementation of the timer APIs; `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`, `setInterval`, `clearInterval`, `requestAnimationFrame`, `cancelAnimationFrame`, `requestIdleCallback`, and `cancelIdleCallback`, along with a clock instance that controls the flow of time. Lolex also provides a `Date` implementation that gets its time from the clock.
 
 In addition in browser environment lolex provides a `performance` implementation that gets its time from the clock. In Node environments lolex provides a `nextTick` implementation that is synchronized with the clock - and a `process.hrtime` shim that works with the clock.
 
@@ -139,7 +139,7 @@ Parameter | Type | Default | Description
 --------- | ---- | ------- | ------------
 `config.target`| Object | global | installs lolex onto the specified target context
 `config.now` | Number/Date | 0 | installs lolex with the specified unix epoch
-`config.toFake` | String[] | ["setTimeout", "clearTimeout", "setImmediate", "clearImmediate","setInterval", "clearInterval", "Date", "requestAnimationFrame", "cancelAnimationFrame", "hrtime"] | an array with explicit function names to hijack. *When not set, lolex will automatically fake all methods **except** `nextTick`* e.g., `lolex.install({ toFake: ["setTimeout","nextTick"]})` will fake only `setTimeout` and `nextTick`
+`config.toFake` | String[] | ["setTimeout", "clearTimeout", "setImmediate", "clearImmediate","setInterval", "clearInterval", "Date", "requestAnimationFrame", "cancelAnimationFrame", "requestIdleCallback", "cancelIdleCallback", "hrtime"] | an array with explicit function names to hijack. *When not set, lolex will automatically fake all methods **except** `nextTick`* e.g., `lolex.install({ toFake: ["setTimeout","nextTick"]})` will fake only `setTimeout` and `nextTick`
 `config.loopLimit` | Number | 1000 | the maximum number of timers that will be run when calling runAll()
 `config.shouldAdvanceTime` | Boolean | false | tells lolex to increment mocked time automatically based on the real system time shift (e.g. the mocked time will be incremented by 20ms for every 20ms change in the real system time)
 `config.advanceTimeDelta` | Number | 20 | relevant only when using with `shouldAdvanceTime: true`. increment mocked time by `advanceTimeDelta` ms every `advanceTimeDelta` ms change in the real system time.
@@ -197,6 +197,14 @@ Schedules the callback to be fired on the next animation frame, which runs every
 available in both browser & node environments.
 
 ### `clock.cancelAnimationFrame(id)`
+
+Cancels the callback scheduled by the provided id.
+
+### `clock.requestIdleCallback(callback[, timeout])`
+
+Queued the callback to be fired during idle periods to perform background and low priority work on the main event loop. Callbacks which have a timeout option will be fired no later than time in milliseconds. Returns an `id` which can be used to cancel the callback.
+
+### `clock.cancelIdleCallback(id)`
 
 Cancels the callback scheduled by the provided id.
 
