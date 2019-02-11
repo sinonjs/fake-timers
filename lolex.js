@@ -35,11 +35,18 @@ function withGlobal(_global) {
     var nextTickPresent = (_global.process && typeof _global.process.nextTick === "function");
     var performancePresent = (_global.performance && typeof _global.performance.now === "function");
     var hasPerformancePrototype = (_global.Performance && (typeof _global.Performance).match(/^(function|object)$/));
+    var queueMicrotaskPresent = (typeof _global.queueMicrotask === "function");
     var requestAnimationFramePresent = (
         _global.requestAnimationFrame && typeof _global.requestAnimationFrame === "function"
     );
     var cancelAnimationFramePresent = (
         _global.cancelAnimationFrame && typeof _global.cancelAnimationFrame === "function"
+    );
+    var requestIdleCallbackPresent = (
+        _global.requestIdleCallback && typeof _global.requestIdleCallback === "function"
+    );
+    var cancelIdleCallbackPresent = (
+        _global.cancelIdleCallback && typeof _global.cancelIdleCallback === "function"
     );
 
     _global.clearTimeout(timeoutResult);
@@ -188,7 +195,6 @@ function withGlobal(_global) {
 
         return mirrorDateProperties(ClockDate, NativeDate);
     }
-
 
     function enqueueJob(clock, job) {
         // enqueues a microtick-deferred task - ecma262/#sec-enqueuejob
@@ -489,9 +495,20 @@ function withGlobal(_global) {
     if (requestAnimationFramePresent) {
         timers.requestAnimationFrame = _global.requestAnimationFrame;
     }
+    if (queueMicrotaskPresent) {
+        timers.queueMicrotask = _global.queueMicrotask;
+    }
 
     if (cancelAnimationFramePresent) {
         timers.cancelAnimationFrame = _global.cancelAnimationFrame;
+    }
+
+    if (requestIdleCallbackPresent) {
+        timers.requestIdleCallback = _global.requestIdleCallback;
+    }
+
+    if (cancelIdleCallbackPresent) {
+        timers.cancelIdleCallback = _global.cancelIdleCallback;
     }
 
     var keys = Object.keys || function (obj) {
@@ -559,6 +576,26 @@ function withGlobal(_global) {
             return [secsSinceStart, remainderInNanos];
         }
 
+        clock.requestIdleCallback = function requestIdleCallback(func, timeout) {
+            var timeToNextIdlePeriod = 0;
+
+            if (clock.countTimers() > 0) {
+                timeToNextIdlePeriod = 50; // const for now
+            }
+
+            var result = addTimer(clock, {
+                func: func,
+                args: Array.prototype.slice.call(arguments, 2),
+                delay: typeof timeout === "undefined" ? timeToNextIdlePeriod : Math.min(timeout, timeToNextIdlePeriod)
+            });
+
+            return result.id || result;
+        };
+
+        clock.cancelIdleCallback = function cancelIdleCallback(timerId) {
+            return clearTimer(clock, timerId, "Timeout");
+        };
+
         clock.setTimeout = function setTimeout(func, timeout) {
             return addTimer(clock, {
                 func: func,
@@ -570,12 +607,18 @@ function withGlobal(_global) {
         clock.clearTimeout = function clearTimeout(timerId) {
             return clearTimer(clock, timerId, "Timeout");
         };
+
         clock.nextTick = function nextTick(func) {
             return enqueueJob(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 1)
             });
         };
+
+        clock.queueMicrotask = function queueMicrotask(func) {
+            return clock.nextTick(func); // explicitly drop additional arguments
+        };
+
         clock.setInterval = function setInterval(func, timeout) {
             timeout = parseInt(timeout, 10);
             return addTimer(clock, {
@@ -652,11 +695,11 @@ function withGlobal(_global) {
 
             clock.duringTick = true;
 
-            // perform process.nextTick()s
+            // perform microtasks
             oldNow = clock.now;
             runJobs(clock);
             if (oldNow !== clock.now) {
-                // compensate for any setSystemTime() call during process.nextTick() callback
+                // compensate for any setSystemTime() call during microtask callback
                 tickFrom += clock.now - oldNow;
                 tickTo += clock.now - oldNow;
             }

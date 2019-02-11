@@ -1,4 +1,12 @@
 
+3.1.0 / 2019-02-11
+==================
+
+  * default timeout set to 50ms
+  * first implementation of requestIdleCallback and cancelIdleCallback
+  * fixed accidentally performance.now() -> x.now() replacement
+  * added queueMicrotask
+
 3.0.0 / 2018-10-08
 ==================
 
