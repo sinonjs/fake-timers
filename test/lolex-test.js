@@ -2545,7 +2545,7 @@ describe("lolex", function () {
         });
         it("runs with timers and before them", function () {
             var last = "";
-            clock.runMicrotasks(function () {
+            clock.queueMicrotask(function () {
                 called = true;
                 last = "tick";
             });
