@@ -5,9 +5,9 @@ cd "$SCRIPT_DIR/.." > /dev/null
 
 PACKAGE_VERSION=$(node -p -e "require('./package.json').version")
 
-echo 'Updating History.md'
+echo 'Updating CHANGELOG.md'
 git changelog --no-merges
-git add History.md
+git add CHANGELOG.md
 
 echo 'Updating AUTHORS'
 git authors --list > AUTHORS
