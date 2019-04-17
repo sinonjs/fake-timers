@@ -8,7 +8,7 @@ Lolex can be used to simulate passing time in automated tests and other
 situations where you want the scheduling semantics, but don't want to actually
 wait (however, from version 2.0 lolex supports those of you who would like to wait too).
 
-Lolex is extracted from [Sinon.JS](https://github.com/sinonjs/sinon.js).
+Lolex is extracted from [Sinon.JS](https://github.com/sinonjs/sinon.js) and targets the [same runtimes](https://sinonjs.org/releases/latest/#supported-runtimes).
 
 ## Installation
 
