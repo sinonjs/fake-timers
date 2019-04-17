@@ -1,4 +1,10 @@
 
+4.0.0 / 2019-04-17
+==================
+
+  * Drop support for IE9 and IE10: link to supported browsers in README
+  * No more ExperimentalWarnings in Node environment for queueMicrotask() if it's not used in user's code
+
 3.1.0 / 2019-02-11
 ==================
 

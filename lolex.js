@@ -35,7 +35,7 @@ function withGlobal(_global) {
     var nextTickPresent = (_global.process && typeof _global.process.nextTick === "function");
     var performancePresent = (_global.performance && typeof _global.performance.now === "function");
     var hasPerformancePrototype = (_global.Performance && (typeof _global.Performance).match(/^(function|object)$/));
-    var queueMicrotaskPresent = (typeof _global.queueMicrotask === "function");
+    var queueMicrotaskPresent = (_global.hasOwnProperty("queueMicrotask"));
     var requestAnimationFramePresent = (
         _global.requestAnimationFrame && typeof _global.requestAnimationFrame === "function"
     );
@@ -495,8 +495,9 @@ function withGlobal(_global) {
     if (requestAnimationFramePresent) {
         timers.requestAnimationFrame = _global.requestAnimationFrame;
     }
+
     if (queueMicrotaskPresent) {
-        timers.queueMicrotask = _global.queueMicrotask;
+        timers.queueMicrotask = true;
     }
 
     if (cancelAnimationFramePresent) {
@@ -899,7 +900,9 @@ function withGlobal(_global) {
 
         if (clock.methods.length === 0) {
             // do not fake nextTick by default - GitHub#126
-            clock.methods = keys(timers).filter(function (key) {return key !== "nextTick";});
+            clock.methods = keys(timers).filter(function (key) {
+                return key !== "nextTick" && key !== "queueMicrotask";
+            });
         }
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
