@@ -69,7 +69,5 @@
   },
   "module": "./lolex.js",
   "main": "./src/lolex-src.js",
-  "dependencies": {
-    "sinon": "7.3.1"
-  }
+  "dependencies": {}
 }
