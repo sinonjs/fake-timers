@@ -1030,7 +1030,7 @@ describe("lolex", function() {
         describe("tickAsync", function () {
 
             beforeEach(function () {
-                this.clock = lolex.install(0);
+                this.clock = lolex.install();
             });
 
             afterEach(function () {
@@ -1915,7 +1915,7 @@ describe("lolex", function() {
         describe("nextAsync", function () {
 
             beforeEach(function () {
-                this.clock = lolex.install(0);
+                this.clock = lolex.install();
             });
 
             afterEach(function () {
@@ -2467,7 +2467,7 @@ describe("lolex", function() {
             });
 
             it("the loop limit can be set when installing a clock", function () {
-                this.clock = lolex.install(0, null, null, 1);
+                this.clock = lolex.install({ loopLimit: 1 });
                 var test = this;
                 var catchSpy = sinon.spy();
 
