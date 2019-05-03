@@ -2098,6 +2098,10 @@ describe("lolex", function () {
 
                 this.clock.uninstall();
 
+                assert.equals(performance.getEntries(), ["foo"]);
+                assert.equals(performance.getEntriesByName(), ["foo"]);
+                assert.equals(performance.getEntriesByType(), ["foo"]);
+
                 delete Performance.prototype.getEntries;
                 delete Performance.prototype.getEntriesByName;
                 delete Performance.prototype.getEntriesByTime;
