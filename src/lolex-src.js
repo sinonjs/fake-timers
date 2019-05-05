@@ -850,7 +850,7 @@ function withGlobal(_global) {
                 Object
                     .getOwnPropertyNames(proto)
                     .forEach(function (name) {
-                        if (name.slice(0, 10) === "getEntries") {
+                        if (name.indexOf("getEntries") === 0) {
                             // match expected return type for getEntries functions
                             clock.performance[name] = NOOP_ARRAY;
                         } else {
