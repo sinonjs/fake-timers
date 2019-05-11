@@ -538,6 +538,11 @@ describe("lolex", function () {
             assert.equals(this.clock.countTimers(), 2);
         });
 
+        it("counts microtasks", function () {
+            this.clock.nextTick(NOOP);
+            assert.equals(this.clock.countTimers(), 1);
+        });
+
     });
 
     describe("tick", function () {

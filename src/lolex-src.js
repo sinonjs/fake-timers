@@ -645,7 +645,7 @@ function withGlobal(_global) {
         };
 
         clock.countTimers = function countTimers() {
-            return Object.keys(clock.timers || {}).length;
+            return Object.keys(clock.timers || {}).length + (clock.jobs || []).length;
         };
 
         clock.requestAnimationFrame = function requestAnimationFrame(func) {
