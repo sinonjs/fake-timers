@@ -27,6 +27,7 @@ function withGlobal(_global) {
     // see https://github.com/cjohansen/Sinon.JS/pull/436
 
     var NOOP = function () { return undefined; };
+    var NOOP_ARRAY = function () { return []; };
     var timeoutResult = _global.setTimeout(NOOP, 0);
     var addTimerReturnsObject = typeof timeoutResult === "object";
     var hrtimePresent = (_global.process && typeof _global.process.hrtime === "function");
@@ -849,7 +850,12 @@ function withGlobal(_global) {
                 Object
                     .getOwnPropertyNames(proto)
                     .forEach(function (name) {
-                        clock.performance[name] = NOOP;
+                        if (name.indexOf("getEntries") === 0) {
+                            // match expected return type for getEntries functions
+                            clock.performance[name] = NOOP_ARRAY;
+                        } else {
+                            clock.performance[name] = NOOP;
+                        }
                     });
             }
 

@@ -2084,6 +2084,28 @@ describe("lolex", function () {
                 delete Performance.prototype.someFunc2;
                 delete Performance.prototype.someFunc3;
             });
+
+            it("should replace the getEntries, getEntriesByX methods with noops that return []", function () {
+                Performance.prototype.getEntries =
+                Performance.prototype.getEntriesByName =
+                Performance.prototype.getEntriesByType = function () { return ["foo"]; };
+
+                this.clock = lolex.install();
+
+                assert.equals(performance.getEntries(), []);
+                assert.equals(performance.getEntriesByName(), []);
+                assert.equals(performance.getEntriesByType(), []);
+
+                this.clock.uninstall();
+
+                assert.equals(performance.getEntries(), ["foo"]);
+                assert.equals(performance.getEntriesByName(), ["foo"]);
+                assert.equals(performance.getEntriesByType(), ["foo"]);
+
+                delete Performance.prototype.getEntries;
+                delete Performance.prototype.getEntriesByName;
+                delete Performance.prototype.getEntriesByTime;
+            });
         }
 
         if (Object.getPrototypeOf(global)) {
