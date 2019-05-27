@@ -21,6 +21,7 @@ var NOOP = function NOOP() { return undefined; };
 var nextTickPresent = (global.process && typeof global.process.nextTick === "function");
 var queueMicrotaskPresent = (typeof global.queueMicrotask === "function");
 var hrtimePresent = (global.process && typeof global.process.hrtime === "function");
+var hrtimeBigintPresent = (hrtimePresent && typeof global.process.hrtime.bigint === "function");
 var performanceNowPresent = (global.performance && typeof global.performance.now === "function");
 var performanceMarkPresent = (global.performance && typeof global.performance.mark === "function");
 
@@ -2543,6 +2544,58 @@ describe("lolex", function () {
             var result = clock.hrtime([0, 20000000]);
 
             assert.equals(result, [1, 2779100]);
+        });
+    });
+
+    describe("process.hrtime.bigint()", function () {
+
+        before(function () {
+            if (!hrtimeBigintPresent) { this.skip(); }
+        });
+
+        afterEach(function () {
+            if (this.clock) {
+                this.clock.uninstall();
+            }
+        });
+
+        it("should start at 0n", function () {
+            var clock = lolex.createClock(1001);
+            var result = clock.hrtime.bigint();
+            assert.same(result, BigInt(0)); // eslint-disable-line
+        });
+
+        it("should run along with clock.tick", function () {
+            var clock = lolex.createClock(0);
+            clock.tick(5001);
+            var result = clock.hrtime.bigint();
+            assert.same(result, BigInt(5.001e9)); // eslint-disable-line
+        });
+
+        it("should run along with clock.tick when timers set", function () {
+            var clock = lolex.createClock(0);
+            clock.setTimeout(function () {
+                var result = clock.hrtime.bigint();
+                assert.same(result, BigInt(2.5e9)); // eslint-disable-line
+            }, 2500);
+            clock.tick(5000);
+        });
+
+        it("should not move with setSystemTime", function () {
+            var clock = lolex.createClock(0);
+            clock.setSystemTime(50000);
+            var result = clock.hrtime.bigint();
+            assert.same(result, BigInt(0)); // eslint-disable-line
+        });
+
+        it("should move with timeouts", function () {
+            var clock = lolex.createClock();
+            var result = clock.hrtime.bigint();
+            assert.same(result, BigInt(0)); // eslint-disable-line
+            clock.setTimeout(function () {}, 1000);
+            clock.runAll();
+            result = clock.hrtime.bigint();
+            assert.same(result, BigInt(1e9)); // eslint-disable-line
         });
     });
 
