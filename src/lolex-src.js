@@ -31,6 +31,7 @@ function withGlobal(_global) {
     var timeoutResult = _global.setTimeout(NOOP, 0);
     var addTimerReturnsObject = typeof timeoutResult === "object";
     var hrtimePresent = (_global.process && typeof _global.process.hrtime === "function");
+    var hrtimeBigintPresent = (hrtimePresent && typeof _global.process.hrtime.bigint === "function");
     var nextTickPresent = (_global.process && typeof _global.process.nextTick === "function");
     var performancePresent = (_global.performance && typeof _global.performance.now === "function");
     var hasPerformancePrototype = (_global.Performance && (typeof _global.Performance).match(/^(function|object)$/));
@@ -574,6 +575,13 @@ function withGlobal(_global) {
                 return [secDiff, nanoDiff];
             }
             return [secsSinceStart, remainderInNanos];
+        }
+
+        if (hrtimeBigintPresent) {
+            hrtime.bigint = function () {
+                var parts = hrtime();
+                return BigInt(parts[0]) * BigInt(1e9) + BigInt(parts[1]); // eslint-disable-line
+            };
         }
 
         clock.requestIdleCallback = function requestIdleCallback(func, timeout) {
