@@ -1,4 +1,12 @@
 
+4.1.0 / 2019-06-04
+==================
+
+  * Fix crash on Bash version 3 (macOS)
+  * Support hrtime.bigint()
+  * fix: count microtasks in countTimers
+  * Return empty arrays for performance.getEntries, other relevant methods
+
 4.0.1 / 2019-04-17
 ==================
 

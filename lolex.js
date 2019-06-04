@@ -29,9 +29,11 @@ function withGlobal(_global) {
     // see https://github.com/cjohansen/Sinon.JS/pull/436
 
     var NOOP = function () { return undefined; };
+    var NOOP_ARRAY = function () { return []; };
     var timeoutResult = _global.setTimeout(NOOP, 0);
     var addTimerReturnsObject = typeof timeoutResult === "object";
     var hrtimePresent = (_global.process && typeof _global.process.hrtime === "function");
+    var hrtimeBigintPresent = (hrtimePresent && typeof _global.process.hrtime.bigint === "function");
     var nextTickPresent = (_global.process && typeof _global.process.nextTick === "function");
     var performancePresent = (_global.performance && typeof _global.performance.now === "function");
     var hasPerformancePrototype = (_global.Performance && (typeof _global.Performance).match(/^(function|object)$/));
@@ -577,6 +579,13 @@ function withGlobal(_global) {
             return [secsSinceStart, remainderInNanos];
         }
 
+        if (hrtimeBigintPresent) {
+            hrtime.bigint = function () {
+                var parts = hrtime();
+                return BigInt(parts[0]) * BigInt(1e9) + BigInt(parts[1]); // eslint-disable-line
+            };
+        }
+
         clock.requestIdleCallback = function requestIdleCallback(func, timeout) {
             var timeToNextIdlePeriod = 0;
 
@@ -647,7 +656,7 @@ function withGlobal(_global) {
         };
 
         clock.countTimers = function countTimers() {
-            return Object.keys(clock.timers || {}).length;
+            return Object.keys(clock.timers || {}).length + (clock.jobs || []).length;
         };
 
         clock.requestAnimationFrame = function requestAnimationFrame(func) {
@@ -851,7 +860,12 @@ function withGlobal(_global) {
                 Object
                     .getOwnPropertyNames(proto)
                     .forEach(function (name) {
-                        clock.performance[name] = NOOP;
+                        if (name.indexOf("getEntries") === 0) {
+                            // match expected return type for getEntries functions
+                            clock.performance[name] = NOOP_ARRAY;
+                        } else {
+                            clock.performance[name] = NOOP;
+                        }
                     });
             }
 
