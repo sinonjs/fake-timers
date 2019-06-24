@@ -416,8 +416,7 @@ function withGlobal(_global) {
             } else if (method === "nextTick" && target.process) {
                 target.process.nextTick = clock[installedNextTick];
             } else if (method === "performance") {
-                var originalPerfPropertyDescriptor = Object.getOwnPropertyDescriptor(clock, "_" + method);
-                Object.defineProperty(target, method, originalPerfPropertyDescriptor);
+                target[method] = clock["_" + method];
             } else {
                 if (target[method] && target[method].hadOwnProperty) {
                     target[method] = clock["_" + method];
@@ -453,12 +452,7 @@ function withGlobal(_global) {
             var date = mirrorDateProperties(clock[method], target[method]);
             target[method] = date;
         } else if (method === "performance") {
-            // JSDOM has a read only performance field so we have to save/copy it differently
-            var originalPerfPropertyDescriptor = Object.getOwnPropertyDescriptor(target, method);
-            Object.defineProperty(clock, "_" + method, originalPerfPropertyDescriptor);
-
-            var perfPropertyDescriptor = Object.getOwnPropertyDescriptor(clock, method);
-            Object.defineProperty(target, method, perfPropertyDescriptor);
+            target[method] = clock[method];
         } else {
             target[method] = function () {
                 return clock[method].apply(clock, arguments);
