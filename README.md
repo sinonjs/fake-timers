@@ -224,16 +224,22 @@ Only available in Node.js, mimics `process.nextTick` to enable completely synchr
 Only available in browser environments, mimicks performance.now().
 
 
-### `clock.tick(time)`
+### `clock.tick(time)` / `await clock.tickAsync(time)`
 
 Advance the clock, firing callbacks if necessary. `time` may be the number of
 milliseconds to advance the clock by or a human-readable string. Valid string
 formats are `"08"` for eight seconds, `"01:00"` for one minute and `"02:34:10"`
 for two hours, 34 minutes and ten seconds.
 
-### `clock.next()`
+The `tickAsync()` will also break the event loop, allowing any scheduled promise 
+callbacks to execute _before_ running the timers.
+
+### `clock.next()` / `await clock.nextAsync()`
 
 Advances the clock to the the moment of the first scheduled timer, firing it.
+
+The `nextAsync()` will also break the event loop, allowing any scheduled promise 
+callbacks to execute _before_ running the timers.
 
 ### `clock.reset()`
 
@@ -241,13 +247,16 @@ Removes all timers and ticks without firing them, and sets `now` to `config.now`
 that was provided to `lolex.install` or to `0` if `config.now` was not provided.
 Useful to reset the state of the clock without having to `uninstall` and `install` it.
 
-### `clock.runAll()`
+### `clock.runAll()` / `await clock.runAllAsync()`
 
 This runs all pending timers until there are none remaining. If new timers are added while it is executing they will be run as well.
 
 This makes it easier to run asynchronous tests to completion without worrying about the number of timers they use, or the delays in those timers.
 
 It runs a maximum of `loopLimit` times after which it assumes there is an infinite loop of timers and throws an error.
+
+The `runAllAsync()` will also break the event loop, allowing any scheduled promise 
+callbacks to execute _before_ running the timers.
 
 ### `clock.runMicrotasks()`
 
@@ -258,7 +267,7 @@ This runs all pending microtasks scheduled with `nextTick` but none of the timer
 Advances the clock to the next frame, firing all scheduled animation frame callbacks,
 if any, for that frame as well as any other timers scheduled along the way.
 
-### `clock.runToLast()`
+### `clock.runToLast()` / `await clock.runToLastAsync()`
 
 This takes note of the last scheduled timer when it is run, and advances the
 clock to that time firing callbacks as necessary.
@@ -268,6 +277,9 @@ would occur before this time.
 
 This is useful when you want to run a test to completion, but the test recursively
 sets timers that would cause `runAll` to trigger an infinite loop warning.
+
+The `runToLastAsync()` will also break the event loop, allowing any scheduled promise 
+callbacks to execute _before_ running the timers.
 
 ### `clock.setSystemTime([now])`
 
