@@ -61,18 +61,6 @@ describe("withGlobal", function () {
 describe("globally configured browser objects", function () {
     var withGlobal, originalDescriptors;
 
-    // Used to support Node 6 which doesn't support Object.getOwnPropertyDescriptors
-    function getOwnPropertyDescriptors(obj) {
-        var propertyNames = Object.getOwnPropertyNames(obj);
-        var result = {};
-        propertyNames.forEach(function (name) {
-            var descriptor = Object.getOwnPropertyDescriptor(obj, name);
-            result[name] = descriptor;
-        });
-
-        return result;
-    }
-
     // We use a set up function instead of beforeEach to avoid Mocha's check leaks detector
     function setUpGlobal() {
         // Configuration taken from from here https://github.com/airbnb/enzyme/blob/master/docs/guides/jsdom.md
@@ -80,8 +68,8 @@ describe("globally configured browser objects", function () {
         var window = dom.window;
 
         function copyProps(src, target) {
-            originalDescriptors = getOwnPropertyDescriptors(target);
-            Object.defineProperties(target, getOwnPropertyDescriptors(src));
+            originalDescriptors = Object.getOwnPropertyDescriptors(target);
+            Object.defineProperties(target, Object.getOwnPropertyDescriptors(src));
             Object.defineProperties(target, originalDescriptors);
         }
 
