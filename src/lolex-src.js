@@ -429,7 +429,7 @@ function withGlobal(_global) {
                 } else {
                     try {
                         delete target[method];
-                    } catch (ignore) { /* eslint empty-block: "off" */ }
+                    } catch (ignore) { /* eslint no-empty: "off" */ }
                 }
             }
         }
