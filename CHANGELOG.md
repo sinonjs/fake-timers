@@ -1,4 +1,9 @@
 
+4.2.0 / 2019-08-04
+==================
+
+  * Fix support for replacing the JSDOM performance field
+
 4.1.0 / 2019-06-04
 ==================
 

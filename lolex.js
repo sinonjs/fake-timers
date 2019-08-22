@@ -362,9 +362,29 @@
             } else {
                 delete clock.timers[timer.id];
             }
-    
-            if (typeof timer.func === "function") {
-                timer.func.apply(null, timer.args);
+        }
+    }
+
+    function uninstall(clock, target, config) {
+        var method,
+            i,
+            l;
+        var installedHrTime = "_hrtime";
+        var installedNextTick = "_nextTick";
+
+        for (i = 0, l = clock.methods.length; i < l; i++) {
+            method = clock.methods[i];
+            if (method === "hrtime" && target.process) {
+                target.process.hrtime = clock[installedHrTime];
+            } else if (method === "nextTick" && target.process) {
+                target.process.nextTick = clock[installedNextTick];
+            } else if (method === "performance") {
+                var originalPerfDescriptor = Object.getOwnPropertyDescriptor(clock, "_" + method);
+                if (originalPerfDescriptor && originalPerfDescriptor.get && !originalPerfDescriptor.set) {
+                    Object.defineProperty(target, method, originalPerfDescriptor);
+                } else if (originalPerfDescriptor.configurable) {
+                    target[method] = clock["_" + method];
+                }
             } else {
                 /* eslint no-eval: "off" */
                 eval(timer.func);
@@ -394,45 +414,52 @@
                 if (timer.type === ttype) {
                     delete clock.timers[timerId];
                 } else {
-                    var clear = ttype === "AnimationFrame" ? "cancelAnimationFrame" : "clear" + ttype;
-                    var schedule = timer.type === "AnimationFrame" ? "requestAnimationFrame" : "set" + timer.type;
-                    throw new Error("Cannot clear timer: timer created with " + schedule
-                        + "() but cleared with " + clear + "()");
+                    try {
+                        delete target[method];
+                    } catch (ignore) { /* eslint no-empty: "off" */ }
                 }
             }
         }
-    
-        function uninstall(clock, target, config) {
-            var method,
-                i,
-                l;
-            var installedHrTime = "_hrtime";
-            var installedNextTick = "_nextTick";
-    
-            for (i = 0, l = clock.methods.length; i < l; i++) {
-                method = clock.methods[i];
-                if (method === "hrtime" && target.process) {
-                    target.process.hrtime = clock[installedHrTime];
-                } else if (method === "nextTick" && target.process) {
-                    target.process.nextTick = clock[installedNextTick];
-                } else if (method === "performance") {
-                    var originalPerfDescriptor = Object.getOwnPropertyDescriptor(clock, "_" + method);
-                    if (originalPerfDescriptor && originalPerfDescriptor.get && !originalPerfDescriptor.set) {
-                        Object.defineProperty(target, method, originalPerfDescriptor);
-                    } else if (originalPerfDescriptor.configurable) {
-                        target[method] = clock["_" + method];
-                    }
-                } else {
-                    if (target[method] && target[method].hadOwnProperty) {
-                        target[method] = clock["_" + method];
-                        if (method === "clearInterval" && config.shouldAdvanceTime === true) {
-                            target[method](clock.attachedInterval);
-                        }
-                    } else {
-                        try {
-                            delete target[method];
-                        } catch (ignore) { /* eslint no-empty: "off" */ }
-                    }
+
+        // Prevent multiple executions which will completely remove these props
+        clock.methods = [];
+
+        // return pending timers, to enable checking what timers remained on uninstall
+        if (!clock.timers) {
+            return [];
+        }
+        return Object.keys(clock.timers).map(function mapper(key) {
+            return clock.timers[key];
+        });
+    }
+
+    function hijackMethod(target, method, clock) {
+        var prop;
+        clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(target, method);
+        clock["_" + method] = target[method];
+
+        if (method === "Date") {
+            var date = mirrorDateProperties(clock[method], target[method]);
+            target[method] = date;
+        } else if (method === "performance") {
+            var originalPerfDescriptor = Object.getOwnPropertyDescriptor(target, method);
+            // JSDOM has a read only performance field so we have to save/copy it differently
+            if (originalPerfDescriptor && originalPerfDescriptor.get && !originalPerfDescriptor.set) {
+                Object.defineProperty(clock, "_" + method, originalPerfDescriptor);
+
+                var perfDescriptor = Object.getOwnPropertyDescriptor(clock, method);
+                Object.defineProperty(target, method, perfDescriptor);
+            } else {
+                target[method] = clock[method];
+            }
+        } else {
+            target[method] = function () {
+                return clock[method].apply(clock, arguments);
+            };
+
+            for (prop in clock[method]) {
+                if (clock[method].hasOwnProperty(prop)) {
+                    target[method][prop] = clock[method][prop];
                 }
             }
     

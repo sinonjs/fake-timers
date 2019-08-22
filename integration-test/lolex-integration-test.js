@@ -57,3 +57,71 @@ describe("withGlobal", function () {
         clock.uninstall();
     });
 });
+
+describe("globally configured browser objects", function () {
+    var withGlobal, originalDescriptors;
+
+    // We use a set up function instead of beforeEach to avoid Mocha's check leaks detector
+    function setUpGlobal() {
+        // Configuration taken from from here https://github.com/airbnb/enzyme/blob/master/docs/guides/jsdom.md
+        var dom = new jsdom.JSDOM("<!doctype html><html><body></body></html>");
+        var window = dom.window;
+
+        function copyProps(src, target) {
+            originalDescriptors = Object.getOwnPropertyDescriptors(target);
+            Object.defineProperties(target, Object.getOwnPropertyDescriptors(src));
+            Object.defineProperties(target, originalDescriptors);
+        }
+
+        global.window = window;
+        global.document = window.document;
+        global.navigator = {
+            userAgent: "node.js"
+        };
+        global.requestAnimationFrame = function (callback) {
+            return setTimeout(callback, 0);
+        };
+        global.cancelAnimationFrame = function (id) {
+            clearTimeout(id);
+        };
+        copyProps(window, global);
+
+        withGlobal = lolex.withGlobal(global);
+    }
+
+    function tearDownGlobal() {
+        var originalDescriptorNames = Object.keys(originalDescriptors);
+        var windowDescriptorNames = Object.getOwnPropertyNames(global.window);
+        windowDescriptorNames.forEach(function (descriptorName) {
+            if (!originalDescriptorNames.includes(descriptorName)) {
+                delete global[descriptorName];
+            }
+        });
+
+        delete global.window;
+        delete global.document;
+        delete global.navigator;
+        delete global.requestAnimationFrame;
+        delete global.cancelAnimationFrame;
+    }
+
+    it("correctly instantiates and tears down", function () {
+        setUpGlobal();
+
+        try {
+            var mockNow = new Date("1990-1-1");
+            var clock = withGlobal.install({
+                now: mockNow
+            });
+
+            assert.equals(new Date(Date.now()), mockNow);
+            assert.equals(new Date(), mockNow);
+
+            clock.uninstall();
+
+            assert(new Date().valueOf() !== mockNow.valueOf());
+        } finally {
+            tearDownGlobal();
+        }
+    });
+});
