@@ -170,10 +170,19 @@ function withGlobal(_global) {
     }
 
     function createDate() {
-        function createNativeDate(year, month, date, hour, minute, second, ms) {
+        function ClockDate(year, month, date, hour, minute, second, ms) {
+            // the Date constructor called as a function, ref Ecma-262 Edition 5.1, section 15.9.2.
+            // This remains so in the 10th edition of 2019 as well.
+            if (!(this instanceof ClockDate)) {
+                return new NativeDate(ClockDate.clock.now).toString();
+            }
+
+            // if Date is called as a constructor with 'new' keyword
             // Defensive and verbose to avoid potential harm in passing
             // explicit undefined when user does not pass argument
             switch (arguments.length) {
+                case 0:
+                    return new NativeDate(ClockDate.clock.now);
                 case 1:
                     return new NativeDate(year);
                 case 2:
@@ -189,24 +198,6 @@ function withGlobal(_global) {
                 default:
                     return new NativeDate(year, month, date, hour, minute, second, ms);
             }
-        }
-
-        function ClockDate() {
-            var args = Array.prototype.slice.call(arguments);
-
-            if (args.length === 0) {
-                args.push(ClockDate.clock.now);
-            }
-
-            var date = createNativeDate.apply(this, args);
-
-            // if Date is called as a constructor with 'new' keyword
-            if (this instanceof ClockDate) {
-                return date;
-            }
-
-            // if Date called as function - ecma-262/#sec-date-year-month-date-hours-minutes-seconds-ms
-            return date.toString();
         }
 
         return mirrorDateProperties(ClockDate, NativeDate);
