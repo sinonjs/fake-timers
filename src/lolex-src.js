@@ -171,6 +171,13 @@ function withGlobal(_global) {
 
     function createDate() {
         function ClockDate(year, month, date, hour, minute, second, ms) {
+            // the Date constructor called as a function, ref Ecma-262 Edition 5.1, section 15.9.2.
+            // This remains so in the 10th edition of 2019 as well.
+            if (!(this instanceof ClockDate)) {
+                return new NativeDate(ClockDate.clock.now).toString();
+            }
+
+            // if Date is called as a constructor with 'new' keyword
             // Defensive and verbose to avoid potential harm in passing
             // explicit undefined when user does not pass argument
             switch (arguments.length) {

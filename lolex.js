@@ -416,12 +416,7 @@ function withGlobal(_global) {
             } else if (method === "nextTick" && target.process) {
                 target.process.nextTick = clock[installedNextTick];
             } else if (method === "performance") {
-                var originalPerfDescriptor = Object.getOwnPropertyDescriptor(clock, "_" + method);
-                if (originalPerfDescriptor && originalPerfDescriptor.get && !originalPerfDescriptor.set) {
-                    Object.defineProperty(target, method, originalPerfDescriptor);
-                } else if (originalPerfDescriptor.configurable) {
-                    target[method] = clock["_" + method];
-                }
+                target[method] = clock["_" + method];
             } else {
                 if (target[method] && target[method].hadOwnProperty) {
                     target[method] = clock["_" + method];
@@ -431,7 +426,7 @@ function withGlobal(_global) {
                 } else {
                     try {
                         delete target[method];
-                    } catch (ignore) { /* eslint no-empty: "off" */ }
+                    } catch (ignore) { /* eslint empty-block: "off" */ }
                 }
             }
         }
@@ -457,16 +452,7 @@ function withGlobal(_global) {
             var date = mirrorDateProperties(clock[method], target[method]);
             target[method] = date;
         } else if (method === "performance") {
-            var originalPerfDescriptor = Object.getOwnPropertyDescriptor(target, method);
-            // JSDOM has a read only performance field so we have to save/copy it differently
-            if (originalPerfDescriptor && originalPerfDescriptor.get && !originalPerfDescriptor.set) {
-                Object.defineProperty(clock, "_" + method, originalPerfDescriptor);
-
-                var perfDescriptor = Object.getOwnPropertyDescriptor(clock, method);
-                Object.defineProperty(target, method, perfDescriptor);
-            } else {
-                target[method] = clock[method];
-            }
+            target[method] = clock[method];
         } else {
             target[method] = function () {
                 return clock[method].apply(clock, arguments);
