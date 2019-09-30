@@ -35,7 +35,7 @@
   "devDependencies": {
     "@sinonjs/referee-sinon": "4.1.0",
     "browserify": "16.2.0",
-    "eslint": "6.1.0",
+    "eslint": "6.5.0",
     "eslint-config-sinon": "1.0.3",
     "eslint-plugin-ie11": "1.0.0",
     "eslint-plugin-mocha": "4.11.0",
