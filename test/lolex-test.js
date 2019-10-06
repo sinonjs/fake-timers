@@ -417,6 +417,10 @@ describe("lolex", function () {
     describe("setImmediate", function () {
 
         beforeEach(function () {
+            if (!setImmediatePresent) {
+                this.skip();
+            }
+
             this.clock = lolex.createClock();
         });
 
@@ -496,6 +500,10 @@ describe("lolex", function () {
     describe("clearImmediate", function () {
 
         beforeEach(function () {
+            if (!setImmediatePresent) {
+                this.skip();
+            }
+
             this.clock = lolex.createClock();
         });
 
@@ -1420,6 +1428,10 @@ describe("lolex", function () {
         });
 
         it("does not remove immediate", function () {
+            if (!setImmediatePresent) {
+                this.skip();
+            }
+
             var stub = sinon.stub();
             var id = this.clock.setImmediate(stub);
             assert.exception(function () {
@@ -1600,6 +1612,10 @@ describe("lolex", function () {
         });
 
         it("does not remove immediate", function () {
+            if (!setImmediatePresent) {
+                this.skip();
+            }
+
             var stub = sinon.stub();
             var id = this.clock.setImmediate(stub);
             assert.exception(function () {
@@ -2388,13 +2404,21 @@ describe("lolex", function () {
         });
 
         it("does not remove immediate", function () {
+            if (!setImmediatePresent) {
+                this.skip();
+            }
+
             var stub = sinon.stub();
             var id = this.clock.setImmediate(stub);
-            assert.exception(function () {
-                this.clock.cancelAnimationFrame(id);
-            }.bind(this), {
-                message: "Cannot clear timer: timer created with setImmediate() but cleared with cancelAnimationFrame()"
-            });
+            assert.exception(
+                function () {
+                    this.clock.cancelAnimationFrame(id);
+                }.bind(this),
+                {
+                    message:
+                        "Cannot clear timer: timer created with setImmediate() but cleared with cancelAnimationFrame()"
+                }
+            );
             this.clock.tick(50);
 
             assert.isTrue(stub.called);
