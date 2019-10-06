@@ -24,6 +24,7 @@ var hrtimePresent = (global.process && typeof global.process.hrtime === "functio
 var hrtimeBigintPresent = (hrtimePresent && typeof global.process.hrtime.bigint === "function");
 var performanceNowPresent = (global.performance && typeof global.performance.now === "function");
 var performanceMarkPresent = (global.performance && typeof global.performance.mark === "function");
+var setImmediatePresent = (global.setImmediate && typeof global.setImmediate === "function");
 
 describe("issue #59", function () {
     var context = {
@@ -201,6 +202,23 @@ describe("issue #207 - nanosecond round-off errors on high-res timer", function 
 
         assert.equals(clock.now, 0);
     });
+});
+
+describe("issue #sinonjs/2086 - don't install setImmediate in unsupported environment", function () {
+    var clock;
+
+    if (typeof setImmediate === "undefined") {
+
+        afterEach(function () {
+            clock.uninstall();
+        });
+
+        it("should not install setImmediate", function () {
+            clock = lolex.install();
+
+            refute.defined(global.setImmediate);
+        });
+    }
 });
 
 describe("lolex", function () {
@@ -2196,8 +2214,12 @@ describe("lolex", function () {
         });
 
         it("should test setImmediate", function (done) {
+            if (!setImmediatePresent) {
+                this.skip();
+            }
+
             var date = new Date("2015-09-25");
-            var clock = lolex.install({now: date, shouldAdvanceTime: true});
+            var clock = lolex.install({ now: date, shouldAdvanceTime: true });
             assert.same(Date.now(), 1443139200000);
             var timeoutStarted = Date.now();
 

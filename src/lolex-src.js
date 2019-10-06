@@ -48,6 +48,9 @@ function withGlobal(_global) {
     var cancelIdleCallbackPresent = (
         _global.cancelIdleCallback && typeof _global.cancelIdleCallback === "function"
     );
+    var setImmediatePresent = (
+        _global.setImmediate && typeof _global.setImmediate === "function"
+    );
 
     _global.clearTimeout(timeoutResult);
 
@@ -494,12 +497,15 @@ function withGlobal(_global) {
     var timers = {
         setTimeout: _global.setTimeout,
         clearTimeout: _global.clearTimeout,
-        setImmediate: _global.setImmediate,
-        clearImmediate: _global.clearImmediate,
         setInterval: _global.setInterval,
         clearInterval: _global.clearInterval,
         Date: _global.Date
     };
+
+    if (setImmediatePresent) {
+        timers.setImmediate = _global.setImmediate;
+        timers.clearImmediate = _global.clearImmediate;
+    }
 
     if (hrtimePresent) {
         timers.hrtime = _global.process.hrtime;
