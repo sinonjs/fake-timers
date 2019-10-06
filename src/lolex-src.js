@@ -4,28 +4,6 @@ function withGlobal(_global) {
     var userAgent = _global.navigator && _global.navigator.userAgent;
     var isRunningInIE = userAgent && userAgent.indexOf("MSIE ") > -1;
     var maxTimeout = Math.pow(2, 31) - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
-
-    // Make properties writable in IE, as per
-    // http://www.adequatelygood.com/Replacing-setTimeout-Globally.html
-    if (isRunningInIE) {
-        _global.setTimeout = _global.setTimeout;
-        _global.clearTimeout = _global.clearTimeout;
-        _global.setInterval = _global.setInterval;
-        _global.clearInterval = _global.clearInterval;
-        _global.Date = _global.Date;
-    }
-
-    // setImmediate is not a standard function
-    // avoid adding the prop to the window object if not present
-    if (_global.setImmediate !== undefined) {
-        _global.setImmediate = _global.setImmediate;
-        _global.clearImmediate = _global.clearImmediate;
-    }
-
-    // node expects setTimeout/setInterval to return a fn object w/ .ref()/.unref()
-    // browsers, a number.
-    // see https://github.com/cjohansen/Sinon.JS/pull/436
-
     var NOOP = function () { return undefined; };
     var NOOP_ARRAY = function () { return []; };
     var timeoutResult = _global.setTimeout(NOOP, 0);
@@ -51,6 +29,23 @@ function withGlobal(_global) {
     var setImmediatePresent = (
         _global.setImmediate && typeof _global.setImmediate === "function"
     );
+
+    // Make properties writable in IE, as per
+    // http://www.adequatelygood.com/Replacing-setTimeout-Globally.html
+    if (isRunningInIE) {
+        _global.setTimeout = _global.setTimeout;
+        _global.clearTimeout = _global.clearTimeout;
+        _global.setInterval = _global.setInterval;
+        _global.clearInterval = _global.clearInterval;
+        _global.Date = _global.Date;
+    }
+
+    // setImmediate is not a standard function
+    // avoid adding the prop to the window object if not present
+    if (setImmediatePresent) {
+        _global.setImmediate = _global.setImmediate;
+        _global.clearImmediate = _global.clearImmediate;
+    }
 
     _global.clearTimeout(timeoutResult);
 
@@ -668,17 +663,19 @@ function withGlobal(_global) {
             return clearTimer(clock, timerId, "Interval");
         };
 
-        clock.setImmediate = function setImmediate(func) {
-            return addTimer(clock, {
-                func: func,
-                args: Array.prototype.slice.call(arguments, 1),
-                immediate: true
-            });
-        };
+        if (setImmediatePresent) {
+            clock.setImmediate = function setImmediate(func) {
+                return addTimer(clock, {
+                    func: func,
+                    args: Array.prototype.slice.call(arguments, 1),
+                    immediate: true
+                });
+            };
 
-        clock.clearImmediate = function clearImmediate(timerId) {
-            return clearTimer(clock, timerId, "Immediate");
-        };
+            clock.clearImmediate = function clearImmediate(timerId) {
+                return clearTimer(clock, timerId, "Immediate");
+            };
+        }
 
         clock.countTimers = function countTimers() {
             return Object.keys(clock.timers || {}).length + (clock.jobs || []).length;
