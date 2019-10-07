@@ -216,7 +216,7 @@ describe("issue #sinonjs/2086 - don't install setImmediate in unsupported enviro
         it("should not install setImmediate", function () {
             clock = lolex.install();
 
-            refute.defined(global.setImmediate);
+            assert.isUndefined(global.setImmediate);
         });
     }
 });
@@ -1796,7 +1796,7 @@ describe("lolex", function () {
         } else {
             describe("unsupported now", function () {
                 it("is undefined", function () {
-                    refute.defined(this.clock.Date.now);
+                    assert.isUndefined(this.clock.Date.now);
                 });
             });
         }
@@ -1825,7 +1825,7 @@ describe("lolex", function () {
             describe("unsupported toSource", function () {
 
                 it("is undefined", function () {
-                    refute.defined(this.clock.Date.toSource);
+                    assert.isUndefined(this.clock.Date.toSource);
                 });
 
             });
@@ -2171,7 +2171,7 @@ describe("lolex", function () {
             global.Date.now = undefined;
             this.clock = lolex.install({ now: 0});
 
-            refute.defined(Date.now);
+            assert.isUndefined(Date.now);
         });
 
         it("mirrors custom Date properties", function () {
