@@ -6,28 +6,6 @@ function withGlobal(_global) {
     var userAgent = _global.navigator && _global.navigator.userAgent;
     var isRunningInIE = userAgent && userAgent.indexOf("MSIE ") > -1;
     var maxTimeout = Math.pow(2, 31) - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
-
-    // Make properties writable in IE, as per
-    // http://www.adequatelygood.com/Replacing-setTimeout-Globally.html
-    if (isRunningInIE) {
-        _global.setTimeout = _global.setTimeout;
-        _global.clearTimeout = _global.clearTimeout;
-        _global.setInterval = _global.setInterval;
-        _global.clearInterval = _global.clearInterval;
-        _global.Date = _global.Date;
-    }
-
-    // setImmediate is not a standard function
-    // avoid adding the prop to the window object if not present
-    if (_global.setImmediate !== undefined) {
-        _global.setImmediate = _global.setImmediate;
-        _global.clearImmediate = _global.clearImmediate;
-    }
-
-    // node expects setTimeout/setInterval to return a fn object w/ .ref()/.unref()
-    // browsers, a number.
-    // see https://github.com/cjohansen/Sinon.JS/pull/436
-
     var NOOP = function () { return undefined; };
     var NOOP_ARRAY = function () { return []; };
     var timeoutResult = _global.setTimeout(NOOP, 0);
@@ -50,6 +28,26 @@ function withGlobal(_global) {
     var cancelIdleCallbackPresent = (
         _global.cancelIdleCallback && typeof _global.cancelIdleCallback === "function"
     );
+    var setImmediatePresent = (
+        _global.setImmediate && typeof _global.setImmediate === "function"
+    );
+
+    // Make properties writable in IE, as per
+    // http://www.adequatelygood.com/Replacing-setTimeout-Globally.html
+    if (isRunningInIE) {
+        _global.setTimeout = _global.setTimeout;
+        _global.clearTimeout = _global.clearTimeout;
+        _global.setInterval = _global.setInterval;
+        _global.clearInterval = _global.clearInterval;
+        _global.Date = _global.Date;
+    }
+
+    // setImmediate is not a standard function
+    // avoid adding the prop to the window object if not present
+    if (setImmediatePresent) {
+        _global.setImmediate = _global.setImmediate;
+        _global.clearImmediate = _global.clearImmediate;
+    }
 
     _global.clearTimeout(timeoutResult);
 
@@ -173,6 +171,13 @@ function withGlobal(_global) {
 
     function createDate() {
         function ClockDate(year, month, date, hour, minute, second, ms) {
+            // the Date constructor called as a function, ref Ecma-262 Edition 5.1, section 15.9.2.
+            // This remains so in the 10th edition of 2019 as well.
+            if (!(this instanceof ClockDate)) {
+                return new NativeDate(ClockDate.clock.now).toString();
+            }
+
+            // if Date is called as a constructor with 'new' keyword
             // Defensive and verbose to avoid potential harm in passing
             // explicit undefined when user does not pass argument
             switch (arguments.length) {
@@ -416,7 +421,12 @@ function withGlobal(_global) {
             } else if (method === "nextTick" && target.process) {
                 target.process.nextTick = clock[installedNextTick];
             } else if (method === "performance") {
-                target[method] = clock["_" + method];
+                var originalPerfDescriptor = Object.getOwnPropertyDescriptor(clock, "_" + method);
+                if (originalPerfDescriptor && originalPerfDescriptor.get && !originalPerfDescriptor.set) {
+                    Object.defineProperty(target, method, originalPerfDescriptor);
+                } else if (originalPerfDescriptor.configurable) {
+                    target[method] = clock["_" + method];
+                }
             } else {
                 if (target[method] && target[method].hadOwnProperty) {
                     target[method] = clock["_" + method];
@@ -426,7 +436,7 @@ function withGlobal(_global) {
                 } else {
                     try {
                         delete target[method];
-                    } catch (ignore) { /* eslint empty-block: "off" */ }
+                    } catch (ignore) { /* eslint no-empty: "off" */ }
                 }
             }
         }
@@ -452,7 +462,16 @@ function withGlobal(_global) {
             var date = mirrorDateProperties(clock[method], target[method]);
             target[method] = date;
         } else if (method === "performance") {
-            target[method] = clock[method];
+            var originalPerfDescriptor = Object.getOwnPropertyDescriptor(target, method);
+            // JSDOM has a read only performance field so we have to save/copy it differently
+            if (originalPerfDescriptor && originalPerfDescriptor.get && !originalPerfDescriptor.set) {
+                Object.defineProperty(clock, "_" + method, originalPerfDescriptor);
+
+                var perfDescriptor = Object.getOwnPropertyDescriptor(clock, method);
+                Object.defineProperty(target, method, perfDescriptor);
+            } else {
+                target[method] = clock[method];
+            }
         } else {
             target[method] = function () {
                 return clock[method].apply(clock, arguments);
@@ -475,12 +494,15 @@ function withGlobal(_global) {
     var timers = {
         setTimeout: _global.setTimeout,
         clearTimeout: _global.clearTimeout,
-        setImmediate: _global.setImmediate,
-        clearImmediate: _global.clearImmediate,
         setInterval: _global.setInterval,
         clearInterval: _global.clearInterval,
         Date: _global.Date
     };
+
+    if (setImmediatePresent) {
+        timers.setImmediate = _global.setImmediate;
+        timers.clearImmediate = _global.clearImmediate;
+    }
 
     if (hrtimePresent) {
         timers.hrtime = _global.process.hrtime;
@@ -643,17 +665,19 @@ function withGlobal(_global) {
             return clearTimer(clock, timerId, "Interval");
         };
 
-        clock.setImmediate = function setImmediate(func) {
-            return addTimer(clock, {
-                func: func,
-                args: Array.prototype.slice.call(arguments, 1),
-                immediate: true
-            });
-        };
+        if (setImmediatePresent) {
+            clock.setImmediate = function setImmediate(func) {
+                return addTimer(clock, {
+                    func: func,
+                    args: Array.prototype.slice.call(arguments, 1),
+                    immediate: true
+                });
+            };
 
-        clock.clearImmediate = function clearImmediate(timerId) {
-            return clearTimer(clock, timerId, "Immediate");
-        };
+            clock.clearImmediate = function clearImmediate(timerId) {
+                return clearTimer(clock, timerId, "Immediate");
+            };
+        }
 
         clock.countTimers = function countTimers() {
             return Object.keys(clock.timers || {}).length + (clock.jobs || []).length;
