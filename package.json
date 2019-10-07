@@ -36,7 +36,7 @@
     "@sinonjs/referee-sinon": "5.0.0",
     "browserify": "16.5.0",
     "eslint": "6.5.1",
-    "eslint-config-sinon": "1.0.3",
+    "eslint-config-sinon": "3.0.1",
     "eslint-plugin-ie11": "1.0.0",
     "eslint-plugin-mocha": "6.1.1",
     "husky": "3.0.8",
