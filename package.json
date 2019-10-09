@@ -16,10 +16,10 @@
   "scripts": {
     "lint": "eslint .",
     "test-node": "mocha test/ integration-test/ -R dot --check-leaks",
-    "test-headless": "mochify",
-    "test-cloud": "mochify --wd",
+    "test-headless": "mochify --no-detect-globals",
+    "test-cloud": "mochify --wd --no-detect-globals",
     "test": "npm run lint && npm run test-node && npm run test-headless",
-    "bundle": "browserify -s lolex -o lolex.js src/lolex-src.js",
+    "bundle": "browserify --no-detect-globals -s lolex -o lolex.js src/lolex-src.js",
     "prepublishOnly": "npm run bundle",
     "preversion": "./scripts/preversion.sh",
     "version": "./scripts/version.sh",
@@ -43,7 +43,7 @@
     "jsdom": "15.1.1",
     "lint-staged": "9.4.1",
     "mocha": "6.2.1",
-    "mochify": "6.5.0",
+    "mochify": "6.6.0",
     "npm-run-all": "4.1.5"
   },
   "eslintConfig": {

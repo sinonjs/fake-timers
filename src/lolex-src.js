@@ -973,7 +973,7 @@ function withGlobal(_global) {
     };
 }
 
-var defaultImplementation = withGlobal(global || window);
+var defaultImplementation = withGlobal(typeof global !== "undefined" ? global : window);
 
 exports.timers = defaultImplementation.timers;
 exports.createClock = defaultImplementation.createClock;
