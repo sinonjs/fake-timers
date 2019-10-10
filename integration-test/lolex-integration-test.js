@@ -21,23 +21,23 @@ var assert = require("@sinonjs/referee-sinon").assert;
 var lolex = require("../src/lolex-src");
 var sinon = require("@sinonjs/referee-sinon").sinon;
 
-describe("withGlobal", function () {
+describe("withGlobal", function() {
     var jsdomGlobal, withGlobal, timers;
 
-    beforeEach(function () {
-        var dom = new jsdom.JSDOM("", {runScripts: "dangerously" });
+    beforeEach(function() {
+        var dom = new jsdom.JSDOM("", { runScripts: "dangerously" });
         jsdomGlobal = dom.window;
 
         withGlobal = lolex.withGlobal(jsdomGlobal);
         timers = Object.keys(withGlobal.timers);
     });
 
-    it("matches the normal lolex API", function () {
+    it("matches the normal lolex API", function() {
         assert.equals(Object.keys(withGlobal), Object.keys(lolex));
     });
 
-    it("should support basic setTimeout", function () {
-        var clock = withGlobal.install({target: jsdomGlobal, toFake: timers});
+    it("should support basic setTimeout", function() {
+        var clock = withGlobal.install({ target: jsdomGlobal, toFake: timers });
         var stub = sinon.stub();
 
         jsdomGlobal.setTimeout(stub, 5);
@@ -47,10 +47,10 @@ describe("withGlobal", function () {
         clock.uninstall();
     });
 
-    it("Date is instanceof itself", function () {
+    it("Date is instanceof itself", function() {
         assert(new jsdomGlobal.Date() instanceof jsdomGlobal.Date);
 
-        var clock = withGlobal.install({target: jsdomGlobal, toFake: timers});
+        var clock = withGlobal.install({ target: jsdomGlobal, toFake: timers });
 
         assert(new jsdomGlobal.Date() instanceof jsdomGlobal.Date);
 
@@ -58,7 +58,7 @@ describe("withGlobal", function () {
     });
 });
 
-describe("globally configured browser objects", function () {
+describe("globally configured browser objects", function() {
     var withGlobal, originalDescriptors;
 
     // We use a set up function instead of beforeEach to avoid Mocha's check leaks detector
@@ -69,7 +69,10 @@ describe("globally configured browser objects", function () {
 
         function copyProps(src, target) {
             originalDescriptors = Object.getOwnPropertyDescriptors(target);
-            Object.defineProperties(target, Object.getOwnPropertyDescriptors(src));
+            Object.defineProperties(
+                target,
+                Object.getOwnPropertyDescriptors(src)
+            );
             Object.defineProperties(target, originalDescriptors);
         }
 
@@ -78,10 +81,10 @@ describe("globally configured browser objects", function () {
         global.navigator = {
             userAgent: "node.js"
         };
-        global.requestAnimationFrame = function (callback) {
+        global.requestAnimationFrame = function(callback) {
             return setTimeout(callback, 0);
         };
-        global.cancelAnimationFrame = function (id) {
+        global.cancelAnimationFrame = function(id) {
             clearTimeout(id);
         };
         copyProps(window, global);
@@ -92,7 +95,7 @@ describe("globally configured browser objects", function () {
     function tearDownGlobal() {
         var originalDescriptorNames = Object.keys(originalDescriptors);
         var windowDescriptorNames = Object.getOwnPropertyNames(global.window);
-        windowDescriptorNames.forEach(function (descriptorName) {
+        windowDescriptorNames.forEach(function(descriptorName) {
             if (!originalDescriptorNames.includes(descriptorName)) {
                 delete global[descriptorName];
             }
@@ -105,7 +108,7 @@ describe("globally configured browser objects", function () {
         delete global.cancelAnimationFrame;
     }
 
-    it("correctly instantiates and tears down", function () {
+    it("correctly instantiates and tears down", function() {
         setUpGlobal();
 
         try {
