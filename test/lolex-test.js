@@ -6,14 +6,30 @@
  */
 "use strict";
 
-if (typeof require === "function" && typeof module === "object") {
-    var assert = require("@sinonjs/referee-sinon").assert;
-    var refute = require("@sinonjs/referee-sinon").refute;
-    var lolex = require("../src/lolex-src");
-    var sinon = require("@sinonjs/referee-sinon").sinon;
+/*
+ * FIXME This is an interim hack to break a circular dependency between lolex,
+ * nise and sinon.
+ *
+ * 1. Load lolex firt, without defining global, verifying the ReferenceError is gone.
+ */
+var lolex = require("../src/lolex-src");
 
-    global.lolex = lolex; // For testing eval
+/*
+ * 2. Define global, if missing.
+ */
+if (typeof global === "undefined") {
+    window.global = window;
 }
+
+/*
+ * 3. Load sinon with global defined.
+ */
+var assert = require("@sinonjs/referee-sinon").assert;
+var refute = require("@sinonjs/referee-sinon").refute;
+var sinon = require("@sinonjs/referee-sinon").sinon;
+
+var globalObject = typeof global !== "undefined" ? global : window;
+globalObject.lolex = lolex; // For testing eval
 
 var GlobalDate = Date;
 
