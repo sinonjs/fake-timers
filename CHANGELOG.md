@@ -1,4 +1,10 @@
 
+5.0.1 / 2019-10-10
+==================
+
+  * Upgrade eslint, add prettier
+  * Use `--no-detect-globals` to bundle and test lolex (#270)
+
 5.0.0 / 2019-10-07
 ==================
 

@@ -1,39 +1,49 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.lolex = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-(function (global){
 "use strict";
 
+// eslint-disable-next-line complexity
 function withGlobal(_global) {
     var userAgent = _global.navigator && _global.navigator.userAgent;
     var isRunningInIE = userAgent && userAgent.indexOf("MSIE ") > -1;
     var maxTimeout = Math.pow(2, 31) - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
-    var NOOP = function () { return undefined; };
-    var NOOP_ARRAY = function () { return []; };
+    var NOOP = function() {
+        return undefined;
+    };
+    var NOOP_ARRAY = function() {
+        return [];
+    };
     var timeoutResult = _global.setTimeout(NOOP, 0);
     var addTimerReturnsObject = typeof timeoutResult === "object";
-    var hrtimePresent = (_global.process && typeof _global.process.hrtime === "function");
-    var hrtimeBigintPresent = (hrtimePresent && typeof _global.process.hrtime.bigint === "function");
-    var nextTickPresent = (_global.process && typeof _global.process.nextTick === "function");
-    var performancePresent = (_global.performance && typeof _global.performance.now === "function");
-    var hasPerformancePrototype = (_global.Performance && (typeof _global.Performance).match(/^(function|object)$/));
-    var queueMicrotaskPresent = (_global.hasOwnProperty("queueMicrotask"));
-    var requestAnimationFramePresent = (
-        _global.requestAnimationFrame && typeof _global.requestAnimationFrame === "function"
-    );
-    var cancelAnimationFramePresent = (
-        _global.cancelAnimationFrame && typeof _global.cancelAnimationFrame === "function"
-    );
-    var requestIdleCallbackPresent = (
-        _global.requestIdleCallback && typeof _global.requestIdleCallback === "function"
-    );
-    var cancelIdleCallbackPresent = (
-        _global.cancelIdleCallback && typeof _global.cancelIdleCallback === "function"
-    );
-    var setImmediatePresent = (
-        _global.setImmediate && typeof _global.setImmediate === "function"
-    );
+    var hrtimePresent =
+        _global.process && typeof _global.process.hrtime === "function";
+    var hrtimeBigintPresent =
+        hrtimePresent && typeof _global.process.hrtime.bigint === "function";
+    var nextTickPresent =
+        _global.process && typeof _global.process.nextTick === "function";
+    var performancePresent =
+        _global.performance && typeof _global.performance.now === "function";
+    var hasPerformancePrototype =
+        _global.Performance &&
+        (typeof _global.Performance).match(/^(function|object)$/);
+    var queueMicrotaskPresent = _global.hasOwnProperty("queueMicrotask");
+    var requestAnimationFramePresent =
+        _global.requestAnimationFrame &&
+        typeof _global.requestAnimationFrame === "function";
+    var cancelAnimationFramePresent =
+        _global.cancelAnimationFrame &&
+        typeof _global.cancelAnimationFrame === "function";
+    var requestIdleCallbackPresent =
+        _global.requestIdleCallback &&
+        typeof _global.requestIdleCallback === "function";
+    var cancelIdleCallbackPresent =
+        _global.cancelIdleCallback &&
+        typeof _global.cancelIdleCallback === "function";
+    var setImmediatePresent =
+        _global.setImmediate && typeof _global.setImmediate === "function";
 
     // Make properties writable in IE, as per
     // http://www.adequatelygood.com/Replacing-setTimeout-Globally.html
+    /* eslint-disable no-self-assign */
     if (isRunningInIE) {
         _global.setTimeout = _global.setTimeout;
         _global.clearTimeout = _global.clearTimeout;
@@ -48,6 +58,7 @@ function withGlobal(_global) {
         _global.setImmediate = _global.setImmediate;
         _global.clearImmediate = _global.clearImmediate;
     }
+    /* eslint-enable no-self-assign */
 
     _global.clearTimeout(timeoutResult);
 
@@ -83,7 +94,9 @@ function withGlobal(_global) {
         var parsed;
 
         if (l > 3 || !/^(\d\d:){0,2}\d\d?$/.test(str)) {
-            throw new Error("tick only understands numbers, 'm:s' and 'h:m:s'. Each part must be two digits");
+            throw new Error(
+                "tick only understands numbers, 'm:s' and 'h:m:s'. Each part must be two digits"
+            );
         }
 
         while (i--) {
@@ -93,7 +106,7 @@ function withGlobal(_global) {
                 throw new Error("Invalid time " + str);
             }
 
-            ms += parsed * Math.pow(60, (l - i - 1));
+            ms += parsed * Math.pow(60, l - i - 1);
         }
 
         return ms * 1000;
@@ -120,9 +133,15 @@ function withGlobal(_global) {
      * @param epoch {Date|number} the system time
      */
     function getEpoch(epoch) {
-        if (!epoch) { return 0; }
-        if (typeof epoch.getTime === "function") { return epoch.getTime(); }
-        if (typeof epoch === "number") { return epoch; }
+        if (!epoch) {
+            return 0;
+        }
+        if (typeof epoch.getTime === "function") {
+            return epoch.getTime();
+        }
+        if (typeof epoch === "number") {
+            return epoch;
+        }
         throw new TypeError("now should be milliseconds since UNIX epoch");
     }
 
@@ -194,9 +213,24 @@ function withGlobal(_global) {
                 case 5:
                     return new NativeDate(year, month, date, hour, minute);
                 case 6:
-                    return new NativeDate(year, month, date, hour, minute, second);
+                    return new NativeDate(
+                        year,
+                        month,
+                        date,
+                        hour,
+                        minute,
+                        second
+                    );
                 default:
-                    return new NativeDate(year, month, date, hour, minute, second, ms);
+                    return new NativeDate(
+                        year,
+                        month,
+                        date,
+                        hour,
+                        minute,
+                        second,
+                        ms
+                    );
             }
         }
 
@@ -220,7 +254,11 @@ function withGlobal(_global) {
             var job = clock.jobs[i];
             job.func.apply(null, job.args);
             if (clock.loopLimit && i > clock.loopLimit) {
-                throw new Error("Aborting after running " + clock.loopLimit + " timers, assuming an infinite loop!");
+                throw new Error(
+                    "Aborting after running " +
+                        clock.loopLimit +
+                        " timers, assuming an infinite loop!"
+                );
             }
         }
         clock.jobs = [];
@@ -257,16 +295,23 @@ function withGlobal(_global) {
 
         timer.id = uniqueTimerId++;
         timer.createdAt = clock.now;
-        timer.callAt = clock.now + (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
+        timer.callAt =
+            clock.now + (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
         clock.timers[timer.id] = timer;
 
         if (addTimerReturnsObject) {
             var res = {
                 id: timer.id,
-                ref: function () { return res; },
-                unref: function () { return res; },
-                refresh: function () { return res; }
+                ref: function() {
+                    return res;
+                },
+                unref: function() {
+                    return res;
+                },
+                refresh: function() {
+                    return res;
+                }
             };
             return res;
         }
@@ -320,7 +365,10 @@ function withGlobal(_global) {
             if (timers.hasOwnProperty(id)) {
                 isInRange = inRange(from, to, timers[id]);
 
-                if (isInRange && (!timer || compareTimers(timer, timers[id]) === 1)) {
+                if (
+                    isInRange &&
+                    (!timer || compareTimers(timer, timers[id]) === 1)
+                ) {
                     timer = timers[id];
                 }
             }
@@ -389,28 +437,35 @@ function withGlobal(_global) {
 
         // in Node, timerId is an object with .ref()/.unref(), and
         // its .id field is the actual timer id.
-        if (typeof timerId === "object") {
-            timerId = timerId.id;
-        }
+        var id = typeof timerId === "object" ? timerId.id : timerId;
 
-        if (clock.timers.hasOwnProperty(timerId)) {
+        if (clock.timers.hasOwnProperty(id)) {
             // check that the ID matches a timer of the correct type
-            var timer = clock.timers[timerId];
+            var timer = clock.timers[id];
             if (timer.type === ttype) {
-                delete clock.timers[timerId];
+                delete clock.timers[id];
             } else {
-                var clear = ttype === "AnimationFrame" ? "cancelAnimationFrame" : "clear" + ttype;
-                var schedule = timer.type === "AnimationFrame" ? "requestAnimationFrame" : "set" + timer.type;
-                throw new Error("Cannot clear timer: timer created with " + schedule
-                    + "() but cleared with " + clear + "()");
+                var clear =
+                    ttype === "AnimationFrame"
+                        ? "cancelAnimationFrame"
+                        : "clear" + ttype;
+                var schedule =
+                    timer.type === "AnimationFrame"
+                        ? "requestAnimationFrame"
+                        : "set" + timer.type;
+                throw new Error(
+                    "Cannot clear timer: timer created with " +
+                        schedule +
+                        "() but cleared with " +
+                        clear +
+                        "()"
+                );
             }
         }
     }
 
     function uninstall(clock, target, config) {
-        var method,
-            i,
-            l;
+        var method, i, l;
         var installedHrTime = "_hrtime";
         var installedNextTick = "_nextTick";
 
@@ -421,22 +476,38 @@ function withGlobal(_global) {
             } else if (method === "nextTick" && target.process) {
                 target.process.nextTick = clock[installedNextTick];
             } else if (method === "performance") {
-                var originalPerfDescriptor = Object.getOwnPropertyDescriptor(clock, "_" + method);
-                if (originalPerfDescriptor && originalPerfDescriptor.get && !originalPerfDescriptor.set) {
-                    Object.defineProperty(target, method, originalPerfDescriptor);
+                var originalPerfDescriptor = Object.getOwnPropertyDescriptor(
+                    clock,
+                    "_" + method
+                );
+                if (
+                    originalPerfDescriptor &&
+                    originalPerfDescriptor.get &&
+                    !originalPerfDescriptor.set
+                ) {
+                    Object.defineProperty(
+                        target,
+                        method,
+                        originalPerfDescriptor
+                    );
                 } else if (originalPerfDescriptor.configurable) {
                     target[method] = clock["_" + method];
                 }
             } else {
                 if (target[method] && target[method].hadOwnProperty) {
                     target[method] = clock["_" + method];
-                    if (method === "clearInterval" && config.shouldAdvanceTime === true) {
+                    if (
+                        method === "clearInterval" &&
+                        config.shouldAdvanceTime === true
+                    ) {
                         target[method](clock.attachedInterval);
                     }
                 } else {
                     try {
                         delete target[method];
-                    } catch (ignore) { /* eslint no-empty: "off" */ }
+                    } catch (ignore) {
+                        /* eslint no-empty: "off" */
+                    }
                 }
             }
         }
@@ -455,25 +526,42 @@ function withGlobal(_global) {
 
     function hijackMethod(target, method, clock) {
         var prop;
-        clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(target, method);
+        clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(
+            target,
+            method
+        );
         clock["_" + method] = target[method];
 
         if (method === "Date") {
             var date = mirrorDateProperties(clock[method], target[method]);
             target[method] = date;
         } else if (method === "performance") {
-            var originalPerfDescriptor = Object.getOwnPropertyDescriptor(target, method);
+            var originalPerfDescriptor = Object.getOwnPropertyDescriptor(
+                target,
+                method
+            );
             // JSDOM has a read only performance field so we have to save/copy it differently
-            if (originalPerfDescriptor && originalPerfDescriptor.get && !originalPerfDescriptor.set) {
-                Object.defineProperty(clock, "_" + method, originalPerfDescriptor);
+            if (
+                originalPerfDescriptor &&
+                originalPerfDescriptor.get &&
+                !originalPerfDescriptor.set
+            ) {
+                Object.defineProperty(
+                    clock,
+                    "_" + method,
+                    originalPerfDescriptor
+                );
 
-                var perfDescriptor = Object.getOwnPropertyDescriptor(clock, method);
+                var perfDescriptor = Object.getOwnPropertyDescriptor(
+                    clock,
+                    method
+                );
                 Object.defineProperty(target, method, perfDescriptor);
             } else {
                 target[method] = clock[method];
             }
         } else {
-            target[method] = function () {
+            target[method] = function() {
                 return clock[method].apply(clock, arguments);
             };
 
@@ -536,32 +624,38 @@ function withGlobal(_global) {
         timers.cancelIdleCallback = _global.cancelIdleCallback;
     }
 
-    var keys = Object.keys || function (obj) {
-        var ks = [];
-        var key;
+    var keys =
+        Object.keys ||
+        function(obj) {
+            var ks = [];
+            var key;
 
-        for (key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                ks.push(key);
+            for (key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    ks.push(key);
+                }
             }
-        }
 
-        return ks;
-    };
+            return ks;
+        };
 
     /**
      * @param start {Date|number} the system time - non-integer values are floored
      * @param loopLimit {number}  maximum number of timers that will be run when calling runAll()
      */
     function createClock(start, loopLimit) {
+        // eslint-disable-next-line no-param-reassign
         start = Math.floor(getEpoch(start));
+        // eslint-disable-next-line no-param-reassign
         loopLimit = loopLimit || 1000;
         var nanos = 0;
         var adjustedSystemTime = [0, 0]; // [millis, nanoremainder]
 
         if (NativeDate === undefined) {
-            throw new Error("The global scope doesn't have a `Date` object"
-                + " (see https://github.com/sinonjs/sinon/issues/1852#issuecomment-419622780)");
+            throw new Error(
+                "The global scope doesn't have a `Date` object" +
+                    " (see https://github.com/sinonjs/sinon/issues/1852#issuecomment-419622780)"
+            );
         }
 
         var clock = {
@@ -579,12 +673,17 @@ function withGlobal(_global) {
 
         function hrtime(prev) {
             var millisSinceStart = clock.now - adjustedSystemTime[0] - start;
-            var secsSinceStart = Math.floor( millisSinceStart / 1000);
-            var remainderInNanos = (millisSinceStart - secsSinceStart * 1e3 ) * 1e6 + nanos - adjustedSystemTime[1];
+            var secsSinceStart = Math.floor(millisSinceStart / 1000);
+            var remainderInNanos =
+                (millisSinceStart - secsSinceStart * 1e3) * 1e6 +
+                nanos -
+                adjustedSystemTime[1];
 
             if (Array.isArray(prev)) {
-                if ( prev[1] > 1e9 ) {
-                    throw new TypeError("Number of nanoseconds can't exceed a billion");
+                if (prev[1] > 1e9) {
+                    throw new TypeError(
+                        "Number of nanoseconds can't exceed a billion"
+                    );
                 }
 
                 var oldSecs = prev[0];
@@ -602,13 +701,16 @@ function withGlobal(_global) {
         }
 
         if (hrtimeBigintPresent) {
-            hrtime.bigint = function () {
+            hrtime.bigint = function() {
                 var parts = hrtime();
                 return BigInt(parts[0]) * BigInt(1e9) + BigInt(parts[1]); // eslint-disable-line
             };
         }
 
-        clock.requestIdleCallback = function requestIdleCallback(func, timeout) {
+        clock.requestIdleCallback = function requestIdleCallback(
+            func,
+            timeout
+        ) {
             var timeToNextIdlePeriod = 0;
 
             if (clock.countTimers() > 0) {
@@ -618,7 +720,10 @@ function withGlobal(_global) {
             var result = addTimer(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 2),
-                delay: typeof timeout === "undefined" ? timeToNextIdlePeriod : Math.min(timeout, timeToNextIdlePeriod)
+                delay:
+                    typeof timeout === "undefined"
+                        ? timeToNextIdlePeriod
+                        : Math.min(timeout, timeToNextIdlePeriod)
             });
 
             return result.id || result;
@@ -652,6 +757,7 @@ function withGlobal(_global) {
         };
 
         clock.setInterval = function setInterval(func, timeout) {
+            // eslint-disable-next-line no-param-reassign
             timeout = parseInt(timeout, 10);
             return addTimer(clock, {
                 func: func,
@@ -680,7 +786,10 @@ function withGlobal(_global) {
         }
 
         clock.countTimers = function countTimers() {
-            return Object.keys(clock.timers || {}).length + (clock.jobs || []).length;
+            return (
+                Object.keys(clock.timers || {}).length +
+                (clock.jobs || []).length
+            );
         };
 
         clock.requestAnimationFrame = function requestAnimationFrame(func) {
@@ -704,9 +813,12 @@ function withGlobal(_global) {
 
         /**
          * @param {tickValue} {String|Number} number of milliseconds or a human-readable value like "01:11:15"
-        */
+         */
         clock.tick = function tick(tickValue) {
-            var msFloat = typeof tickValue === "number" ? tickValue : parseTime(tickValue);
+            var msFloat =
+                typeof tickValue === "number"
+                    ? tickValue
+                    : parseTime(tickValue);
             var ms = Math.floor(msFloat);
             var remainder = nanoRemainder(msFloat);
             var nanosTotal = nanos + remainder;
@@ -829,7 +941,11 @@ function withGlobal(_global) {
                 clock.next();
             }
 
-            throw new Error("Aborting after running " + clock.loopLimit + " timers, assuming an infinite loop!");
+            throw new Error(
+                "Aborting after running " +
+                    clock.loopLimit +
+                    " timers, assuming an infinite loop!"
+            );
         };
 
         clock.runToFrame = function runToFrame() {
@@ -881,25 +997,22 @@ function withGlobal(_global) {
             if (hasPerformancePrototype) {
                 var proto = _global.Performance.prototype;
 
-                Object
-                    .getOwnPropertyNames(proto)
-                    .forEach(function (name) {
-                        if (name.indexOf("getEntries") === 0) {
-                            // match expected return type for getEntries functions
-                            clock.performance[name] = NOOP_ARRAY;
-                        } else {
-                            clock.performance[name] = NOOP;
-                        }
-                    });
+                Object.getOwnPropertyNames(proto).forEach(function(name) {
+                    if (name.indexOf("getEntries") === 0) {
+                        // match expected return type for getEntries functions
+                        clock.performance[name] = NOOP_ARRAY;
+                    } else {
+                        clock.performance[name] = NOOP;
+                    }
+                });
             }
 
             clock.performance.now = function lolexNow() {
                 var hrt = hrtime();
-                var millis = (hrt[0] * 1000 + hrt[1] / 1e6);
+                var millis = hrt[0] * 1000 + hrt[1] / 1e6;
                 return millis;
             };
         }
-
 
         if (hrtimePresent) {
             clock.hrtime = hrtime;
@@ -917,11 +1030,22 @@ function withGlobal(_global) {
      * @param config.shouldAdvanceTime {Boolean} tells lolex to increment mocked time automatically (default false)
      * @param config.advanceTimeDelta {Number} increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
      */
+    // eslint-disable-next-line complexity
     function install(config) {
-        if ( arguments.length > 1 || config instanceof Date || Array.isArray(config) || typeof config === "number") {
-            throw new TypeError("lolex.install called with " + String(config) +
-                " lolex 2.0+ requires an object parameter - see https://github.com/sinonjs/lolex");
+        if (
+            arguments.length > 1 ||
+            config instanceof Date ||
+            Array.isArray(config) ||
+            typeof config === "number"
+        ) {
+            throw new TypeError(
+                "lolex.install called with " +
+                    String(config) +
+                    " lolex 2.0+ requires an object parameter - see https://github.com/sinonjs/lolex"
+            );
         }
+
+        // eslint-disable-next-line no-param-reassign
         config = typeof config !== "undefined" ? config : {};
         config.shouldAdvanceTime = config.shouldAdvanceTime || false;
         config.advanceTimeDelta = config.advanceTimeDelta || 20;
@@ -930,7 +1054,7 @@ function withGlobal(_global) {
         var target = config.target || _global;
         var clock = createClock(config.now, config.loopLimit);
 
-        clock.uninstall = function () {
+        clock.uninstall = function() {
             return uninstall(clock, target, config);
         };
 
@@ -938,26 +1062,40 @@ function withGlobal(_global) {
 
         if (clock.methods.length === 0) {
             // do not fake nextTick by default - GitHub#126
-            clock.methods = keys(timers).filter(function (key) {
+            clock.methods = keys(timers).filter(function(key) {
                 return key !== "nextTick" && key !== "queueMicrotask";
             });
         }
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
             if (clock.methods[i] === "hrtime") {
-                if (target.process && typeof target.process.hrtime === "function") {
+                if (
+                    target.process &&
+                    typeof target.process.hrtime === "function"
+                ) {
                     hijackMethod(target.process, clock.methods[i], clock);
                 }
             } else if (clock.methods[i] === "nextTick") {
-                if (target.process && typeof target.process.nextTick === "function") {
+                if (
+                    target.process &&
+                    typeof target.process.nextTick === "function"
+                ) {
                     hijackMethod(target.process, clock.methods[i], clock);
                 }
             } else {
-                if (clock.methods[i] === "setInterval" && config.shouldAdvanceTime === true) {
-                    var intervalTick = doIntervalTick.bind(null, clock, config.advanceTimeDelta);
+                if (
+                    clock.methods[i] === "setInterval" &&
+                    config.shouldAdvanceTime === true
+                ) {
+                    var intervalTick = doIntervalTick.bind(
+                        null,
+                        clock,
+                        config.advanceTimeDelta
+                    );
                     var intervalId = target[clock.methods[i]](
                         intervalTick,
-                        config.advanceTimeDelta);
+                        config.advanceTimeDelta
+                    );
                     clock.attachedInterval = intervalId;
                 }
                 hijackMethod(target, clock.methods[i], clock);
@@ -975,13 +1113,14 @@ function withGlobal(_global) {
     };
 }
 
-var defaultImplementation = withGlobal(global || window);
+var defaultImplementation = withGlobal(
+    typeof global !== "undefined" ? global : window
+);
 
 exports.timers = defaultImplementation.timers;
 exports.createClock = defaultImplementation.createClock;
 exports.install = defaultImplementation.install;
 exports.withGlobal = withGlobal;
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}]},{},[1])(1)
 });
