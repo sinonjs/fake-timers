@@ -1027,78 +1027,77 @@ describe("lolex", function() {
     });
 
     if (typeof global.Promise !== "undefined") {
-        describe("tickAsync", function () {
-
-            beforeEach(function () {
+        describe("tickAsync", function() {
+            beforeEach(function() {
                 this.clock = lolex.install();
             });
 
-            afterEach(function () {
+            afterEach(function() {
                 this.clock.uninstall();
             });
 
-            it("triggers immediately without specified delay", function () {
+            it("triggers immediately without specified delay", function() {
                 var stub = sinon.stub();
                 this.clock.setTimeout(stub);
 
-                return this.clock.tickAsync(0)
-                    .then(function () {
-                        assert(stub.called);
-                    });
+                return this.clock.tickAsync(0).then(function() {
+                    assert(stub.called);
+                });
             });
 
-            it("does not trigger without sufficient delay", function () {
+            it("does not trigger without sufficient delay", function() {
                 var stub = sinon.stub();
                 this.clock.setTimeout(stub, 100);
 
-                return this.clock.tickAsync(10)
-                    .then(function () {
-                        assert.isFalse(stub.called);
-                    });
+                return this.clock.tickAsync(10).then(function() {
+                    assert.isFalse(stub.called);
+                });
             });
 
-            it("triggers after sufficient delay", function () {
+            it("triggers after sufficient delay", function() {
                 var stub = sinon.stub();
                 this.clock.setTimeout(stub, 100);
 
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert(stub.called);
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert(stub.called);
+                });
             });
 
-            it("triggers simultaneous timers", function () {
+            it("triggers simultaneous timers", function() {
                 var spies = [sinon.spy(), sinon.spy()];
                 this.clock.setTimeout(spies[0], 100);
                 this.clock.setTimeout(spies[1], 100);
 
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert(spies[0].called);
-                        assert(spies[1].called);
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert(spies[0].called);
+                    assert(spies[1].called);
+                });
             });
 
-            it("triggers multiple simultaneous timers", function () {
-                var spies = [sinon.spy(), sinon.spy(), sinon.spy(), sinon.spy()];
+            it("triggers multiple simultaneous timers", function() {
+                var spies = [
+                    sinon.spy(),
+                    sinon.spy(),
+                    sinon.spy(),
+                    sinon.spy()
+                ];
                 this.clock.setTimeout(spies[0], 100);
                 this.clock.setTimeout(spies[1], 100);
                 this.clock.setTimeout(spies[2], 99);
                 this.clock.setTimeout(spies[3], 100);
 
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert(spies[0].called);
-                        assert(spies[1].called);
-                        assert(spies[2].called);
-                        assert(spies[3].called);
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert(spies[0].called);
+                    assert(spies[1].called);
+                    assert(spies[2].called);
+                    assert(spies[3].called);
+                });
             });
 
-            it("triggers multiple simultaneous timers with zero callAt", function () {
+            it("triggers multiple simultaneous timers with zero callAt", function() {
                 var test = this;
                 var spies = [
-                    sinon.spy(function () {
+                    sinon.spy(function() {
                         test.clock.setTimeout(spies[1], 0);
                     }),
                     sinon.spy(),
@@ -1109,19 +1108,18 @@ describe("lolex", function() {
                 this.clock.setTimeout(spies[0], 0);
                 this.clock.setTimeout(spies[2], 10);
 
-                return this.clock.tickAsync(10)
-                    .then(function () {
-                        assert(spies[0].called);
-                        assert(spies[1].called);
-                        assert(spies[2].called);
-                    });
+                return this.clock.tickAsync(10).then(function() {
+                    assert(spies[0].called);
+                    assert(spies[1].called);
+                    assert(spies[2].called);
+                });
             });
 
-            it("triggers multiple simultaneous timers with zero callAt created in promises", function () {
+            it("triggers multiple simultaneous timers with zero callAt created in promises", function() {
                 var test = this;
                 var spies = [
-                    sinon.spy(function () {
-                        global.Promise.resolve().then(function () {
+                    sinon.spy(function() {
+                        global.Promise.resolve().then(function() {
                             test.clock.setTimeout(spies[1], 0);
                         });
                     }),
@@ -1133,59 +1131,66 @@ describe("lolex", function() {
                 this.clock.setTimeout(spies[0], 0);
                 this.clock.setTimeout(spies[2], 10);
 
-                return this.clock.tickAsync(10)
-                    .then(function () {
-                        assert(spies[0].called);
-                        assert(spies[1].called);
-                        assert(spies[2].called);
-                    });
+                return this.clock.tickAsync(10).then(function() {
+                    assert(spies[0].called);
+                    assert(spies[1].called);
+                    assert(spies[2].called);
+                });
             });
 
-            it("waits after setTimeout was called", function () {
+            it("waits after setTimeout was called", function() {
                 var clock = this.clock;
                 var stub = sinon.stub();
 
-                return clock.tickAsync(100)
-                    .then(function () {
+                return clock
+                    .tickAsync(100)
+                    .then(function() {
                         clock.setTimeout(stub, 150);
                         return clock.tickAsync(50);
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert.isFalse(stub.called);
                         return clock.tickAsync(100);
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert(stub.called);
                     });
             });
 
-            it("mini integration test", function () {
+            it("mini integration test", function() {
                 var clock = this.clock;
                 var stubs = [sinon.stub(), sinon.stub(), sinon.stub()];
                 clock.setTimeout(stubs[0], 100);
                 clock.setTimeout(stubs[1], 120);
 
-                return clock.tickAsync(10)
-                    .then(function () {
+                return clock
+                    .tickAsync(10)
+                    .then(function() {
                         return clock.tickAsync(89);
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert.isFalse(stubs[0].called);
                         assert.isFalse(stubs[1].called);
                         clock.setTimeout(stubs[2], 20);
                         return clock.tickAsync(1);
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert(stubs[0].called);
                         assert.isFalse(stubs[1].called);
                         assert.isFalse(stubs[2].called);
                         return clock.tickAsync(19);
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert.isFalse(stubs[1].called);
                         assert(stubs[2].called);
                         return clock.tickAsync(1);
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert(stubs[1].called);
                     });
             });
 
-            it("triggers even when some throw", function () {
+            it("triggers even when some throw", function() {
                 var clock = this.clock;
                 var stubs = [sinon.stub().throws(), sinon.stub()];
                 var catchSpy = sinon.spy();
@@ -1193,305 +1198,296 @@ describe("lolex", function() {
                 clock.setTimeout(stubs[0], 100);
                 clock.setTimeout(stubs[1], 120);
 
-                return clock.tickAsync(120)
+                return clock
+                    .tickAsync(120)
                     .catch(catchSpy)
-                    .then(function () {
+                    .then(function() {
                         assert(catchSpy.calledOnce);
                         assert(stubs[0].called);
                         assert(stubs[1].called);
                     });
             });
 
-            it("calls function with global object or null (strict mode) as this", function () {
+            it("calls function with global object or null (strict mode) as this", function() {
                 var clock = this.clock;
                 var stub = sinon.stub().throws();
                 var catchSpy = sinon.spy();
                 clock.setTimeout(stub, 100);
 
-                return clock.tickAsync(100)
+                return clock
+                    .tickAsync(100)
                     .catch(catchSpy)
-                    .then(function () {
+                    .then(function() {
                         assert(catchSpy.calledOnce);
                         assert(stub.calledOn(global) || stub.calledOn(null));
                     });
             });
 
-            it("triggers in the order scheduled", function () {
+            it("triggers in the order scheduled", function() {
                 var spies = [sinon.spy(), sinon.spy()];
                 this.clock.setTimeout(spies[0], 13);
                 this.clock.setTimeout(spies[1], 11);
 
-                return this.clock.tickAsync(15)
-                    .then(function () {
-                        assert(spies[1].calledBefore(spies[0]));
-                    });
+                return this.clock.tickAsync(15).then(function() {
+                    assert(spies[1].calledBefore(spies[0]));
+                });
             });
 
-            it("creates updated Date while ticking", function () {
+            it("creates updated Date while ticking", function() {
                 var spy = sinon.spy();
 
-                this.clock.setInterval(function () {
+                this.clock.setInterval(function() {
                     spy(new Date().getTime());
                 }, 10);
 
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert.equals(spy.callCount, 10);
-                        assert(spy.calledWith(10));
-                        assert(spy.calledWith(20));
-                        assert(spy.calledWith(30));
-                        assert(spy.calledWith(40));
-                        assert(spy.calledWith(50));
-                        assert(spy.calledWith(60));
-                        assert(spy.calledWith(70));
-                        assert(spy.calledWith(80));
-                        assert(spy.calledWith(90));
-                        assert(spy.calledWith(100));
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert.equals(spy.callCount, 10);
+                    assert(spy.calledWith(10));
+                    assert(spy.calledWith(20));
+                    assert(spy.calledWith(30));
+                    assert(spy.calledWith(40));
+                    assert(spy.calledWith(50));
+                    assert(spy.calledWith(60));
+                    assert(spy.calledWith(70));
+                    assert(spy.calledWith(80));
+                    assert(spy.calledWith(90));
+                    assert(spy.calledWith(100));
+                });
             });
 
-            it("creates updated Date while ticking promises", function () {
+            it("creates updated Date while ticking promises", function() {
                 var spy = sinon.spy();
 
-                this.clock.setInterval(function () {
-                    global.Promise.resolve().then(function () {
+                this.clock.setInterval(function() {
+                    global.Promise.resolve().then(function() {
                         spy(new Date().getTime());
                     });
                 }, 10);
 
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert.equals(spy.callCount, 10);
-                        assert(spy.calledWith(10));
-                        assert(spy.calledWith(20));
-                        assert(spy.calledWith(30));
-                        assert(spy.calledWith(40));
-                        assert(spy.calledWith(50));
-                        assert(spy.calledWith(60));
-                        assert(spy.calledWith(70));
-                        assert(spy.calledWith(80));
-                        assert(spy.calledWith(90));
-                        assert(spy.calledWith(100));
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert.equals(spy.callCount, 10);
+                    assert(spy.calledWith(10));
+                    assert(spy.calledWith(20));
+                    assert(spy.calledWith(30));
+                    assert(spy.calledWith(40));
+                    assert(spy.calledWith(50));
+                    assert(spy.calledWith(60));
+                    assert(spy.calledWith(70));
+                    assert(spy.calledWith(80));
+                    assert(spy.calledWith(90));
+                    assert(spy.calledWith(100));
+                });
             });
 
-            it("fires timer in intervals of 13", function () {
+            it("fires timer in intervals of 13", function() {
                 var spy = sinon.spy();
                 this.clock.setInterval(spy, 13);
 
-                return this.clock.tickAsync(500)
-                    .then(function () {
-                        assert.equals(spy.callCount, 38);
-                    });
+                return this.clock.tickAsync(500).then(function() {
+                    assert.equals(spy.callCount, 38);
+                });
             });
 
-            it("fires timers in correct order", function () {
+            it("fires timers in correct order", function() {
                 var spy13 = sinon.spy();
                 var spy10 = sinon.spy();
 
-                this.clock.setInterval(function () {
+                this.clock.setInterval(function() {
                     spy13(new Date().getTime());
                 }, 13);
 
-                this.clock.setInterval(function () {
+                this.clock.setInterval(function() {
                     spy10(new Date().getTime());
                 }, 10);
 
-                return this.clock.tickAsync(500)
-                    .then(function () {
-                        assert.equals(spy13.callCount, 38);
-                        assert.equals(spy10.callCount, 50);
+                return this.clock.tickAsync(500).then(function() {
+                    assert.equals(spy13.callCount, 38);
+                    assert.equals(spy10.callCount, 50);
 
-                        assert(spy13.calledWith(416));
-                        assert(spy10.calledWith(320));
+                    assert(spy13.calledWith(416));
+                    assert(spy10.calledWith(320));
 
-                        assert(spy10.getCall(0).calledBefore(spy13.getCall(0)));
-                        assert(spy10.getCall(4).calledBefore(spy13.getCall(3)));
-                    });
+                    assert(spy10.getCall(0).calledBefore(spy13.getCall(0)));
+                    assert(spy10.getCall(4).calledBefore(spy13.getCall(3)));
+                });
             });
 
-            it("fires promise timers in correct order", function () {
+            it("fires promise timers in correct order", function() {
                 var spy13 = sinon.spy();
                 var spy10 = sinon.spy();
 
-                this.clock.setInterval(function () {
-                    global.Promise.resolve().then(function () {
+                this.clock.setInterval(function() {
+                    global.Promise.resolve().then(function() {
                         spy13(new Date().getTime());
                     });
                 }, 13);
 
-                this.clock.setInterval(function () {
-                    global.Promise.resolve().then(function () {
+                this.clock.setInterval(function() {
+                    global.Promise.resolve().then(function() {
                         spy10(new Date().getTime());
                     });
                 }, 10);
 
-                return this.clock.tickAsync(500)
-                    .then(function () {
-                        assert.equals(spy13.callCount, 38);
-                        assert.equals(spy10.callCount, 50);
+                return this.clock.tickAsync(500).then(function() {
+                    assert.equals(spy13.callCount, 38);
+                    assert.equals(spy10.callCount, 50);
 
-                        assert(spy13.calledWith(416));
-                        assert(spy10.calledWith(320));
+                    assert(spy13.calledWith(416));
+                    assert(spy10.calledWith(320));
 
-                        assert(spy10.getCall(0).calledBefore(spy13.getCall(0)));
-                        assert(spy10.getCall(4).calledBefore(spy13.getCall(3)));
-                    });
+                    assert(spy10.getCall(0).calledBefore(spy13.getCall(0)));
+                    assert(spy10.getCall(4).calledBefore(spy13.getCall(3)));
+                });
             });
 
-            it("triggers timeouts and intervals in the order scheduled", function () {
+            it("triggers timeouts and intervals in the order scheduled", function() {
                 var spies = [sinon.spy(), sinon.spy()];
                 this.clock.setInterval(spies[0], 10);
                 this.clock.setTimeout(spies[1], 50);
 
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert(spies[0].calledBefore(spies[1]));
-                        assert.equals(spies[0].callCount, 10);
-                        assert.equals(spies[1].callCount, 1);
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert(spies[0].calledBefore(spies[1]));
+                    assert.equals(spies[0].callCount, 10);
+                    assert.equals(spies[1].callCount, 1);
+                });
             });
 
-            it("does not fire canceled intervals", function () {
+            it("does not fire canceled intervals", function() {
                 var id;
-                var callback = sinon.spy(function () {
+                var callback = sinon.spy(function() {
                     if (callback.callCount === 3) {
                         clearInterval(id);
                     }
                 });
 
                 id = this.clock.setInterval(callback, 10);
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert.equals(callback.callCount, 3);
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert.equals(callback.callCount, 3);
+                });
             });
 
-            it("does not fire intervals canceled in a promise", function () {
+            it("does not fire intervals canceled in a promise", function() {
                 var id;
-                var callback = sinon.spy(function () {
+                var callback = sinon.spy(function() {
                     if (callback.callCount === 3) {
-                        global.Promise.resolve().then(function () {
+                        global.Promise.resolve().then(function() {
                             clearInterval(id);
                         });
                     }
                 });
 
                 id = this.clock.setInterval(callback, 10);
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert.equals(callback.callCount, 3);
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert.equals(callback.callCount, 3);
+                });
             });
 
-            it("passes 8 seconds", function () {
+            it("passes 8 seconds", function() {
                 var spy = sinon.spy();
                 this.clock.setInterval(spy, 4000);
 
-                return this.clock.tickAsync("08")
-                    .then(function () {
-                        assert.equals(spy.callCount, 2);
-                    });
+                return this.clock.tickAsync("08").then(function() {
+                    assert.equals(spy.callCount, 2);
+                });
             });
 
-            it("passes 1 minute", function () {
+            it("passes 1 minute", function() {
                 var spy = sinon.spy();
                 this.clock.setInterval(spy, 6000);
 
-                return this.clock.tickAsync("01:00")
-                    .then(function () {
-                        assert.equals(spy.callCount, 10);
-                    });
+                return this.clock.tickAsync("01:00").then(function() {
+                    assert.equals(spy.callCount, 10);
+                });
             });
 
-            it("passes 2 hours, 34 minutes and 10 seconds", function () {
+            it("passes 2 hours, 34 minutes and 10 seconds", function() {
                 var spy = sinon.spy();
                 this.clock.setInterval(spy, 10000);
 
-                return this.clock.tickAsync("02:34:10")
-                    .then(function () {
-                        assert.equals(spy.callCount, 925);
-                    });
+                return this.clock.tickAsync("02:34:10").then(function() {
+                    assert.equals(spy.callCount, 925);
+                });
             });
 
-            it("throws for invalid format", function () {
-                var spy = sinon.spy();
-                this.clock.setInterval(spy, 10000);
-                var test = this;
-                var catchSpy = sinon.spy();
-
-                return test.clock.tickAsync("12:02:34:10")
-                    .catch(catchSpy)
-                    .then(function () {
-                        assert(catchSpy.calledOnce);
-                        assert.equals(spy.callCount, 0);
-                    });
-            });
-
-            it("throws for invalid minutes", function () {
+            it("throws for invalid format", function() {
                 var spy = sinon.spy();
                 this.clock.setInterval(spy, 10000);
                 var test = this;
                 var catchSpy = sinon.spy();
 
-                return test.clock.tickAsync("67:10")
+                return test.clock
+                    .tickAsync("12:02:34:10")
                     .catch(catchSpy)
-                    .then(function () {
+                    .then(function() {
                         assert(catchSpy.calledOnce);
                         assert.equals(spy.callCount, 0);
                     });
             });
 
-            it("throws for negative minutes", function () {
+            it("throws for invalid minutes", function() {
                 var spy = sinon.spy();
                 this.clock.setInterval(spy, 10000);
                 var test = this;
                 var catchSpy = sinon.spy();
 
-                return test.clock.tickAsync("-7:10")
+                return test.clock
+                    .tickAsync("67:10")
                     .catch(catchSpy)
-                    .then(function () {
+                    .then(function() {
                         assert(catchSpy.calledOnce);
                         assert.equals(spy.callCount, 0);
                     });
             });
 
-            it("treats missing argument as 0", function () {
+            it("throws for negative minutes", function() {
+                var spy = sinon.spy();
+                this.clock.setInterval(spy, 10000);
+                var test = this;
+                var catchSpy = sinon.spy();
+
+                return test.clock
+                    .tickAsync("-7:10")
+                    .catch(catchSpy)
+                    .then(function() {
+                        assert(catchSpy.calledOnce);
+                        assert.equals(spy.callCount, 0);
+                    });
+            });
+
+            it("treats missing argument as 0", function() {
                 var clock = this.clock;
-                return this.clock.tickAsync()
-                    .then(function () {
-                        assert.equals(clock.now, 0);
-                    });
+                return this.clock.tickAsync().then(function() {
+                    assert.equals(clock.now, 0);
+                });
             });
 
-            it("fires nested setTimeout calls properly", function () {
+            it("fires nested setTimeout calls properly", function() {
                 var i = 0;
                 var clock = this.clock;
 
-                var callback = function () {
+                var callback = function() {
                     ++i;
-                    clock.setTimeout(function () {
+                    clock.setTimeout(function() {
                         callback();
                     }, 100);
                 };
 
                 callback();
 
-                return clock.tickAsync(1000)
-                    .then(function () {
-                        assert.equals(i, 11);
-                    });
+                return clock.tickAsync(1000).then(function() {
+                    assert.equals(i, 11);
+                });
             });
 
-            it("fires nested setTimeout calls in user-created promises properly", function () {
+            it("fires nested setTimeout calls in user-created promises properly", function() {
                 var i = 0;
                 var clock = this.clock;
 
-                var callback = function () {
-                    global.Promise.resolve().then(function () {
+                var callback = function() {
+                    global.Promise.resolve().then(function() {
                         ++i;
-                        clock.setTimeout(function () {
-                            global.Promise.resolve().then(function () {
+                        clock.setTimeout(function() {
+                            global.Promise.resolve().then(function() {
                                 callback();
                             });
                         }, 100);
@@ -1500,218 +1496,224 @@ describe("lolex", function() {
 
                 callback();
 
-                return clock.tickAsync(1000)
-                    .then(function () {
-                        assert.equals(i, 11);
-                    });
+                return clock.tickAsync(1000).then(function() {
+                    assert.equals(i, 11);
+                });
             });
 
-            it("does not silently catch errors", function () {
+            it("does not silently catch errors", function() {
                 var clock = this.clock;
                 var catchSpy = sinon.spy();
 
-                clock.setTimeout(function () {
+                clock.setTimeout(function() {
                     throw new Error("oh no!");
                 }, 1000);
 
-                return clock.tickAsync(1000)
+                return clock
+                    .tickAsync(1000)
                     .catch(catchSpy)
-                    .then(function () {
+                    .then(function() {
                         assert(catchSpy.calledOnce);
                     });
             });
 
-            it("returns the current now value", function () {
+            it("returns the current now value", function() {
                 var clock = this.clock;
-                return clock.tickAsync(200).then(function (value) {
+                return clock.tickAsync(200).then(function(value) {
                     assert.equals(clock.now, value);
                 });
             });
 
-            it("is not influenced by forward system clock changes", function () {
+            it("is not influenced by forward system clock changes", function() {
                 var clock = this.clock;
-                var callback = function () {
-                    clock.setSystemTime((new clock.Date()).getTime() + 1000);
+                var callback = function() {
+                    clock.setSystemTime(new clock.Date().getTime() + 1000);
                 };
                 var stub = sinon.stub();
                 clock.setTimeout(callback, 1000);
                 clock.setTimeout(stub, 2000);
-                return clock.tickAsync(1990)
-                    .then(function () {
+                return clock
+                    .tickAsync(1990)
+                    .then(function() {
                         assert.equals(stub.callCount, 0);
                         return clock.tickAsync(20);
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert.equals(stub.callCount, 1);
                     });
             });
 
-            it("is not influenced by forward system clock changes in promises", function () {
+            it("is not influenced by forward system clock changes in promises", function() {
                 var clock = this.clock;
-                var callback = function () {
-                    global.Promise.resolve().then(function () {
-                        clock.setSystemTime((new clock.Date()).getTime() + 1000);
+                var callback = function() {
+                    global.Promise.resolve().then(function() {
+                        clock.setSystemTime(new clock.Date().getTime() + 1000);
                     });
                 };
                 var stub = sinon.stub();
                 clock.setTimeout(callback, 1000);
                 clock.setTimeout(stub, 2000);
-                return clock.tickAsync(1990)
-                    .then(function () {
+                return clock
+                    .tickAsync(1990)
+                    .then(function() {
                         assert.equals(stub.callCount, 0);
                         return clock.tickAsync(20);
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert.equals(stub.callCount, 1);
                     });
             });
 
-            it("is not influenced by forward system clock changes when an error is thrown", function () {
+            it("is not influenced by forward system clock changes when an error is thrown", function() {
                 var clock = this.clock;
-                var callback = function () {
-                    clock.setSystemTime((new clock.Date()).getTime() + 1000);
+                var callback = function() {
+                    clock.setSystemTime(new clock.Date().getTime() + 1000);
                     throw new Error();
                 };
                 var stub = sinon.stub();
                 var catchSpy = sinon.spy();
                 clock.setTimeout(callback, 1000);
                 clock.setTimeout(stub, 2000);
-                return clock.tickAsync(1990)
+                return clock
+                    .tickAsync(1990)
                     .catch(catchSpy)
-                    .then(function () {
+                    .then(function() {
                         assert(catchSpy.calledOnce);
                         assert.equals(stub.callCount, 0);
                         return clock.tickAsync(20);
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert.equals(stub.callCount, 1);
                     });
             });
 
-            it("should settle user-created promises", function () {
+            it("should settle user-created promises", function() {
                 var spy = sinon.spy();
 
-                setTimeout(function () {
+                setTimeout(function() {
                     global.Promise.resolve().then(spy);
                 }, 100);
 
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert(spy.calledOnce);
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert(spy.calledOnce);
+                });
             });
 
-            it("should settle chained user-created promises", function () {
+            it("should settle chained user-created promises", function() {
                 var spies = [sinon.spy(), sinon.spy(), sinon.spy()];
 
-                setTimeout(function () {
+                setTimeout(function() {
                     global.Promise.resolve()
                         .then(spies[0])
                         .then(spies[1])
                         .then(spies[2]);
                 }, 100);
 
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert(spies[0].calledOnce);
-                        assert(spies[1].calledOnce);
-                        assert(spies[2].calledOnce);
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert(spies[0].calledOnce);
+                    assert(spies[1].calledOnce);
+                    assert(spies[2].calledOnce);
+                });
             });
 
-            it("should settle multiple user-created promises", function () {
+            it("should settle multiple user-created promises", function() {
                 var spies = [sinon.spy(), sinon.spy(), sinon.spy()];
 
-                setTimeout(function () {
+                setTimeout(function() {
                     global.Promise.resolve().then(spies[0]);
                     global.Promise.resolve().then(spies[1]);
                     global.Promise.resolve().then(spies[2]);
                 }, 100);
 
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert(spies[0].calledOnce);
-                        assert(spies[1].calledOnce);
-                        assert(spies[2].calledOnce);
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert(spies[0].calledOnce);
+                    assert(spies[1].calledOnce);
+                    assert(spies[2].calledOnce);
+                });
             });
 
-            it("should settle nested user-created promises", function () {
+            it("should settle nested user-created promises", function() {
                 var spy = sinon.spy();
 
-                setTimeout(function () {
-                    global.Promise.resolve().then(function () {
-                        global.Promise.resolve().then(function () {
+                setTimeout(function() {
+                    global.Promise.resolve().then(function() {
+                        global.Promise.resolve().then(function() {
                             global.Promise.resolve().then(spy);
                         });
                     });
                 }, 100);
 
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert(spy.calledOnce);
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert(spy.calledOnce);
+                });
             });
 
-            it("should settle user-created promises even if some throw", function () {
-                var spies = [sinon.spy(), sinon.spy(), sinon.spy(), sinon.spy()];
+            it("should settle user-created promises even if some throw", function() {
+                var spies = [
+                    sinon.spy(),
+                    sinon.spy(),
+                    sinon.spy(),
+                    sinon.spy()
+                ];
 
-                setTimeout(function () {
-                    global.Promise.reject().then(spies[0]).catch(spies[1]);
-                    global.Promise.resolve().then(spies[2]).catch(spies[3]);
+                setTimeout(function() {
+                    global.Promise.reject()
+                        .then(spies[0])
+                        .catch(spies[1]);
+                    global.Promise.resolve()
+                        .then(spies[2])
+                        .catch(spies[3]);
                 }, 100);
 
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert(spies[0].notCalled);
-                        assert(spies[1].calledOnce);
-                        assert(spies[2].calledOnce);
-                        assert(spies[3].notCalled);
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert(spies[0].notCalled);
+                    assert(spies[1].calledOnce);
+                    assert(spies[2].calledOnce);
+                    assert(spies[3].notCalled);
+                });
             });
 
-            it("should settle user-created promises before calling more timeouts", function () {
+            it("should settle user-created promises before calling more timeouts", function() {
                 var spies = [sinon.spy(), sinon.spy()];
 
-                setTimeout(function () {
+                setTimeout(function() {
                     global.Promise.resolve().then(spies[0]);
                 }, 100);
 
                 setTimeout(spies[1], 200);
 
-                return this.clock.tickAsync(200)
-                    .then(function () {
-                        assert(spies[0].calledBefore(spies[1]));
-                    });
+                return this.clock.tickAsync(200).then(function() {
+                    assert(spies[0].calledBefore(spies[1]));
+                });
             });
 
-            it("should settle local promises before calling timeouts", function () {
+            it("should settle local promises before calling timeouts", function() {
                 var spies = [sinon.spy(), sinon.spy()];
 
                 global.Promise.resolve().then(spies[0]);
 
                 setTimeout(spies[1], 100);
 
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert(spies[0].calledBefore(spies[1]));
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert(spies[0].calledBefore(spies[1]));
+                });
             });
 
-            it("should settle local nested promises before calling timeouts", function () {
+            it("should settle local nested promises before calling timeouts", function() {
                 var spies = [sinon.spy(), sinon.spy()];
 
-                global.Promise.resolve().then(function () {
-                    global.Promise.resolve().then(function () {
+                global.Promise.resolve().then(function() {
+                    global.Promise.resolve().then(function() {
                         global.Promise.resolve().then(spies[0]);
                     });
                 });
 
                 setTimeout(spies[1], 100);
 
-                return this.clock.tickAsync(100)
-                    .then(function () {
-                        assert(spies[0].calledBefore(spies[1]));
-                    });
+                return this.clock.tickAsync(100).then(function() {
+                    assert(spies[0].calledBefore(spies[1]));
+                });
             });
-
         });
     }
 
@@ -1912,73 +1914,79 @@ describe("lolex", function() {
     });
 
     if (typeof global.Promise !== "undefined") {
-        describe("nextAsync", function () {
-
-            beforeEach(function () {
+        describe("nextAsync", function() {
+            beforeEach(function() {
                 this.clock = lolex.install();
             });
 
-            afterEach(function () {
+            afterEach(function() {
                 this.clock.uninstall();
             });
 
-            it("triggers the next timer", function () {
+            it("triggers the next timer", function() {
                 var stub = sinon.stub();
                 this.clock.setTimeout(stub, 100);
 
-                return this.clock.nextAsync()
-                    .then(function () {
-                        assert(stub.called);
-                    });
+                return this.clock.nextAsync().then(function() {
+                    assert(stub.called);
+                });
             });
 
-            it("does not trigger simultaneous timers", function () {
+            it("does not trigger simultaneous timers", function() {
                 var spies = [sinon.spy(), sinon.spy()];
                 this.clock.setTimeout(spies[0], 100);
                 this.clock.setTimeout(spies[1], 100);
 
-                return this.clock.nextAsync()
-                    .then(function () {
-                        assert(spies[0].called);
-                        assert.isFalse(spies[1].called);
-                    });
+                return this.clock.nextAsync().then(function() {
+                    assert(spies[0].called);
+                    assert.isFalse(spies[1].called);
+                });
             });
 
-            it("subsequent calls trigger simultaneous timers", function () {
-                var spies = [sinon.spy(), sinon.spy(), sinon.spy(), sinon.spy()];
+            it("subsequent calls trigger simultaneous timers", function() {
+                var spies = [
+                    sinon.spy(),
+                    sinon.spy(),
+                    sinon.spy(),
+                    sinon.spy()
+                ];
                 var clock = this.clock;
                 this.clock.setTimeout(spies[0], 100);
                 this.clock.setTimeout(spies[1], 100);
                 this.clock.setTimeout(spies[2], 99);
                 this.clock.setTimeout(spies[3], 100);
 
-                return this.clock.nextAsync()
-                    .then(function () {
+                return this.clock
+                    .nextAsync()
+                    .then(function() {
                         assert(spies[2].called);
                         assert.isFalse(spies[0].called);
                         assert.isFalse(spies[1].called);
                         assert.isFalse(spies[3].called);
                         return clock.nextAsync();
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert(spies[0].called);
                         assert.isFalse(spies[1].called);
                         assert.isFalse(spies[3].called);
 
                         return clock.nextAsync();
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert(spies[1].called);
                         assert.isFalse(spies[3].called);
 
                         return clock.nextAsync();
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert(spies[3].called);
                     });
             });
 
-            it("subsequent calls triggers simultaneous timers with zero callAt", function () {
+            it("subsequent calls triggers simultaneous timers with zero callAt", function() {
                 var test = this;
                 var spies = [
-                    sinon.spy(function () {
+                    sinon.spy(function() {
                         test.clock.setTimeout(spies[1], 0);
                     }),
                     sinon.spy(),
@@ -1989,26 +1997,29 @@ describe("lolex", function() {
                 this.clock.setTimeout(spies[0], 0);
                 this.clock.setTimeout(spies[2], 10);
 
-                return this.clock.nextAsync()
-                    .then(function () {
+                return this.clock
+                    .nextAsync()
+                    .then(function() {
                         assert(spies[0].called);
                         assert.isFalse(spies[1].called);
 
                         return test.clock.nextAsync();
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert(spies[1].called);
 
                         return test.clock.nextAsync();
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert(spies[2].called);
                     });
             });
 
-            it("subsequent calls in promises triggers simultaneous timers with zero callAt", function () {
+            it("subsequent calls in promises triggers simultaneous timers with zero callAt", function() {
                 var test = this;
                 var spies = [
-                    sinon.spy(function () {
-                        global.Promise.resolve().then(function () {
+                    sinon.spy(function() {
+                        global.Promise.resolve().then(function() {
                             test.clock.setTimeout(spies[1], 0);
                         });
                     }),
@@ -2020,75 +2031,83 @@ describe("lolex", function() {
                 this.clock.setTimeout(spies[0], 0);
                 this.clock.setTimeout(spies[2], 10);
 
-                return this.clock.nextAsync()
-                    .then(function () {
+                return this.clock
+                    .nextAsync()
+                    .then(function() {
                         assert(spies[0].called);
                         assert.isFalse(spies[1].called);
 
                         return test.clock.nextAsync();
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert(spies[1].called);
 
                         return test.clock.nextAsync();
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert(spies[2].called);
                     });
             });
 
-            it("throws exception thrown by timer", function () {
+            it("throws exception thrown by timer", function() {
                 var clock = this.clock;
                 var stub = sinon.stub().throws();
                 var catchSpy = sinon.spy();
 
                 clock.setTimeout(stub, 100);
 
-                return clock.nextAsync()
+                return clock
+                    .nextAsync()
                     .catch(catchSpy)
-                    .then(function () {
+                    .then(function() {
                         assert(catchSpy.calledOnce);
 
                         assert(stub.called);
                     });
             });
 
-            it("calls function with global object or null (strict mode) as this", function () {
+            it("calls function with global object or null (strict mode) as this", function() {
                 var clock = this.clock;
                 var stub = sinon.stub().throws();
                 var catchSpy = sinon.spy();
                 clock.setTimeout(stub, 100);
 
-                return clock.nextAsync()
+                return clock
+                    .nextAsync()
                     .catch(catchSpy)
-                    .then(function () {
+                    .then(function() {
                         assert(catchSpy.calledOnce);
 
                         assert(stub.calledOn(global) || stub.calledOn(null));
                     });
             });
 
-            it("subsequent calls trigger in the order scheduled", function () {
+            it("subsequent calls trigger in the order scheduled", function() {
                 var clock = this.clock;
                 var spies = [sinon.spy(), sinon.spy()];
                 this.clock.setTimeout(spies[0], 13);
                 this.clock.setTimeout(spies[1], 11);
 
-                return this.clock.nextAsync()
-                    .then(function () {
+                return this.clock
+                    .nextAsync()
+                    .then(function() {
                         return clock.nextAsync();
-                    }).then(function () {
+                    })
+                    .then(function() {
                         assert(spies[1].calledBefore(spies[0]));
                     });
             });
 
-            it("subsequent calls create updated Date", function () {
+            it("subsequent calls create updated Date", function() {
                 var clock = this.clock;
                 var spy = sinon.spy();
 
-                this.clock.setInterval(function () {
+                this.clock.setInterval(function() {
                     spy(new Date().getTime());
                 }, 10);
 
-                return this.clock.nextAsync()
+                return this.clock
+                    .nextAsync()
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
@@ -2098,7 +2117,7 @@ describe("lolex", function() {
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
-                    .then(function () {
+                    .then(function() {
                         assert.equals(spy.callCount, 10);
                         assert(spy.calledWith(10));
                         assert(spy.calledWith(20));
@@ -2113,17 +2132,18 @@ describe("lolex", function() {
                     });
             });
 
-            it("subsequent calls in promises create updated Date", function () {
+            it("subsequent calls in promises create updated Date", function() {
                 var clock = this.clock;
                 var spy = sinon.spy();
 
-                this.clock.setInterval(function () {
-                    global.Promise.resolve().then(function () {
+                this.clock.setInterval(function() {
+                    global.Promise.resolve().then(function() {
                         spy(new Date().getTime());
                     });
                 }, 10);
 
-                return this.clock.nextAsync()
+                return this.clock
+                    .nextAsync()
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
@@ -2133,7 +2153,7 @@ describe("lolex", function() {
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
-                    .then(function () {
+                    .then(function() {
                         assert.equals(spy.callCount, 10);
                         assert(spy.calledWith(10));
                         assert(spy.calledWith(20));
@@ -2148,126 +2168,123 @@ describe("lolex", function() {
                     });
             });
 
-            it("subsequent calls trigger timeouts and intervals in the order scheduled", function () {
+            it("subsequent calls trigger timeouts and intervals in the order scheduled", function() {
                 var clock = this.clock;
                 var spies = [sinon.spy(), sinon.spy()];
                 this.clock.setInterval(spies[0], 10);
                 this.clock.setTimeout(spies[1], 50);
 
-                return this.clock.nextAsync()
+                return this.clock
+                    .nextAsync()
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
-                    .then(function () {
+                    .then(function() {
                         assert(spies[0].calledBefore(spies[1]));
                         assert.equals(spies[0].callCount, 5);
                         assert.equals(spies[1].callCount, 1);
                     });
             });
 
-            it("subsequent calls do not fire canceled intervals", function () {
+            it("subsequent calls do not fire canceled intervals", function() {
                 var id;
                 var clock = this.clock;
-                var callback = sinon.spy(function () {
+                var callback = sinon.spy(function() {
                     if (callback.callCount === 3) {
                         clearInterval(id);
                     }
                 });
 
                 id = this.clock.setInterval(callback, 10);
-                return this.clock.nextAsync()
+                return this.clock
+                    .nextAsync()
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
-                    .then(function () {
+                    .then(function() {
                         assert.equals(callback.callCount, 3);
                     });
             });
 
-            it("subsequent calls do not fire intervals canceled in promises", function () {
+            it("subsequent calls do not fire intervals canceled in promises", function() {
                 var id;
                 var clock = this.clock;
-                var callback = sinon.spy(function () {
+                var callback = sinon.spy(function() {
                     if (callback.callCount === 3) {
-                        global.Promise.resolve().then(function () {
+                        global.Promise.resolve().then(function() {
                             clearInterval(id);
                         });
                     }
                 });
 
                 id = this.clock.setInterval(callback, 10);
-                return this.clock.nextAsync()
+                return this.clock
+                    .nextAsync()
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
                     .then(clock.nextAsync)
-                    .then(function () {
+                    .then(function() {
                         assert.equals(callback.callCount, 3);
                     });
             });
 
-            it("advances the clock based on when the timer was supposed to be called", function () {
+            it("advances the clock based on when the timer was supposed to be called", function() {
                 var clock = this.clock;
                 clock.setTimeout(sinon.spy(), 55);
-                return clock.nextAsync()
-                    .then(function () {
-                        assert.equals(clock.now, 55);
-                    });
+                return clock.nextAsync().then(function() {
+                    assert.equals(clock.now, 55);
+                });
             });
 
-            it("returns the current now value", function () {
+            it("returns the current now value", function() {
                 var clock = this.clock;
                 clock.setTimeout(sinon.spy(), 55);
-                return clock.nextAsync()
-                    .then(function (value) {
-                        assert.equals(clock.now, value);
-                    });
+                return clock.nextAsync().then(function(value) {
+                    assert.equals(clock.now, value);
+                });
             });
 
-            it("should settle user-created promises", function () {
+            it("should settle user-created promises", function() {
                 var spy = sinon.spy();
 
-                setTimeout(function () {
+                setTimeout(function() {
                     global.Promise.resolve().then(spy);
                 }, 55);
 
-                return this.clock.nextAsync()
-                    .then(function () {
-                        assert(spy.calledOnce);
-                    });
+                return this.clock.nextAsync().then(function() {
+                    assert(spy.calledOnce);
+                });
             });
 
-            it("should settle nested user-created promises", function () {
+            it("should settle nested user-created promises", function() {
                 var spy = sinon.spy();
 
-                setTimeout(function () {
-                    global.Promise.resolve().then(function () {
-                        global.Promise.resolve().then(function () {
+                setTimeout(function() {
+                    global.Promise.resolve().then(function() {
+                        global.Promise.resolve().then(function() {
                             global.Promise.resolve().then(spy);
                         });
                     });
                 }, 55);
 
-                return this.clock.nextAsync()
-                    .then(function () {
-                        assert(spy.calledOnce);
-                    });
+                return this.clock.nextAsync().then(function() {
+                    assert(spy.calledOnce);
+                });
             });
 
-            it("should settle local promises before firing timers", function () {
+            it("should settle local promises before firing timers", function() {
                 var spies = [sinon.spy(), sinon.spy()];
 
                 global.Promise.resolve().then(spies[0]);
 
                 setTimeout(spies[1], 55);
 
-                return this.clock.nextAsync()
-                    .then(function () {
-                        assert(spies[0].calledBefore(spies[1]));
-                    });
+                return this.clock.nextAsync().then(function() {
+                    assert(spies[0].calledBefore(spies[1]));
+                });
             });
-
         });
     }
 
@@ -2352,31 +2369,29 @@ describe("lolex", function() {
     });
 
     if (typeof global.Promise !== "undefined") {
-        describe("runAllAsync", function () {
-
-            it("if there are no timers just return", function () {
+        describe("runAllAsync", function() {
+            it("if there are no timers just return", function() {
                 this.clock = lolex.createClock();
                 return this.clock.runAllAsync();
             });
 
-            it("runs all timers", function () {
+            it("runs all timers", function() {
                 this.clock = lolex.createClock();
                 var spies = [sinon.spy(), sinon.spy()];
                 this.clock.setTimeout(spies[0], 10);
                 this.clock.setTimeout(spies[1], 50);
 
-                return this.clock.runAllAsync()
-                    .then(function () {
-                        assert(spies[0].called);
-                        assert(spies[1].called);
-                    });
+                return this.clock.runAllAsync().then(function() {
+                    assert(spies[0].called);
+                    assert(spies[1].called);
+                });
             });
 
-            it("new timers added while running are also run", function () {
+            it("new timers added while running are also run", function() {
                 this.clock = lolex.createClock();
                 var test = this;
                 var spies = [
-                    sinon.spy(function () {
+                    sinon.spy(function() {
                         test.clock.setTimeout(spies[1], 50);
                     }),
                     sinon.spy()
@@ -2385,19 +2400,18 @@ describe("lolex", function() {
                 // Spy calls another setTimeout
                 this.clock.setTimeout(spies[0], 10);
 
-                return this.clock.runAllAsync()
-                    .then(function () {
-                        assert(spies[0].called);
-                        assert(spies[1].called);
-                    });
+                return this.clock.runAllAsync().then(function() {
+                    assert(spies[0].called);
+                    assert(spies[1].called);
+                });
             });
 
-            it("new timers added in promises while running are also run", function () {
+            it("new timers added in promises while running are also run", function() {
                 this.clock = lolex.createClock();
                 var test = this;
                 var spies = [
-                    sinon.spy(function () {
-                        global.Promise.resolve().then(function () {
+                    sinon.spy(function() {
+                        global.Promise.resolve().then(function() {
                             test.clock.setTimeout(spies[1], 50);
                         });
                     }),
@@ -2407,35 +2421,35 @@ describe("lolex", function() {
                 // Spy calls another setTimeout
                 this.clock.setTimeout(spies[0], 10);
 
-                return this.clock.runAllAsync()
-                    .then(function () {
-                        assert(spies[0].called);
-                        assert(spies[1].called);
-                    });
+                return this.clock.runAllAsync().then(function() {
+                    assert(spies[0].called);
+                    assert(spies[1].called);
+                });
             });
 
-            it("throws before allowing infinite recursion", function () {
+            it("throws before allowing infinite recursion", function() {
                 this.clock = lolex.createClock();
                 var test = this;
-                var recursiveCallback = function () {
+                var recursiveCallback = function() {
                     test.clock.setTimeout(recursiveCallback, 10);
                 };
                 var catchSpy = sinon.spy();
 
                 this.clock.setTimeout(recursiveCallback, 10);
 
-                return test.clock.runAllAsync()
+                return test.clock
+                    .runAllAsync()
                     .catch(catchSpy)
-                    .then(function () {
+                    .then(function() {
                         assert(catchSpy.calledOnce);
                     });
             });
 
-            it("throws before allowing infinite recursion from promises", function () {
+            it("throws before allowing infinite recursion from promises", function() {
                 this.clock = lolex.createClock();
                 var test = this;
-                var recursiveCallback = function () {
-                    global.Promise.resolve().then(function () {
+                var recursiveCallback = function() {
+                    global.Promise.resolve().then(function() {
                         test.clock.setTimeout(recursiveCallback, 10);
                     });
                 };
@@ -2443,14 +2457,15 @@ describe("lolex", function() {
 
                 this.clock.setTimeout(recursiveCallback, 10);
 
-                return test.clock.runAllAsync()
+                return test.clock
+                    .runAllAsync()
                     .catch(catchSpy)
-                    .then(function () {
+                    .then(function() {
                         assert(catchSpy.calledOnce);
                     });
             });
 
-            it("the loop limit can be set when creating a clock", function () {
+            it("the loop limit can be set when creating a clock", function() {
                 this.clock = lolex.createClock(0, 1);
                 var test = this;
                 var catchSpy = sinon.spy();
@@ -2459,14 +2474,15 @@ describe("lolex", function() {
                 this.clock.setTimeout(spies[0], 10);
                 this.clock.setTimeout(spies[1], 50);
 
-                return test.clock.runAllAsync()
+                return test.clock
+                    .runAllAsync()
                     .catch(catchSpy)
-                    .then(function () {
+                    .then(function() {
                         assert(catchSpy.calledOnce);
                     });
             });
 
-            it("the loop limit can be set when installing a clock", function () {
+            it("the loop limit can be set when installing a clock", function() {
                 this.clock = lolex.install({ loopLimit: 1 });
                 var test = this;
                 var catchSpy = sinon.spy();
@@ -2475,49 +2491,47 @@ describe("lolex", function() {
                 setTimeout(spies[0], 10);
                 setTimeout(spies[1], 50);
 
-                return test.clock.runAllAsync()
+                return test.clock
+                    .runAllAsync()
                     .catch(catchSpy)
-                    .then(function () {
+                    .then(function() {
                         assert(catchSpy.calledOnce);
 
                         test.clock.uninstall();
                     });
-
             });
 
-            it("should settle user-created promises", function () {
+            it("should settle user-created promises", function() {
                 this.clock = lolex.createClock();
                 var spy = sinon.spy();
 
-                this.clock.setTimeout(function () {
+                this.clock.setTimeout(function() {
                     global.Promise.resolve().then(spy);
                 }, 55);
 
-                return this.clock.runAllAsync()
-                    .then(function () {
-                        assert(spy.calledOnce);
-                    });
+                return this.clock.runAllAsync().then(function() {
+                    assert(spy.calledOnce);
+                });
             });
 
-            it("should settle nested user-created promises", function () {
+            it("should settle nested user-created promises", function() {
                 this.clock = lolex.createClock();
                 var spy = sinon.spy();
 
-                this.clock.setTimeout(function () {
-                    global.Promise.resolve().then(function () {
-                        global.Promise.resolve().then(function () {
+                this.clock.setTimeout(function() {
+                    global.Promise.resolve().then(function() {
+                        global.Promise.resolve().then(function() {
                             global.Promise.resolve().then(spy);
                         });
                     });
                 }, 55);
 
-                return this.clock.runAllAsync()
-                    .then(function () {
-                        assert(spy.calledOnce);
-                    });
+                return this.clock.runAllAsync().then(function() {
+                    assert(spy.calledOnce);
+                });
             });
 
-            it("should settle local promises before firing timers", function () {
+            it("should settle local promises before firing timers", function() {
                 this.clock = lolex.createClock();
                 var spies = [sinon.spy(), sinon.spy()];
 
@@ -2525,28 +2539,25 @@ describe("lolex", function() {
 
                 this.clock.setTimeout(spies[1], 55);
 
-                return this.clock.runAllAsync()
-                    .then(function () {
-                        assert(spies[0].calledBefore(spies[1]));
-                    });
+                return this.clock.runAllAsync().then(function() {
+                    assert(spies[0].calledBefore(spies[1]));
+                });
             });
 
-            it("should settle user-created promises before firing more timers", function () {
+            it("should settle user-created promises before firing more timers", function() {
                 this.clock = lolex.createClock();
                 var spies = [sinon.spy(), sinon.spy()];
 
-                this.clock.setTimeout(function () {
+                this.clock.setTimeout(function() {
                     global.Promise.resolve().then(spies[0]);
                 }, 55);
 
                 this.clock.setTimeout(spies[1], 75);
 
-                return this.clock.runAllAsync()
-                    .then(function () {
-                        assert(spies[0].calledBefore(spies[1]));
-                    });
+                return this.clock.runAllAsync().then(function() {
+                    assert(spies[0].calledBefore(spies[1]));
+                });
             });
-
         });
     }
 
@@ -2668,60 +2679,55 @@ describe("lolex", function() {
     });
 
     if (typeof global.Promise !== "undefined") {
-        describe("runToLastAsync", function () {
-
-            it("returns current time when there are no timers", function () {
+        describe("runToLastAsync", function() {
+            it("returns current time when there are no timers", function() {
                 this.clock = lolex.createClock();
 
-                return this.clock.runToLastAsync()
-                    .then(function (time) {
-                        assert.equals(time, 0);
-                    });
+                return this.clock.runToLastAsync().then(function(time) {
+                    assert.equals(time, 0);
+                });
             });
 
-            it("runs all existing timers", function () {
+            it("runs all existing timers", function() {
                 this.clock = lolex.createClock();
                 var spies = [sinon.spy(), sinon.spy()];
                 this.clock.setTimeout(spies[0], 10);
                 this.clock.setTimeout(spies[1], 50);
 
-                return this.clock.runToLastAsync()
-                    .then(function () {
-                        assert(spies[0].called);
-                        assert(spies[1].called);
-                    });
+                return this.clock.runToLastAsync().then(function() {
+                    assert(spies[0].called);
+                    assert(spies[1].called);
+                });
             });
 
-            it("returns time of the last timer", function () {
+            it("returns time of the last timer", function() {
                 this.clock = lolex.createClock();
                 var spies = [sinon.spy(), sinon.spy()];
                 this.clock.setTimeout(spies[0], 10);
                 this.clock.setTimeout(spies[1], 50);
 
-                return this.clock.runToLastAsync()
-                    .then(function (time) {
-                        assert.equals(time, 50);
-                    });
+                return this.clock.runToLastAsync().then(function(time) {
+                    assert.equals(time, 50);
+                });
             });
 
-            it("runs all existing timers when two timers are matched for being last", function () {
+            it("runs all existing timers when two timers are matched for being last", function() {
                 this.clock = lolex.createClock();
                 var spies = [sinon.spy(), sinon.spy()];
                 this.clock.setTimeout(spies[0], 10);
                 this.clock.setTimeout(spies[1], 10);
 
-                return this.clock.runToLastAsync()
-                    .then(function () {
-                        assert(spies[0].called);
-                        assert(spies[1].called);
-                    });
+                return this.clock.runToLastAsync().then(function() {
+                    assert(spies[0].called);
+                    assert(spies[1].called);
+                });
             });
 
-            it("new timers added with a call time later than the last existing timer are NOT run", function () {
+            it("new timers added with a call time later than the last existing timer are NOT run", function() {
                 this.clock = lolex.createClock();
                 var test = this;
                 var spies = [
-                    sinon.spy(function () {
+                    sinon.spy(function() {
                         test.clock.setTimeout(spies[1], 50);
                     }),
                     sinon.spy()
@@ -2730,42 +2736,43 @@ describe("lolex", function() {
                 // Spy calls another setTimeout
                 this.clock.setTimeout(spies[0], 10);
 
-                return this.clock.runToLastAsync()
-                    .then(function () {
+                return this.clock.runToLastAsync().then(function() {
+                    assert.isTrue(spies[0].called);
+                    assert.isFalse(spies[1].called);
+                });
+            });
+
+            it(
+                "new timers added from a promise with a call time later than the last existing timer" +
+                    "are NOT run",
+                function() {
+                    this.clock = lolex.createClock();
+                    var test = this;
+                    var spies = [
+                        sinon.spy(function() {
+                            global.Promise.resolve().then(function() {
+                                test.clock.setTimeout(spies[1], 50);
+                            });
+                        }),
+                        sinon.spy()
+                    ];
+
+                    // Spy calls another setTimeout
+                    this.clock.setTimeout(spies[0], 10);
+
+                    return this.clock.runToLastAsync().then(function() {
                         assert.isTrue(spies[0].called);
                         assert.isFalse(spies[1].called);
                     });
-            });
+                }
+            );
 
-            it("new timers added from a promise with a call time later than the last existing timer" +
-                    "are NOT run", function () {
-                this.clock = lolex.createClock();
-                var test = this;
-                var spies = [
-                    sinon.spy(function () {
-                        global.Promise.resolve().then(function () {
-                            test.clock.setTimeout(spies[1], 50);
-                        });
-                    }),
-                    sinon.spy()
-                ];
-
-                // Spy calls another setTimeout
-                this.clock.setTimeout(spies[0], 10);
-
-                return this.clock.runToLastAsync()
-                    .then(function () {
-                        assert.isTrue(spies[0].called);
-                        assert.isFalse(spies[1].called);
-                    });
-            });
-
-            it("new timers added with a call time ealier than the last existing timer are run", function () {
+            it("new timers added with a call time ealier than the last existing timer are run", function() {
                 this.clock = lolex.createClock();
                 var test = this;
                 var spies = [
                     sinon.spy(),
-                    sinon.spy(function () {
+                    sinon.spy(function() {
                         test.clock.setTimeout(spies[2], 50);
                     }),
                     sinon.spy()
@@ -2775,63 +2782,63 @@ describe("lolex", function() {
                 // Spy calls another setTimeout
                 this.clock.setTimeout(spies[1], 10);
 
-                return this.clock.runToLastAsync()
-                    .then(function () {
+                return this.clock.runToLastAsync().then(function() {
+                    assert.isTrue(spies[0].called);
+                    assert.isTrue(spies[1].called);
+                    assert.isTrue(spies[2].called);
+                });
+            });
+
+            it(
+                "new timers added from a promise with a call time ealier than the last existing timer" +
+                    "are run",
+                function() {
+                    this.clock = lolex.createClock();
+                    var test = this;
+                    var spies = [
+                        sinon.spy(),
+                        sinon.spy(function() {
+                            global.Promise.resolve().then(function() {
+                                test.clock.setTimeout(spies[2], 50);
+                            });
+                        }),
+                        sinon.spy()
+                    ];
+
+                    this.clock.setTimeout(spies[0], 100);
+                    // Spy calls another setTimeout
+                    this.clock.setTimeout(spies[1], 10);
+
+                    return this.clock.runToLastAsync().then(function() {
                         assert.isTrue(spies[0].called);
                         assert.isTrue(spies[1].called);
                         assert.isTrue(spies[2].called);
                     });
-            });
+                }
+            );
 
-            it("new timers added from a promise with a call time ealier than the last existing timer" +
-                    "are run", function () {
-                this.clock = lolex.createClock();
-                var test = this;
-                var spies = [
-                    sinon.spy(),
-                    sinon.spy(function () {
-                        global.Promise.resolve().then(function () {
-                            test.clock.setTimeout(spies[2], 50);
-                        });
-                    }),
-                    sinon.spy()
-                ];
-
-                this.clock.setTimeout(spies[0], 100);
-                // Spy calls another setTimeout
-                this.clock.setTimeout(spies[1], 10);
-
-                return this.clock.runToLastAsync()
-                    .then(function () {
-                        assert.isTrue(spies[0].called);
-                        assert.isTrue(spies[1].called);
-                        assert.isTrue(spies[2].called);
-                    });
-            });
-
-            it("new timers cannot cause an infinite loop", function () {
+            it("new timers cannot cause an infinite loop", function() {
                 this.clock = lolex.createClock();
                 var test = this;
                 var spy = sinon.spy();
-                var recursiveCallback = function () {
+                var recursiveCallback = function() {
                     test.clock.setTimeout(recursiveCallback, 0);
                 };
 
                 this.clock.setTimeout(recursiveCallback, 0);
                 this.clock.setTimeout(spy, 100);
 
-                return this.clock.runToLastAsync()
-                    .then(function () {
-                        assert.isTrue(spy.called);
-                    });
+                return this.clock.runToLastAsync().then(function() {
+                    assert.isTrue(spy.called);
+                });
             });
 
-            it("new timers created from promises cannot cause an infinite loop", function () {
+            it("new timers created from promises cannot cause an infinite loop", function() {
                 this.clock = lolex.createClock();
                 var test = this;
                 var spy = sinon.spy();
-                var recursiveCallback = function () {
-                    global.Promise.resolve().then(function () {
+                var recursiveCallback = function() {
+                    global.Promise.resolve().then(function() {
                         test.clock.setTimeout(recursiveCallback, 0);
                     });
                 };
@@ -2839,45 +2846,42 @@ describe("lolex", function() {
                 this.clock.setTimeout(recursiveCallback, 0);
                 this.clock.setTimeout(spy, 100);
 
-                return this.clock.runToLastAsync()
-                    .then(function () {
-                        assert.isTrue(spy.called);
-                    });
+                return this.clock.runToLastAsync().then(function() {
+                    assert.isTrue(spy.called);
+                });
             });
 
-            it("should settle user-created promises", function () {
+            it("should settle user-created promises", function() {
                 this.clock = lolex.createClock();
                 var spy = sinon.spy();
 
-                this.clock.setTimeout(function () {
+                this.clock.setTimeout(function() {
                     global.Promise.resolve().then(spy);
                 }, 55);
 
-                return this.clock.runToLastAsync()
-                    .then(function () {
-                        assert(spy.calledOnce);
-                    });
+                return this.clock.runToLastAsync().then(function() {
+                    assert(spy.calledOnce);
+                });
             });
 
-            it("should settle nested user-created promises", function () {
+            it("should settle nested user-created promises", function() {
                 this.clock = lolex.createClock();
                 var spy = sinon.spy();
 
-                this.clock.setTimeout(function () {
-                    global.Promise.resolve().then(function () {
-                        global.Promise.resolve().then(function () {
+                this.clock.setTimeout(function() {
+                    global.Promise.resolve().then(function() {
+                        global.Promise.resolve().then(function() {
                             global.Promise.resolve().then(spy);
                         });
                     });
                 }, 55);
 
-                return this.clock.runToLastAsync()
-                    .then(function () {
-                        assert(spy.calledOnce);
-                    });
+                return this.clock.runToLastAsync().then(function() {
+                    assert(spy.calledOnce);
+                });
             });
 
-            it("should settle local promises before firing timers", function () {
+            it("should settle local promises before firing timers", function() {
                 this.clock = lolex.createClock();
                 var spies = [sinon.spy(), sinon.spy()];
 
@@ -2885,28 +2889,25 @@ describe("lolex", function() {
 
                 this.clock.setTimeout(spies[1], 55);
 
-                return this.clock.runToLastAsync()
-                    .then(function () {
-                        assert(spies[0].calledBefore(spies[1]));
-                    });
+                return this.clock.runToLastAsync().then(function() {
+                    assert(spies[0].calledBefore(spies[1]));
+                });
             });
 
-            it("should settle user-created promises before firing more timers", function () {
+            it("should settle user-created promises before firing more timers", function() {
                 this.clock = lolex.createClock();
                 var spies = [sinon.spy(), sinon.spy()];
 
-                this.clock.setTimeout(function () {
+                this.clock.setTimeout(function() {
                     global.Promise.resolve().then(spies[0]);
                 }, 55);
 
                 this.clock.setTimeout(spies[1], 75);
 
-                return this.clock.runToLastAsync()
-                    .then(function () {
-                        assert(spies[0].calledBefore(spies[1]));
-                    });
+                return this.clock.runToLastAsync().then(function() {
+                    assert(spies[0].calledBefore(spies[1]));
+                });
             });
-
         });
     }
 
