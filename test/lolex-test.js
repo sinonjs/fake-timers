@@ -1402,10 +1402,10 @@ describe("lolex", function() {
 
             it("passes 2 hours, 34 minutes and 10 seconds", function() {
                 var spy = sinon.spy();
-                this.clock.setInterval(spy, 10000);
+                this.clock.setInterval(spy, 100000);
 
                 return this.clock.tickAsync("02:34:10").then(function() {
-                    assert.equals(spy.callCount, 925);
+                    assert.equals(spy.callCount, 92);
                 });
             });
 
@@ -2428,7 +2428,7 @@ describe("lolex", function() {
             });
 
             it("throws before allowing infinite recursion", function() {
-                this.clock = lolex.createClock();
+                this.clock = lolex.createClock(0, 100);
                 var test = this;
                 var recursiveCallback = function() {
                     test.clock.setTimeout(recursiveCallback, 10);
@@ -2446,7 +2446,7 @@ describe("lolex", function() {
             });
 
             it("throws before allowing infinite recursion from promises", function() {
-                this.clock = lolex.createClock();
+                this.clock = lolex.createClock(0, 100);
                 var test = this;
                 var recursiveCallback = function() {
                     global.Promise.resolve().then(function() {
