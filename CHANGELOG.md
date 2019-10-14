@@ -1,4 +1,9 @@
 
+5.1.0 / 2019-10-14
+==================
+
+  * Upgrade lolex with async versions of most calls
+
 5.0.1 / 2019-10-10
 ==================
 
