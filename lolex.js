@@ -956,9 +956,9 @@ function withGlobal(_global) {
             return doTick(tickValue, false);
         };
 
-        if (typeof global.Promise !== "undefined") {
+        if (typeof _global.Promise !== "undefined") {
             clock.tickAsync = function tickAsync(ms) {
-                return new global.Promise(function(resolve, reject) {
+                return new _global.Promise(function(resolve, reject) {
                     originalSetTimeout(function() {
                         try {
                             doTick(ms, true, resolve, reject);
@@ -988,9 +988,9 @@ function withGlobal(_global) {
             }
         };
 
-        if (typeof global.Promise !== "undefined") {
+        if (typeof _global.Promise !== "undefined") {
             clock.nextAsync = function nextAsync() {
-                return new global.Promise(function(resolve, reject) {
+                return new _global.Promise(function(resolve, reject) {
                     originalSetTimeout(function() {
                         try {
                             var timer = firstTimer(clock);
@@ -1051,9 +1051,9 @@ function withGlobal(_global) {
             return clock.tick(getTimeToNextFrame());
         };
 
-        if (typeof global.Promise !== "undefined") {
+        if (typeof _global.Promise !== "undefined") {
             clock.runAllAsync = function runAllAsync() {
-                return new global.Promise(function(resolve, reject) {
+                return new _global.Promise(function(resolve, reject) {
                     var i = 0;
                     function doRun() {
                         originalSetTimeout(function() {
@@ -1107,9 +1107,9 @@ function withGlobal(_global) {
             return clock.tick(timer.callAt - clock.now);
         };
 
-        if (typeof global.Promise !== "undefined") {
+        if (typeof _global.Promise !== "undefined") {
             clock.runToLastAsync = function runToLastAsync() {
-                return new global.Promise(function(resolve, reject) {
+                return new _global.Promise(function(resolve, reject) {
                     originalSetTimeout(function() {
                         try {
                             var timer = lastTimer(clock);
