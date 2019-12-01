@@ -38,7 +38,7 @@
     "@sinonjs/referee-sinon": "5.0.0",
     "browserify": "16.5.0",
     "eslint": "6.5.1",
-    "eslint-config-prettier": "6.4.0",
+    "eslint-config-prettier": "6.7.0",
     "eslint-config-sinon": "3.0.1",
     "eslint-plugin-ie11": "1.0.0",
     "eslint-plugin-mocha": "6.1.1",
