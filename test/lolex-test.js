@@ -4099,6 +4099,7 @@ describe("lolex", function() {
         it("should not move with setSystemTime", function() {
             var clock = lolex.createClock(0);
             var prev = clock.hrtime();
+            clock.setSystemTime(9000);
             clock.setSystemTime(50000);
             var result = clock.hrtime(prev);
             assert.same(result[0], 0);

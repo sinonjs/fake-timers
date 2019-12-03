@@ -1138,8 +1138,8 @@ function withGlobal(_global) {
             var difference = newNow - clock.now;
             var id, timer;
 
-            adjustedSystemTime[0] = difference;
-            adjustedSystemTime[1] = nanos;
+            adjustedSystemTime[0] = adjustedSystemTime[0] + difference;
+            adjustedSystemTime[1] = adjustedSystemTime[1] + nanos;
             // update 'system clock'
             clock.now = newNow;
             nanos = 0;
