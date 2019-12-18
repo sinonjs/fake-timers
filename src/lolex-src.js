@@ -1,5 +1,7 @@
 "use strict";
 
+var globalObject = require("@sinonjs/commons").global;
+
 // eslint-disable-next-line complexity
 function withGlobal(_global) {
     var userAgent = _global.navigator && _global.navigator.userAgent;
@@ -1276,9 +1278,7 @@ function withGlobal(_global) {
     };
 }
 
-var defaultImplementation = withGlobal(
-    typeof global !== "undefined" ? global : window
-);
+var defaultImplementation = withGlobal(globalObject);
 
 exports.timers = defaultImplementation.timers;
 exports.createClock = defaultImplementation.createClock;
