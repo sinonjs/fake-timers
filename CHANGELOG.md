@@ -1,4 +1,11 @@
 
+5.1.2 / 2019-12-19
+==================
+
+  * Use global from `@sinonjs/commons`
+  * Fix setSystemTime affects hrtime if its called multiple times.
+  * Test coverage: use nyc
+
 5.1.1 / 2019-10-21
 ==================
 
