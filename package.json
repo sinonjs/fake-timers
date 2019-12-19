@@ -74,7 +74,9 @@
   },
   "module": "./lolex.js",
   "main": "./src/lolex-src.js",
-  "dependencies": {},
+  "dependencies": {
+    "@sinonjs/commons": "^1.7.0"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "run-p lint test-node"
