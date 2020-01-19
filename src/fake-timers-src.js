@@ -21,6 +21,7 @@ function withGlobal(_global) {
         hrtimePresent && typeof _global.process.hrtime.bigint === "function";
     var nextTickPresent =
         _global.process && typeof _global.process.nextTick === "function";
+    var utilPromisify = _global.process && require("util").promisify;
     var performancePresent =
         _global.performance && typeof _global.performance.now === "function";
     var hasPerformancePrototype =
@@ -743,6 +744,21 @@ function withGlobal(_global) {
                 delay: timeout
             });
         };
+        if (typeof _global.Promise !== "undefined" && utilPromisify) {
+            clock.setTimeout[
+                utilPromisify.custom
+            ] = function promisifiedSetTimeout(timeout, arg) {
+                return new _global.Promise(function setTimeoutExecutor(
+                    resolve
+                ) {
+                    addTimer(clock, {
+                        func: resolve,
+                        args: [arg],
+                        delay: timeout
+                    });
+                });
+            };
+        }
 
         clock.clearTimeout = function clearTimeout(timerId) {
             return clearTimer(clock, timerId, "Timeout");
@@ -782,6 +798,22 @@ function withGlobal(_global) {
                     immediate: true
                 });
             };
+
+            if (typeof _global.Promise !== "undefined" && utilPromisify) {
+                clock.setImmediate[
+                    utilPromisify.custom
+                ] = function promisifiedSetImmediate(arg) {
+                    return new _global.Promise(function setImmediateExecutor(
+                        resolve
+                    ) {
+                        addTimer(clock, {
+                            func: resolve,
+                            args: [arg],
+                            immediate: true
+                        });
+                    });
+                };
+            }
 
             clock.clearImmediate = function clearImmediate(timerId) {
                 return clearTimer(clock, timerId, "Immediate");
