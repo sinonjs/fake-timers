@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.lolex = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.FakeTimers = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
 
 var every = require("./prototypes/array").every;
@@ -1856,7 +1856,7 @@ function withGlobal(_global) {
                 });
             }
 
-            clock.performance.now = function lolexNow() {
+            clock.performance.now = function FakeTimersNow() {
                 var hrt = hrtime();
                 var millis = hrt[0] * 1000 + hrt[1] / 1e6;
                 return millis;
@@ -1876,24 +1876,11 @@ function withGlobal(_global) {
      * @param config.now {number|Date}  a number (in milliseconds) or a Date object (default epoch)
      * @param config.toFake {string[]} names of the methods that should be faked.
      * @param config.loopLimit {number} the maximum number of timers that will be run when calling runAll()
-     * @param config.shouldAdvanceTime {Boolean} tells lolex to increment mocked time automatically (default false)
+     * @param config.shouldAdvanceTime {Boolean} tells FakeTimers to increment mocked time automatically (default false)
      * @param config.advanceTimeDelta {Number} increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
      */
     // eslint-disable-next-line complexity
     function install(config) {
-        if (
-            arguments.length > 1 ||
-            config instanceof Date ||
-            Array.isArray(config) ||
-            typeof config === "number"
-        ) {
-            throw new TypeError(
-                "lolex.install called with " +
-                    String(config) +
-                    " lolex 2.0+ requires an object parameter - see https://github.com/sinonjs/lolex"
-            );
-        }
-
         // eslint-disable-next-line no-param-reassign
         config = typeof config !== "undefined" ? config : {};
         config.shouldAdvanceTime = config.shouldAdvanceTime || false;

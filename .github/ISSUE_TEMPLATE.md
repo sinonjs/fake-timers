@@ -1,5 +1,5 @@
 <!--
-Are you wondering how to do something with Lolex, or something else that is purely
+Are you wondering how to do something with FakeTimers, or something else that is purely
 usage related? Please post it to StackOverflow using the `sinon` and `lolex` labels.
 This makes it possible for the bigger community to help answer your questions.
 
@@ -9,7 +9,7 @@ The issue tracker is solely meant for posting bugs, feature requests and non-usa
 > We understand you have a problem and are in a hurry, but please provide us with some info to make it much more likely for your issue to be understood, worked on and resolved quickly.
 
 
-* Lolex version : _please verify that the bug exists in the latest Lolex release_
+* FakeTimers version : _please verify that the bug exists in the latest FakeTimers release_
 * Environment   : <!-- Browser, OS, ... -->
 * Example URL   : <!-- If you have one, such as a jsbin -->
 * Other libraries you are using:

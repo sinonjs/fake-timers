@@ -1,4 +1,4 @@
-# Rolling Lolex releases
+# Rolling `@sinonjs/fake-timers` releases
 
 You'll need a working installation of [git-extras](https://github.com/tj/git-extras) for this.
 
@@ -20,5 +20,5 @@ $ npm publish
 
 Create a GitHub release where you highlight
 interesting additions from the changelog.
-Just add a release notes to [the existing tag](https://github.com/sinonjs/lolex/tags).
+Just add a release notes to [the existing tag](https://github.com/sinonjs/fake-timers/tags).
 

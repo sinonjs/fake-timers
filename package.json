@@ -1,16 +1,16 @@
 {
-  "name": "lolex",
+  "name": "@sinonjs/fake-timers",
   "description": "Fake JavaScript timers",
   "version": "5.1.2",
-  "homepage": "http://github.com/sinonjs/lolex",
+  "homepage": "http://github.com/sinonjs/fake-timers",
   "author": "Christian Johansen",
   "repository": {
     "type": "git",
-    "url": "http://github.com/sinonjs/lolex.git"
+    "url": "http://github.com/sinonjs/fake-timers.git"
   },
   "bugs": {
     "mail": "christian@cjohansen.no",
-    "url": "http://github.com/sinonjs/lolex/issues"
+    "url": "http://github.com/sinonjs/fake-timers/issues"
   },
   "license": "BSD-3-Clause",
   "scripts": {
@@ -21,7 +21,7 @@
     "test-cloud": "mochify --wd --no-detect-globals --timeout=10000",
     "test-coverage": "nyc --all --reporter text --reporter html --reporter lcovonly npm run test-node",
     "test": "npm run lint && npm run test-node && npm run test-headless",
-    "bundle": "browserify --no-detect-globals -s lolex -o lolex.js src/lolex-src.js",
+    "bundle": "browserify --no-detect-globals -s FakeTimers -o fake-timers.js src/fake-timers-src.js",
     "prepublishOnly": "npm run bundle",
     "preversion": "./scripts/preversion.sh",
     "version": "./scripts/version.sh",
@@ -32,7 +32,7 @@
   },
   "files": [
     "src/",
-    "lolex.js"
+    "fake-timers.js"
   ],
   "devDependencies": {
     "@sinonjs/referee-sinon": "5.0.0",
@@ -72,8 +72,8 @@
       ]
     }
   },
-  "module": "./lolex.js",
-  "main": "./src/lolex-src.js",
+  "module": "./fake-timers.js",
+  "main": "./src/fake-timers-src.js",
   "dependencies": {
     "@sinonjs/commons": "^1.7.0"
   },
@@ -90,7 +90,7 @@
     "exclude": [
       "**/*-test.js",
       "coverage/**",
-      "lolex.js"
+      "fake-timers.js"
     ]
   }
 }
