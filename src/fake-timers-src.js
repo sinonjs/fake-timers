@@ -1172,7 +1172,7 @@ function withGlobal(_global) {
                 });
             }
 
-            clock.performance.now = function lolexNow() {
+            clock.performance.now = function FakeTimersNow() {
                 var hrt = hrtime();
                 var millis = hrt[0] * 1000 + hrt[1] / 1e6;
                 return millis;
@@ -1192,24 +1192,11 @@ function withGlobal(_global) {
      * @param config.now {number|Date}  a number (in milliseconds) or a Date object (default epoch)
      * @param config.toFake {string[]} names of the methods that should be faked.
      * @param config.loopLimit {number} the maximum number of timers that will be run when calling runAll()
-     * @param config.shouldAdvanceTime {Boolean} tells lolex to increment mocked time automatically (default false)
+     * @param config.shouldAdvanceTime {Boolean} tells FakeTimers to increment mocked time automatically (default false)
      * @param config.advanceTimeDelta {Number} increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
      */
     // eslint-disable-next-line complexity
     function install(config) {
-        if (
-            arguments.length > 1 ||
-            config instanceof Date ||
-            Array.isArray(config) ||
-            typeof config === "number"
-        ) {
-            throw new TypeError(
-                "lolex.install called with " +
-                    String(config) +
-                    " lolex 2.0+ requires an object parameter - see https://github.com/sinonjs/lolex"
-            );
-        }
-
         // eslint-disable-next-line no-param-reassign
         config = typeof config !== "undefined" ? config : {};
         config.shouldAdvanceTime = config.shouldAdvanceTime || false;

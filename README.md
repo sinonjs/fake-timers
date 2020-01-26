@@ -1,38 +1,38 @@
-# Lolex [![CircleCI](https://circleci.com/gh/sinonjs/lolex.svg?style=svg)](https://circleci.com/gh/sinonjs/lolex) [![codecov](https://codecov.io/gh/sinonjs/lolex/branch/master/graph/badge.svg)](https://codecov.io/gh/sinonjs/lolex)
+# `@sinonjs/fake-timers` [![CircleCI](https://circleci.com/gh/sinonjs/fake-timers.svg?style=svg)](https://circleci.com/gh/sinonjs/fake-timers) [![codecov](https://codecov.io/gh/sinonjs/fake-timers/branch/master/graph/badge.svg)](https://codecov.io/gh/sinonjs/fake-timers)
 
-JavaScript implementation of the timer APIs; `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`, `setInterval`, `clearInterval`, `requestAnimationFrame`, `cancelAnimationFrame`, `requestIdleCallback`, and `cancelIdleCallback`, along with a clock instance that controls the flow of time. Lolex also provides a `Date` implementation that gets its time from the clock.
+JavaScript implementation of the timer APIs; `setTimeout`, `clearTimeout`, `setImmediate`, `clearImmediate`, `setInterval`, `clearInterval`, `requestAnimationFrame`, `cancelAnimationFrame`, `requestIdleCallback`, and `cancelIdleCallback`, along with a clock instance that controls the flow of time. FakeTimers also provides a `Date` implementation that gets its time from the clock.
 
-In addition in browser environment lolex provides a `performance` implementation that gets its time from the clock. In Node environments lolex provides a `nextTick` implementation that is synchronized with the clock - and a `process.hrtime` shim that works with the clock.
+In addition in browser environment `@sinonjs/fake-timers` provides a `performance` implementation that gets its time from the clock. In Node environments FakeTimers provides a `nextTick` implementation that is synchronized with the clock - and a `process.hrtime` shim that works with the clock.
 
-Lolex can be used to simulate passing time in automated tests and other
+`@sinonjs/fake-timers` can be used to simulate passing time in automated tests and other
 situations where you want the scheduling semantics, but don't want to actually
-wait (however, from version 2.0 lolex supports those of you who would like to wait too).
+wait.
 
-Lolex is extracted from [Sinon.JS](https://github.com/sinonjs/sinon.js) and targets the [same runtimes](https://sinonjs.org/releases/latest/#supported-runtimes).
+`@sinonjs/fake-timers` is extracted from [Sinon.JS](https://github.com/sinonjs/sinon.js) and targets the [same runtimes](https://sinonjs.org/releases/latest/#supported-runtimes).
 
 ## Installation
 
-Lolex can be used in both Node and browser environments. Installation is as easy as
+`@sinonjs/fake-timers` can be used in both Node and browser environments. Installation is as easy as
 
 ```sh
-npm install lolex
+npm install @sinonjs/fake-timers
 ```
 
-If you want to use Lolex in a browser you can use [the pre-built
-version](https://github.com/sinonjs/lolex/blob/master/lolex.js) available in the repo
-and the npm package. Using npm you only need to reference `./node_modules/lolex/lolex.js` in your `<script>` tags.
+If you want to use `@sinonjs/fake-timers` in a browser you can use [the pre-built
+version](https://github.com/sinonjs/fake-timers/blob/master/fake-timers.js) available in the repo
+and the npm package. Using npm you only need to reference `./node_modules/@sinonjs/fake-timers.js` in your `<script>` tags.
 
-You are always free to [build it yourself](https://github.com/sinonjs/lolex/blob/53ea4d9b9e5bcff53cc7c9755dc9aa340368cf1c/package.json#L22), of course.
+You are always free to [build it yourself](https://github.com/sinonjs/@sinonjs/fake-timers/blob/53ea4d9b9e5bcff53cc7c9755dc9aa340368cf1c/package.json#L22), of course.
 
 ## Usage
 
-To use lolex, create a new clock, schedule events on it using the timer
+To use `@sinonjs/fake-timers`, create a new clock, schedule events on it using the timer
 functions and pass time using the `tick` method.
 
 ```js
-// In the browser distribution, a global `lolex` is already available
-var lolex = require("lolex");
-var clock = lolex.createClock();
+// In the browser distribution, a global `FakeTimers` is already available
+var FakeTimers = require("@sinonjs/fake-timers");
+var clock = FakeTimers.createClock();
 
 clock.setTimeout(function () {
     console.log("The poblano is a mild chili pepper originating in the state of Puebla, Mexico.");
@@ -53,7 +53,7 @@ API Reference for more details.
 
 ### Faking the native timers
 
-When using lolex to test timers, you will most likely want to replace the native
+When using `@sinonjs/fake-timers` to test timers, you will most likely want to replace the native
 timers such that calling `setTimeout` actually schedules a callback with your
 clock instance, not the browser's internals.
 
@@ -61,12 +61,12 @@ Calling `install` with no arguments achieves this. You can call `uninstall`
 later to restore things as they were again.
 
 ```js
-// In the browser distribution, a global `lolex` is already available
-var lolex = require("lolex");
+// In the browser distribution, a global `FakeTimers` is already available
+var FakeTimers = require("@sinonjs/fake-timers");
 
-var clock = lolex.install();
+var clock = FakeTimers.install();
 // Equivalent to
-// var clock = lolex.install(typeof global !== "undefined" ? global : window);
+// var clock = FakeTimers.install(typeof global !== "undefined" ? global : window);
 
 setTimeout(fn, 15); // Schedules with clock.setTimeout
 
@@ -77,11 +77,11 @@ clock.uninstall();
 To hijack timers in another context pass it to the `install` method.
 
 ```js
-var lolex = require("lolex");
+var FakeTimers = require("@sinonjs/fake-timers");
 var context = {
     setTimeout: setTimeout // By default context.setTimeout uses the global setTimeout
 }
-var clock = lolex.install({target: context});
+var clock = FakeTimers.install({target: context});
 
 context.setTimeout(fn, 15); // Schedules with clock.setTimeout
 
@@ -93,7 +93,7 @@ Usually you want to install the timers onto the global object, so call `install`
 without arguments.
 
 #### Automatically incrementing mocked time
-Since version 2.0 Lolex supports the possibility to attach the faked timers
+Since version 2.0 FakeTimers supports the possibility to attach the faked timers
 to any change in the real system time. This basically means you no longer need
 to `tick()` the clock in a situation where you won't know **when** to call `tick()`.
 
@@ -104,8 +104,8 @@ be incremented every 20ms, not in real time.
 An example would be:
 
 ```js
-var lolex = require("lolex");
-var clock = lolex.install({shouldAdvanceTime: true, advanceTimeDelta: 40});
+var FakeTimers = require("@sinonjs/fake-timers");
+var clock = FakeTimers.install({shouldAdvanceTime: true, advanceTimeDelta: 40});
 
 setTimeout(() => {
     console.log('this just timed out'); //executed after 40ms
@@ -123,7 +123,7 @@ setTimeout(() => {
 
 ## API Reference
 
-### `var clock = lolex.createClock([now[, loopLimit]])`
+### `var clock = FakeTimers.createClock([now[, loopLimit]])`
 
 Creates a clock. The default
 [epoch](https://en.wikipedia.org/wiki/Epoch_%28reference_date%29) is `0`.
@@ -132,23 +132,23 @@ The `now` argument may be a number (in milliseconds) or a Date object.
 
 The `loopLimit` argument sets the maximum number of timers that will be run when calling `runAll()` before assuming that we have an infinite loop and throwing an error. The default is `1000`.
 
-### `var clock = lolex.install([config])`
-Installs lolex using the specified config (otherwise with epoch `0` on the global scope). The following configuration options are available
+### `var clock = FakeTimers.install([config])`
+Installs FakeTimers using the specified config (otherwise with epoch `0` on the global scope). The following configuration options are available
 
 Parameter | Type | Default | Description
 --------- | ---- | ------- | ------------
-`config.target`| Object | global | installs lolex onto the specified target context
-`config.now` | Number/Date | 0 | installs lolex with the specified unix epoch
-`config.toFake` | String[] | ["setTimeout", "clearTimeout", "setImmediate", "clearImmediate","setInterval", "clearInterval", "Date", "requestAnimationFrame", "cancelAnimationFrame", "requestIdleCallback", "cancelIdleCallback", "hrtime"] | an array with explicit function names to hijack. *When not set, lolex will automatically fake all methods **except** `nextTick`* e.g., `lolex.install({ toFake: ["setTimeout","nextTick"]})` will fake only `setTimeout` and `nextTick`
+`config.target`| Object | global | installs FakeTimers onto the specified target context
+`config.now` | Number/Date | 0 | installs FakeTimers with the specified unix epoch
+`config.toFake` | String[] | ["setTimeout", "clearTimeout", "setImmediate", "clearImmediate","setInterval", "clearInterval", "Date", "requestAnimationFrame", "cancelAnimationFrame", "requestIdleCallback", "cancelIdleCallback", "hrtime"] | an array with explicit function names to hijack. *When not set, FakeTimers will automatically fake all methods **except** `nextTick`* e.g., `FakeTimers.install({ toFake: ["setTimeout","nextTick"]})` will fake only `setTimeout` and `nextTick`
 `config.loopLimit` | Number | 1000 | the maximum number of timers that will be run when calling runAll()
-`config.shouldAdvanceTime` | Boolean | false | tells lolex to increment mocked time automatically based on the real system time shift (e.g. the mocked time will be incremented by 20ms for every 20ms change in the real system time)
+`config.shouldAdvanceTime` | Boolean | false | tells FakeTimers to increment mocked time automatically based on the real system time shift (e.g. the mocked time will be incremented by 20ms for every 20ms change in the real system time)
 `config.advanceTimeDelta` | Number | 20 | relevant only when using with `shouldAdvanceTime: true`. increment mocked time by `advanceTimeDelta` ms every `advanceTimeDelta` ms change in the real system time.
 
 ### `var id = clock.setTimeout(callback, timeout)`
 
 Schedules the callback to be fired once `timeout` milliseconds have ticked by.
 
-In Node.js `setTimeout` returns a timer object. Lolex will do the same, however
+In Node.js `setTimeout` returns a timer object. FakeTimers will do the same, however
 its `ref()` and `unref()` methods have no effect.
 
 In browsers a timer ID is returned.
@@ -163,7 +163,7 @@ Clears the timer given the ID or timer object, as long as it was created using
 Schedules the callback to be fired every time `timeout` milliseconds have ticked
 by.
 
-In Node.js `setInterval` returns a timer object. Lolex will do the same, however
+In Node.js `setInterval` returns a timer object. FakeTimers will do the same, however
 its `ref()` and `unref()` methods have no effect.
 
 In browsers a timer ID is returned.
@@ -180,7 +180,7 @@ that you'll still have to call `clock.tick()` for the callback to fire. If
 called during a tick the callback won't fire until `1` millisecond has ticked
 by.
 
-In Node.js `setImmediate` returns a timer object. Lolex will do the same,
+In Node.js `setImmediate` returns a timer object. FakeTimers will do the same,
 however its `ref()` and `unref()` methods have no effect.
 
 In browsers a timer ID is returned.
@@ -244,7 +244,7 @@ callbacks to execute _before_ running the timers.
 ### `clock.reset()`
 
 Removes all timers and ticks without firing them, and sets `now` to `config.now`
-that was provided to `lolex.install` or to `0` if `config.now` was not provided.
+that was provided to `FakeTimers.install` or to `0` if `config.now` was not provided.
 Useful to reset the state of the clock without having to `uninstall` and `install` it.
 
 ### `clock.runAll()` / `await clock.runAllAsync()`
@@ -260,7 +260,7 @@ callbacks to execute _before_ running the timers.
 
 ### `clock.runMicrotasks()`
 
-This runs all pending microtasks scheduled with `nextTick` but none of the timers and is mostly useful for libraries using lolex underneath and for running `nextTick` items without any timers.
+This runs all pending microtasks scheduled with `nextTick` but none of the timers and is mostly useful for libraries using FakeTimers underneath and for running `nextTick` items without any timers.
 
 ### `clock.runToFrame()`
 
@@ -291,7 +291,7 @@ setSystemTime().
 ### `clock.uninstall()`
 
 Restores the original methods on the `target` that was passed to
-`lolex.install`, or the native timers if no `target` was given.
+`FakeTimers.install`, or the native timers if no `target` was given.
 
 ### `Date`
 
@@ -301,13 +301,13 @@ Implements the `Date` object but using the clock to provide the correct time.
 
 Implements the `now` method of the [`Performance`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now) object but using the clock to provide the correct time. Only available in environments that support the Performance object (browsers mostly).
 
-### `lolex.withGlobal`
+### `FakeTimers.withGlobal`
 
-In order to support creating clocks based on separate or sandboxed environments (such as JSDOM), Lolex exports a factory method which takes single argument `global`, which it inspects to figure out what to mock and what features to support. When invoking this function with a global, you will get back an object with `timers`, `createClock` and `install` - same as the regular Lolex exports only based on the passed in global instead of the global environment.
+In order to support creating clocks based on separate or sandboxed environments (such as JSDOM), FakeTimers exports a factory method which takes single argument `global`, which it inspects to figure out what to mock and what features to support. When invoking this function with a global, you will get back an object with `timers`, `createClock` and `install` - same as the regular FakeTimers exports only based on the passed in global instead of the global environment.
 
 ## Running tests
 
-Lolex has a comprehensive test suite. If you're thinking of contributing bug
+FakeTimers has a comprehensive test suite. If you're thinking of contributing bug
 fixes or suggesting new features, you need to make sure you have not broken any
 tests. You are also expected to add tests for any new behavior.
 
@@ -320,7 +320,7 @@ npm test
 Or, if you prefer more verbose output:
 
 ```
-$(npm bin)/mocha ./test/lolex-test.js
+$(npm bin)/mocha ./test/fake-timers-test.js
 ```
 
 ### In the browser
