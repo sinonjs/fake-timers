@@ -1,0 +1,127 @@
+version: 2.1
+
+references:
+  x-workdir: &work-dir
+    working_directory: ~/source
+
+  x-save-workspace: &persist-step
+    persist_to_workspace:
+      root: ~/source
+      paths:
+        - .
+
+  x-attach: &attach-step
+    attach_workspace:
+      at: .
+
+jobs:
+  install-dependencies:
+    <<: *work-dir
+    docker:
+      - image: circleci/node:10
+    environment:
+      HUSKY_SKIP_INSTALL: 1
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-npm-{{ checksum "package-lock.json" }}
+      - run:
+          name: Install dependencies
+          command: |
+            if [ ! -d node_modules ]; then
+                npm ci
+            fi
+      - save_cache:
+          key: v1-npm-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+      - *persist-step
+
+  lint:
+    <<: *work-dir
+    docker:
+      - image: node
+    steps:
+      - *attach-step
+      - run:
+          name: lint
+          command: npm run lint
+
+  node-10:
+    docker:
+      - image: circleci/node:10
+    steps:
+      - *attach-step
+      - run:
+          name: Test
+          command: npm run test-node
+
+  node-12:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - *attach-step
+      - run:
+          name: Test with coverage
+          command: npm run test-coverage
+      - run:
+          name: Upload coverage report
+          command: bash <(curl -s https://codecov.io/bash) -F unit -s coverage/lcov.info
+
+  node-13:
+    docker:
+      - image: circleci/node:13
+    steps:
+      - *attach-step
+      - run:
+          name: Test
+          command: npm run test-node
+
+  chromium:
+    docker:
+      - image: circleci/node:12-browsers
+    steps:
+      - *attach-step
+      - run:
+          name: Test
+          command: npm run test-headless
+
+  saucelabs:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - *attach-step
+      - run:
+          name: Test in browsers (Sauce Labs)
+          command: npm run test-cloud
+
+workflows:
+  version: 2
+  verify:
+    jobs:
+      - install-dependencies
+      - lint:
+          requires:
+            - install-dependencies
+      - node-10:
+          requires:
+            - install-dependencies
+      - node-12:
+          requires:
+            - install-dependencies
+      - node-13:
+          requires:
+            - install-dependencies
+      - chromium:
+          requires:
+            - install-dependencies
+      - saucelabs:
+          requires:
+            - lint
+            - node-10
+            - node-12
+            - node-13
+          filters:
+            branches:
+              only: master
