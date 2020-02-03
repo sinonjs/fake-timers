@@ -129,6 +129,7 @@ workflows:
           requires:
             - install-dependencies
       - saucelabs:
+          context: SAUCE_LABS
           requires:
             - lint
             - node-8
