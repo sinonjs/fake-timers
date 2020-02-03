@@ -48,6 +48,15 @@ jobs:
           name: lint
           command: npm run lint
 
+  node-8:
+    docker:
+      - image: circleci/node:8
+    steps:
+      - *attach-step
+      - run:
+          name: Test
+          command: npm run test-node
+
   node-10:
     docker:
       - image: circleci/node:10
@@ -104,6 +113,9 @@ workflows:
       - lint:
           requires:
             - install-dependencies
+      - node-8:
+          requires:
+            - install-dependencies
       - node-10:
           requires:
             - install-dependencies
@@ -119,6 +131,7 @@ workflows:
       - saucelabs:
           requires:
             - lint
+            - node-8
             - node-10
             - node-12
             - node-13
