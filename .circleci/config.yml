@@ -136,6 +136,7 @@ workflows:
             - node-10
             - node-12
             - node-13
+            - chromium
           filters:
             branches:
               only: master
