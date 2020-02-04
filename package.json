@@ -35,7 +35,7 @@
     "fake-timers.js"
   ],
   "devDependencies": {
-    "@sinonjs/referee-sinon": "5.0.0",
+    "@sinonjs/referee-sinon": "6.0.1",
     "browserify": "16.5.0",
     "eslint": "6.5.1",
     "eslint-config-prettier": "6.10.0",
