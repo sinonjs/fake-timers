@@ -1881,6 +1881,19 @@ function withGlobal(_global) {
      */
     // eslint-disable-next-line complexity
     function install(config) {
+        if (
+            arguments.length > 1 ||
+            config instanceof Date ||
+            Array.isArray(config) ||
+            typeof config === "number"
+        ) {
+            throw new TypeError(
+                "FakeTimers.install called with " +
+                    String(config) +
+                    " install requires an object parameter"
+            );
+        }
+
         // eslint-disable-next-line no-param-reassign
         config = typeof config !== "undefined" ? config : {};
         config.shouldAdvanceTime = config.shouldAdvanceTime || false;
