@@ -1,7 +1,7 @@
 {
   "name": "@sinonjs/fake-timers",
   "description": "Fake JavaScript timers",
-  "version": "5.1.2",
+  "version": "6.0.0",
   "homepage": "http://github.com/sinonjs/fake-timers",
   "author": "Christian Johansen",
   "repository": {
