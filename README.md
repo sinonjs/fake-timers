@@ -24,9 +24,9 @@ npm install @sinonjs/fake-timers
 
 If you want to use `@sinonjs/fake-timers` in a browser you can use [the pre-built
 version](https://github.com/sinonjs/fake-timers/blob/master/fake-timers.js) available in the repo
-and the npm package. Using npm you only need to reference `./node_modules/@sinonjs/fake-timers.js` in your `<script>` tags.
+and the npm package. Using npm you only need to reference `./node_modules/@sinonjs/fake-timers/fake-timers.js` in your `<script>` tags.
 
-You are always free to [build it yourself](https://github.com/sinonjs/@sinonjs/fake-timers/blob/53ea4d9b9e5bcff53cc7c9755dc9aa340368cf1c/package.json#L22), of course.
+You are always free to [build it yourself](https://github.com/sinonjs/fake-timers/blob/53ea4d9b9e5bcff53cc7c9755dc9aa340368cf1c/package.json#L22), of course.
 
 ## Usage
 
