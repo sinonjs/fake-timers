@@ -50,6 +50,7 @@ var performanceMarkPresent =
     global.performance && typeof global.performance.mark === "function";
 var setImmediatePresent =
     global.setImmediate && typeof global.setImmediate === "function";
+var utilPromisify = global.process && require("util").promisify;
 
 describe("issue #59", function() {
     var context = {
@@ -445,6 +446,36 @@ describe("FakeTimers", function() {
             this.clock.runAll();
             assert.equals(calls, ["NaN", "Infinity", "-Infinity"]);
         });
+
+        if (typeof global.Promise !== "undefined" && utilPromisify) {
+            describe("when util.promisified", function() {
+                it("sets timers on instance", function() {
+                    var resolved = false;
+                    utilPromisify(this.clock.setTimeout)(100).then(function() {
+                        resolved = true;
+                    });
+
+                    return this.clock.tickAsync(100).then(function() {
+                        assert.isTrue(resolved);
+                    });
+                });
+
+                it("resolves with the first additional argument to setTimeout", function() {
+                    var resolvedValue;
+                    utilPromisify(this.clock.setTimeout)(
+                        100,
+                        "the first",
+                        "the second"
+                    ).then(function(value) {
+                        resolvedValue = value;
+                    });
+
+                    return this.clock.tickAsync(100).then(function() {
+                        assert.equals(resolvedValue, "the first");
+                    });
+                });
+            });
+        }
     });
 
     describe("setImmediate", function() {
@@ -527,6 +558,35 @@ describe("FakeTimers", function() {
 
             clock.tick(0);
         });
+
+        if (typeof global.Promise !== "undefined" && utilPromisify) {
+            describe("when util.promisified", function() {
+                it("calls the given callback immediately", function() {
+                    var resolved = false;
+                    utilPromisify(this.clock.setImmediate)().then(function() {
+                        resolved = true;
+                    });
+
+                    return this.clock.tickAsync(0).then(function() {
+                        assert.isTrue(resolved);
+                    });
+                });
+
+                it("resolves with the first argument to setImmediate", function() {
+                    var resolvedValue;
+                    utilPromisify(this.clock.setImmediate)(
+                        "the first",
+                        "the second"
+                    ).then(function(value) {
+                        resolvedValue = value;
+                    });
+
+                    return this.clock.tickAsync(0).then(function() {
+                        assert.equals(resolvedValue, "the first");
+                    });
+                });
+            });
+        }
     });
 
     describe("clearImmediate", function() {
