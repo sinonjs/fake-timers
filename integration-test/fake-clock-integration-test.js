@@ -37,7 +37,7 @@ describe("withGlobal", function() {
     });
 
     it("should support basic setTimeout", function() {
-        var clock = withGlobal.install({ target: jsdomGlobal, toFake: timers });
+        var clock = withGlobal.install({ toFake: timers });
         var stub = sinon.stub();
 
         jsdomGlobal.setTimeout(stub, 5);
@@ -50,7 +50,7 @@ describe("withGlobal", function() {
     it("Date is instanceof itself", function() {
         assert(new jsdomGlobal.Date() instanceof jsdomGlobal.Date);
 
-        var clock = withGlobal.install({ target: jsdomGlobal, toFake: timers });
+        var clock = withGlobal.install({ toFake: timers });
 
         assert(new jsdomGlobal.Date() instanceof jsdomGlobal.Date);
 
@@ -78,9 +78,7 @@ describe("globally configured browser objects", function() {
 
         global.window = window;
         global.document = window.document;
-        global.navigator = {
-            userAgent: "node.js"
-        };
+        global.navigator = window.navigator;
         global.requestAnimationFrame = function(callback) {
             return setTimeout(callback, 0);
         };

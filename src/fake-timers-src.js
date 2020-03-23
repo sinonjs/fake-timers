@@ -466,17 +466,17 @@ function withGlobal(_global) {
         }
     }
 
-    function uninstall(clock, target, config) {
+    function uninstall(clock, config) {
         var method, i, l;
         var installedHrTime = "_hrtime";
         var installedNextTick = "_nextTick";
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
             method = clock.methods[i];
-            if (method === "hrtime" && target.process) {
-                target.process.hrtime = clock[installedHrTime];
-            } else if (method === "nextTick" && target.process) {
-                target.process.nextTick = clock[installedNextTick];
+            if (method === "hrtime" && _global.process) {
+                _global.process.hrtime = clock[installedHrTime];
+            } else if (method === "nextTick" && _global.process) {
+                _global.process.nextTick = clock[installedNextTick];
             } else if (method === "performance") {
                 var originalPerfDescriptor = Object.getOwnPropertyDescriptor(
                     clock,
@@ -488,25 +488,25 @@ function withGlobal(_global) {
                     !originalPerfDescriptor.set
                 ) {
                     Object.defineProperty(
-                        target,
+                        _global,
                         method,
                         originalPerfDescriptor
                     );
                 } else if (originalPerfDescriptor.configurable) {
-                    target[method] = clock["_" + method];
+                    _global[method] = clock["_" + method];
                 }
             } else {
-                if (target[method] && target[method].hadOwnProperty) {
-                    target[method] = clock["_" + method];
+                if (_global[method] && _global[method].hadOwnProperty) {
+                    _global[method] = clock["_" + method];
                     if (
                         method === "clearInterval" &&
                         config.shouldAdvanceTime === true
                     ) {
-                        target[method](clock.attachedInterval);
+                        _global[method](clock.attachedInterval);
                     }
                 } else {
                     try {
-                        delete target[method];
+                        delete _global[method];
                     } catch (ignore) {
                         /* eslint no-empty: "off" */
                     }
@@ -1220,7 +1220,6 @@ function withGlobal(_global) {
 
     /**
      * @param config {Object} optional config
-     * @param config.target {Object} the target to install timers in (default `window`)
      * @param config.now {number|Date}  a number (in milliseconds) or a Date object (default epoch)
      * @param config.toFake {string[]} names of the methods that should be faked.
      * @param config.loopLimit {number} the maximum number of timers that will be run when calling runAll()
@@ -1247,12 +1246,17 @@ function withGlobal(_global) {
         config.shouldAdvanceTime = config.shouldAdvanceTime || false;
         config.advanceTimeDelta = config.advanceTimeDelta || 20;
 
+        if (config.target) {
+            throw new TypeError(
+                "config.target is no longer supported. Use `withGlobal(target)` instead."
+            );
+        }
+
         var i, l;
-        var target = config.target || _global;
         var clock = createClock(config.now, config.loopLimit);
 
         clock.uninstall = function() {
-            return uninstall(clock, target, config);
+            return uninstall(clock, config);
         };
 
         clock.methods = config.toFake || [];
@@ -1267,17 +1271,17 @@ function withGlobal(_global) {
         for (i = 0, l = clock.methods.length; i < l; i++) {
             if (clock.methods[i] === "hrtime") {
                 if (
-                    target.process &&
-                    typeof target.process.hrtime === "function"
+                    _global.process &&
+                    typeof _global.process.hrtime === "function"
                 ) {
-                    hijackMethod(target.process, clock.methods[i], clock);
+                    hijackMethod(_global.process, clock.methods[i], clock);
                 }
             } else if (clock.methods[i] === "nextTick") {
                 if (
-                    target.process &&
-                    typeof target.process.nextTick === "function"
+                    _global.process &&
+                    typeof _global.process.nextTick === "function"
                 ) {
-                    hijackMethod(target.process, clock.methods[i], clock);
+                    hijackMethod(_global.process, clock.methods[i], clock);
                 }
             } else {
                 if (
@@ -1289,13 +1293,13 @@ function withGlobal(_global) {
                         clock,
                         config.advanceTimeDelta
                     );
-                    var intervalId = target[clock.methods[i]](
+                    var intervalId = _global[clock.methods[i]](
                         intervalTick,
                         config.advanceTimeDelta
                     );
                     clock.attachedInterval = intervalId;
                 }
-                hijackMethod(target, clock.methods[i], clock);
+                hijackMethod(_global, clock.methods[i], clock);
             }
         }
 
