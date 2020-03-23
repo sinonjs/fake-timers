@@ -21,7 +21,7 @@
     "test-cloud": "mochify --wd --no-detect-globals --timeout=10000",
     "test-coverage": "nyc --all --reporter text --reporter html --reporter lcovonly npm run test-node",
     "test": "npm run lint && npm run test-node && npm run test-headless",
-    "bundle": "browserify --no-detect-globals -s FakeTimers -o fake-timers.js src/fake-timers-src.js",
+    "bundle": "node ./build.js",
     "prepublishOnly": "npm run bundle",
     "preversion": "./scripts/preversion.sh",
     "version": "./scripts/version.sh",
@@ -32,7 +32,8 @@
   },
   "files": [
     "src/",
-    "fake-timers.js"
+    "fake-timers.js",
+    "fake-timers-esm.js"
   ],
   "devDependencies": {
     "@sinonjs/referee-sinon": "6.0.1",
@@ -72,7 +73,7 @@
       ]
     }
   },
-  "module": "./fake-timers.js",
+  "module": "./fake-timers-esm.js",
   "main": "./src/fake-timers-src.js",
   "dependencies": {
     "@sinonjs/commons": "^1.7.0"
@@ -90,7 +91,8 @@
     "exclude": [
       "**/*-test.js",
       "coverage/**",
-      "fake-timers.js"
+      "fake-timers.js",
+      "fake-timers-esm.js"
     ]
   }
 }
