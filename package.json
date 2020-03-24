@@ -32,8 +32,7 @@
   },
   "files": [
     "src/",
-    "fake-timers.js",
-    "fake-timers-esm.js"
+    "pkg/"
   ],
   "devDependencies": {
     "@sinonjs/referee-sinon": "6.0.1",
@@ -73,7 +72,9 @@
       ]
     }
   },
-  "module": "./fake-timers-esm.js",
+  "module": "./pkg/fake-timers-esm.js",
+  "cdn": "./pkg/fake-timers.js",
+  "jsdelivr": "./pkg/fake-timers.js",
   "main": "./src/fake-timers-src.js",
   "dependencies": {
     "@sinonjs/commons": "^1.7.0"
@@ -91,8 +92,7 @@
     "exclude": [
       "**/*-test.js",
       "coverage/**",
-      "fake-timers.js",
-      "fake-timers-esm.js"
+      "pkg/**"
     ]
   }
 }

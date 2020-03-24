@@ -5,6 +5,12 @@ var fs = require("fs");
 var browserify = require("browserify");
 var timers = require("./src/fake-timers-src.js");
 
+try {
+    fs.mkdirSync("pkg");
+} catch (ignore) {
+    // We seem to have it already
+}
+
 function makeBundle(entryPoint, config, done) {
     browserify(entryPoint, config).bundle(function(err, buffer) {
         if (err) {
@@ -21,7 +27,7 @@ makeBundle(
         detectGlobals: false
     },
     function(bundle) {
-        fs.writeFileSync("fake-timers.js", bundle);
+        fs.writeFileSync("pkg/fake-timers.js", bundle);
     }
 );
 
@@ -49,6 +55,6 @@ makeBundle(
             })
             .join("\n");
 
-        fs.writeFileSync("fake-timers-esm.js", source);
+        fs.writeFileSync("pkg/fake-timers-esm.js", source);
     }
 );
