@@ -53,15 +53,19 @@ var setImmediatePresent =
 var utilPromisify = global.process && require("util").promisify;
 
 describe("issue #59", function() {
+    var setTimeoutFake = sinon.fake();
     var context = {
         Date: Date,
-        setTimeout: setTimeout,
-        clearTimeout: clearTimeout
+        setTimeout: setTimeoutFake,
+        clearTimeout: sinon.fake()
     };
     var clock;
 
     it("should install and uninstall the clock on a custom target", function() {
-        clock = FakeTimers.install(context);
+        clock = FakeTimers.withGlobal(context).install();
+        assert.equals(setTimeoutFake.callCount, 1);
+        clock.setTimeout(NOOP, 0);
+        assert.equals(setTimeoutFake.callCount, 1);
         // this would throw an error before issue #59 was fixed
         clock.uninstall();
     });
@@ -4591,5 +4595,13 @@ describe("FakeTimers", function() {
 
             assert.isFalse(stub.called);
         });
+    });
+});
+
+describe("#276 - remove config.target", function() {
+    it("should throw on using `config.target`", function() {
+        assert.exception(function() {
+            FakeTimers.install({ target: {} });
+        }, /config.target is no longer supported/);
     });
 });
