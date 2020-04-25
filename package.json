@@ -20,7 +20,7 @@
     "test-check-coverage": "npm run test-coverage && nyc check-coverage",
     "test-cloud": "mochify --wd --no-detect-globals --timeout=10000",
     "test-coverage": "nyc --all --reporter text --reporter html --reporter lcovonly npm run test-node",
-    "test-esm": "node -r esm test/fake-timers-esm-test.js",
+    "test-esm": "node -r esm test-esm/fake-timers-esm-test.js",
     "test": "npm run lint && npm run test-node && npm run test-headless && npm run test-esm",
     "bundle": "node ./build.js",
     "prepublishOnly": "npm run bundle",
@@ -72,7 +72,19 @@
       "ie11/no-weak-collections": [
         "error"
       ]
-    }
+    },
+    "overrides": [
+      {
+        "files": "test-esm/*",
+        "parserOptions": {
+          "ecmaVersion": 6,
+          "sourceType": "module",
+          "ecmaFeatures": {
+            "modules": true
+          }
+        }
+      }
+    ]
   },
   "module": "./pkg/fake-timers-esm.js",
   "cdn": "./pkg/fake-timers.js",
@@ -93,6 +105,8 @@
     "statements": 92,
     "exclude": [
       "**/*-test.js",
+      "**/*-test-esm.js",
+      "build.js",
       "coverage/**",
       "pkg/**"
     ]

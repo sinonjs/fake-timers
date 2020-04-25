@@ -1,6 +1,7 @@
-import * as timers from '../pkg/fake-timers-esm.js';
+/* eslint-disable no-console */
+import * as timers from "../pkg/fake-timers-esm.js";
 
-const expectedExports = ['timers', 'createClock', 'install', 'withGlobal'];
+const expectedExports = ["timers", "createClock", "install", "withGlobal"];
 
 for (const exp of expectedExports) {
     if (!timers[exp]) {
@@ -10,12 +11,11 @@ for (const exp of expectedExports) {
 }
 
 let hasRun = false;
-const org = setTimeout;
 const clock = timers.install();
 setTimeout(() => (hasRun = true));
 clock.tick();
 
 if (!hasRun) {
-    console.error('Failed to tick timers in ES Module');
+    console.error("Failed to tick timers in ES Module");
     process.exit(1);
 }
