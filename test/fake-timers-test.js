@@ -4606,7 +4606,7 @@ describe("#276 - remove config.target", function() {
     });
 });
 
-describe("issue #315 - praseInt if delay not a number", function() {
+describe("issue #315 - praseInt if delay is not a number", function() {
     it("should successfully execute the timer", function() {
         var clock = FakeTimers.install();
         var stub1 = sinon.stub();
