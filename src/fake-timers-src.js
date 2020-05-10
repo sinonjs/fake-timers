@@ -271,7 +271,7 @@ function withGlobal(_global) {
 
         if (timer.hasOwnProperty("delay")) {
             if (typeof timer.delay !== "number") {
-              timer.delay = praseInt(timer.delay, 10);
+                timer.delay = parseInt(timer.delay, 10);
             }
 
             if (!isNumberFinite(timer.delay)) {
