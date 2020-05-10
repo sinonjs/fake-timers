@@ -270,7 +270,7 @@ function withGlobal(_global) {
         timer.type = timer.immediate ? "Immediate" : "Timeout";
 
         if (timer.hasOwnProperty("delay")) {
-            if (typeof timer.delay !== 'number') {
+            if (typeof timer.delay !== "number") {
               timer.delay = praseInt(timer.delay, 10);
             }
 
