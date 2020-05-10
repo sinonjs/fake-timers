@@ -4605,3 +4605,16 @@ describe("#276 - remove config.target", function() {
         }, /config.target is no longer supported/);
     });
 });
+
+describe("issue #315 - praseInt if delay not a number", function() {
+    it("should successfully execute the timer", function() {
+        var clock = FakeTimers.install();
+        var stub1 = sinon.stub();
+
+        clock.setTimeout(stub1, "1");
+        clock.tick(1);
+        assert(stub1.calledOnce);
+
+        clock.uninstall();
+    });
+});
