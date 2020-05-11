@@ -4668,19 +4668,6 @@ describe("FakeTimers", function () {
             assert(called);
             clock.uninstall();
         });
-
-        it("does not install by default - GitHub#126", function (done) {
-            const clock = FakeTimers.install();
-            const spy = sinon.spy(clock, "nextTick");
-            let called = false;
-            process.nextTick(function (value) {
-                called = value;
-                assert(called);
-                assert(!spy.called);
-                clock.uninstall();
-                done();
-            }, true);
-        });
     });
 
     describe("requestIdleCallback", function () {

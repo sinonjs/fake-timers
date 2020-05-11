@@ -1776,10 +1776,7 @@ function withGlobal(_global) {
         clock.methods = config.toFake || [];
 
         if (clock.methods.length === 0) {
-            // do not fake nextTick by default - GitHub#126
-            clock.methods = Object.keys(timers).filter(function (key) {
-                return key !== "nextTick" && key !== "queueMicrotask";
-            });
+            clock.methods = Object.keys(timers);
         }
 
         if (config.shouldAdvanceTime === true) {
