@@ -4668,6 +4668,20 @@ describe("FakeTimers", function () {
             assert(called);
             clock.uninstall();
         });
+
+        it("mock process.nextTick as well", function(done) {
+            var clock = FakeTimers.install();
+            var spy = sinon.spy(clock, "nextTick");
+            var called = false;
+            process.nextTick(function(value) {
+                called = value;
+                assert(called);
+                assert(spy.called);
+                clock.uninstall();
+                done();
+            }, true);
+            clock.runMicrotasks();
+        });
     });
 
     describe("requestIdleCallback", function () {
