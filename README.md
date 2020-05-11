@@ -329,6 +329,10 @@ Implements the `now` method of the [`Performance`](https://developer.mozilla.org
 
 In order to support creating clocks based on separate or sandboxed environments (such as JSDOM), FakeTimers exports a factory method which takes single argument `global`, which it inspects to figure out what to mock and what features to support. When invoking this function with a global, you will get back an object with `timers`, `createClock` and `install` - same as the regular FakeTimers exports only based on the passed in global instead of the global environment.
 
+## Promises and fake time
+
+If you use a Promise library like Bluebird, note that you should either call `clock.runMicrotasks()` or make sure to _not_ mock `nextTick`.
+
 ## Running tests
 
 FakeTimers has a comprehensive test suite. If you're thinking of contributing bug
