@@ -72,10 +72,6 @@ function withGlobal(_global) {
             return Number.isFinite(num);
         }
 
-        if (typeof num !== "number") {
-            return false;
-        }
-
         return isFinite(num);
     }
 
@@ -274,6 +270,10 @@ function withGlobal(_global) {
         timer.type = timer.immediate ? "Immediate" : "Timeout";
 
         if (timer.hasOwnProperty("delay")) {
+            if (typeof timer.delay !== "number") {
+                timer.delay = parseInt(timer.delay, 10);
+            }
+
             if (!isNumberFinite(timer.delay)) {
                 timer.delay = 0;
             }
