@@ -2989,38 +2989,22 @@ describe("FakeTimers", function() {
             assert.isFalse(stub.called);
         });
 
-        it("does not remove interval", function() {
+        it("removes interval", function() {
             var stub = sinon.stub();
             var id = this.clock.setInterval(stub, 50);
-            assert.exception(
-                function() {
-                    this.clock.clearTimeout(id);
-                }.bind(this),
-                {
-                    message:
-                        "Cannot clear timer: timer created with setInterval() but cleared with clearTimeout()"
-                }
-            );
+            this.clock.clearTimeout(id);
             this.clock.tick(50);
 
-            assert.isTrue(stub.called);
+            assert.isFalse(stub.called);
         });
 
-        it("does not remove interval with undefined interval", function() {
+        it("removes interval with undefined interval", function() {
             var stub = sinon.stub();
             var id = this.clock.setInterval(stub);
-            assert.exception(
-                function() {
-                    this.clock.clearTimeout(id);
-                }.bind(this),
-                {
-                    message:
-                        "Cannot clear timer: timer created with setInterval() but cleared with clearTimeout()"
-                }
-            );
+            this.clock.clearTimeout(id);
             this.clock.tick(50);
 
-            assert.isTrue(stub.called);
+            assert.isFalse(stub.called);
         });
 
         it("does not remove immediate", function() {
@@ -3198,20 +3182,13 @@ describe("FakeTimers", function() {
             assert.isFalse(stub.called);
         });
 
-        it("does not remove timeout", function() {
+        it("removes timeout", function() {
             var stub = sinon.stub();
             var id = this.clock.setTimeout(stub, 50);
-            assert.exception(
-                function() {
-                    this.clock.clearInterval(id);
-                }.bind(this),
-                {
-                    message:
-                        "Cannot clear timer: timer created with setTimeout() but cleared with clearInterval()"
-                }
-            );
+            this.clock.clearInterval(id);
             this.clock.tick(50);
-            assert.isTrue(stub.called);
+
+            assert.isFalse(stub.called);
         });
 
         it("does not remove immediate", function() {
