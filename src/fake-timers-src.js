@@ -67,6 +67,18 @@ function withGlobal(_global) {
     var NativeDate = _global.Date;
     var uniqueTimerId = 1;
 
+    var isNearInfiniteLimit = false;
+
+    function checkIsNearInfiniteLimit(clock, i) {
+        if (clock.loopLimit && i === clock.loopLimit - 1) {
+            isNearInfiniteLimit = true;
+        }
+    }
+
+    function resetIsNearInfiniteLimit() {
+        isNearInfiniteLimit = false;
+    }
+
     function isNumberFinite(num) {
         if (Number.isFinite) {
             return Number.isFinite(num);
@@ -275,10 +287,13 @@ function withGlobal(_global) {
         for (var i = 0; i < clock.jobs.length; i++) {
             var job = clock.jobs[i];
             job.func.apply(null, job.args);
+
+            checkIsNearInfiniteLimit(clock, i);
             if (clock.loopLimit && i > clock.loopLimit) {
                 throw getInfiniteLoopError(clock.loopLimit, job);
             }
         }
+        resetIsNearInfiniteLimit();
         clock.jobs = [];
     }
 
@@ -287,7 +302,9 @@ function withGlobal(_global) {
             throw new Error("Callback must be provided to timer calls");
         }
 
-        timer.error = new Error();
+        if (isNearInfiniteLimit) {
+            timer.error = new Error();
+        }
 
         timer.type = timer.immediate ? "Immediate" : "Timeout";
 
@@ -795,7 +812,7 @@ function withGlobal(_global) {
             return enqueueJob(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 1),
-                error: new Error()
+                error: isNearInfiniteLimit ? new Error() : null
             });
         };
 
@@ -1090,15 +1107,18 @@ function withGlobal(_global) {
             runJobs(clock);
             for (i = 0; i < clock.loopLimit; i++) {
                 if (!clock.timers) {
+                    resetIsNearInfiniteLimit();
                     return clock.now;
                 }
 
                 numTimers = keys(clock.timers).length;
                 if (numTimers === 0) {
+                    resetIsNearInfiniteLimit();
                     return clock.now;
                 }
 
                 clock.next();
+                checkIsNearInfiniteLimit(clock, i);
             }
 
             var excessJob = firstTimer(clock);
@@ -1119,6 +1139,7 @@ function withGlobal(_global) {
                                 var numTimers;
                                 if (i < clock.loopLimit) {
                                     if (!clock.timers) {
+                                        resetIsNearInfiniteLimit();
                                         resolve(clock.now);
                                         return;
                                     }
@@ -1126,6 +1147,7 @@ function withGlobal(_global) {
                                     numTimers = Object.keys(clock.timers)
                                         .length;
                                     if (numTimers === 0) {
+                                        resetIsNearInfiniteLimit();
                                         resolve(clock.now);
                                         return;
                                     }
@@ -1135,6 +1157,7 @@ function withGlobal(_global) {
                                     i++;
 
                                     doRun();
+                                    checkIsNearInfiniteLimit(clock, i);
                                     return;
                                 }
 
