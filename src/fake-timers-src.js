@@ -143,6 +143,30 @@ function withGlobal(_global) {
         throw new TypeError("now should be milliseconds since UNIX epoch");
     }
 
+    function getInfiniteLoopError(loopLimit, job) {
+        var infiniteLoopError = new Error(
+            "Aborting after running " +
+                loopLimit +
+                " timers, assuming an infinite loop!"
+        );
+
+        var sliceSize = job.type ? 4 : 3;
+
+        infiniteLoopError.stack =
+            infiniteLoopError +
+            "\n" +
+            (job.type || "Microtask") +
+            " - " +
+            (job.func.name || "anonymous") +
+            "\n" +
+            job.error.stack
+                .split("\n")
+                .slice(sliceSize)
+                .join("\n");
+
+        return infiniteLoopError;
+    }
+
     function inRange(from, to, timer) {
         return timer && timer.callAt >= from && timer.callAt <= to;
     }
@@ -252,11 +276,7 @@ function withGlobal(_global) {
             var job = clock.jobs[i];
             job.func.apply(null, job.args);
             if (clock.loopLimit && i > clock.loopLimit) {
-                throw new Error(
-                    "Aborting after running " +
-                        clock.loopLimit +
-                        " timers, assuming an infinite loop!"
-                );
+                throw getInfiniteLoopError(clock.loopLimit, job);
             }
         }
         clock.jobs = [];
@@ -266,6 +286,8 @@ function withGlobal(_global) {
         if (timer.func === undefined) {
             throw new Error("Callback must be provided to timer calls");
         }
+
+        timer.error = new Error();
 
         timer.type = timer.immediate ? "Immediate" : "Timeout";
 
@@ -772,7 +794,8 @@ function withGlobal(_global) {
         clock.nextTick = function nextTick(func) {
             return enqueueJob(clock, {
                 func: func,
-                args: Array.prototype.slice.call(arguments, 1)
+                args: Array.prototype.slice.call(arguments, 1),
+                error: new Error()
             });
         };
 
@@ -1078,11 +1101,8 @@ function withGlobal(_global) {
                 clock.next();
             }
 
-            throw new Error(
-                "Aborting after running " +
-                    clock.loopLimit +
-                    " timers, assuming an infinite loop!"
-            );
+            var excessJob = firstTimer(clock);
+            throw getInfiniteLoopError(clock.loopLimit, excessJob);
         };
 
         clock.runToFrame = function runToFrame() {
@@ -1118,11 +1138,11 @@ function withGlobal(_global) {
                                     return;
                                 }
 
+                                var excessJob = firstTimer(clock);
                                 reject(
-                                    new Error(
-                                        "Aborting after running " +
-                                            clock.loopLimit +
-                                            " timers, assuming an infinite loop!"
+                                    getInfiniteLoopError(
+                                        clock.loopLimit,
+                                        excessJob
                                     )
                                 );
                             } catch (e) {

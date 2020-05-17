@@ -4622,3 +4622,99 @@ describe("#187 - Support timeout.refresh in node environments", function() {
         clock.uninstall();
     });
 });
+
+describe("loop limit stack trace", function() {
+    var test,
+        expectedMessage =
+            "Aborting after running 5 timers, assuming an infinite loop!";
+
+    beforeEach(function() {
+        test = this;
+        this.clock = FakeTimers.install({ loopLimit: 5 });
+    });
+
+    afterEach(function() {
+        this.clock.uninstall();
+    });
+
+    describe("microtasks", function() {
+        beforeEach(function() {
+            function recursiveQueueMicroTask() {
+                test.clock.queueMicrotask(recursiveQueueMicroTask);
+            }
+            recursiveQueueMicroTask();
+        });
+
+        it("provides a stack trace for running microtasks", function() {
+            var caughtError = false;
+
+            try {
+                test.clock.runMicrotasks();
+            } catch (err) {
+                caughtError = true;
+                assert.equals(err.message, expectedMessage);
+                assert.equals(
+                    new RegExp(
+                        "Error: " +
+                            expectedMessage +
+                            "\\s+Microtask - recursiveQueueMicroTask\\s+at recursiveQueueMicroTask"
+                    ).test(err.stack),
+                    true
+                );
+            }
+            assert.equals(caughtError, true);
+        });
+    });
+
+    describe("timeouts", function() {
+        beforeEach(function() {
+            function recursiveCreateTimer() {
+                setTimeout(function recursiveCreateTimerTimeout() {
+                    recursiveCreateTimer();
+                }, 10);
+            }
+            recursiveCreateTimer();
+        });
+
+        it("provides a stack trace for running all async", function() {
+            var catchSpy = sinon.spy();
+
+            return test.clock
+                .runAllAsync()
+                .catch(catchSpy)
+                .then(function() {
+                    assert(catchSpy.calledOnce);
+                    var err = catchSpy.firstCall.args[0];
+                    assert.equals(err.message, expectedMessage);
+                    assert.equals(
+                        new RegExp(
+                            "Error: " +
+                                expectedMessage +
+                                "\\s+Timeout - recursiveCreateTimerTimeout\\s+at recursiveCreateTimer"
+                        ).test(err.stack),
+                        true
+                    );
+                });
+        });
+
+        it("provides a stack trace for running all sync", function() {
+            var caughtError = false;
+
+            try {
+                test.clock.runAll();
+            } catch (err) {
+                caughtError = true;
+                assert.equals(err.message, expectedMessage);
+                assert.equals(
+                    new RegExp(
+                        "Error: " +
+                            expectedMessage +
+                            "\\s+Timeout - recursiveCreateTimerTimeout\\s+at recursiveCreateTimer"
+                    ).test(err.stack),
+                    true
+                );
+            }
+            assert.equals(caughtError, true);
+        });
+    });
+});
