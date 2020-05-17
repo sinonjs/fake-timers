@@ -152,6 +152,18 @@ function withGlobal(_global) {
         return isFinite(num);
     }
 
+    var isNearInfiniteLimit = false;
+
+    function checkIsNearInfiniteLimit(clock, i) {
+        if (clock.loopLimit && i === clock.loopLimit - 1) {
+            isNearInfiniteLimit = true;
+        }
+    }
+
+    function resetIsNearInfiniteLimit() {
+        isNearInfiniteLimit = false;
+    }
+
     /**
      * Parse strings like "01:10:00" (meaning 1 hour, 10 minutes, 0 seconds) into
      * number of milliseconds. This is used to support human-readable strings passed
@@ -233,6 +245,64 @@ function withGlobal(_global) {
      */
     function inRange(from, to, timer) {
         return timer && timer.callAt >= from && timer.callAt <= to;
+    }
+
+    function getInfiniteLoopError(clock, job) {
+        var infiniteLoopError = new Error(
+            "Aborting after running " +
+                clock.loopLimit +
+                " timers, assuming an infinite loop!"
+        );
+        var computedTargetPattern = /target\.*[<|(|[].*?[>|\]|)]\s*/;
+        var clockMethodPattern = new RegExp(
+            String(Object.keys(clock).join("|"))
+        );
+
+        var matchedLineIndex = -1;
+        job.error.stack.split("\n").some(function (line, i) {
+            // If we've matched a computed target line (e.g. setTimeout) then we
+            // don't need to look any further. Return true to stop iterating.
+            var matchedComputedTarget = line.match(computedTargetPattern);
+            if (matchedComputedTarget) {
+                matchedLineIndex = i;
+                return true;
+            }
+
+            // If we've matched a clock method line, then there may still be
+            // others further down the trace. Return false to keep iterating.
+            var matchedClockMethod = line.match(clockMethodPattern);
+            if (matchedClockMethod) {
+                matchedLineIndex = i;
+                return false;
+            }
+
+            // If we haven't matched anything on this line, but we matched
+            // previously and set the matched line index, then we can stop.
+            // If we haven't matched previously, then we should keep iterating.
+            return matchedLineIndex >= 0;
+        });
+
+        var stack =
+            infiniteLoopError +
+            "\n" +
+            (job.type || "Microtask") +
+            " - " +
+            (job.func.name || "anonymous") +
+            "\n" +
+            job.error.stack
+                .split("\n")
+                .slice(matchedLineIndex + 1)
+                .join("\n");
+
+        try {
+            Object.defineProperty(infiniteLoopError, "stack", {
+                value: stack,
+            });
+        } catch (e) {
+            // noop
+        }
+
+        return infiniteLoopError;
     }
 
     /**
@@ -358,12 +428,13 @@ function withGlobal(_global) {
         for (var i = 0; i < clock.jobs.length; i++) {
             var job = clock.jobs[i];
             job.func.apply(null, job.args);
+
+            checkIsNearInfiniteLimit(clock, i);
             if (clock.loopLimit && i > clock.loopLimit) {
-                throw new Error(
-                    `Aborting after running ${clock.loopLimit} timers, assuming an infinite loop!`
-                );
+                throw getInfiniteLoopError(clock, job);
             }
         }
+        resetIsNearInfiniteLimit();
         clock.jobs = [];
     }
 
@@ -386,6 +457,10 @@ function withGlobal(_global) {
                     } of type ${typeof timer.func}`
                 );
             }
+        }
+
+        if (isNearInfiniteLimit) {
+            timer.error = new Error();
         }
 
         timer.type = timer.immediate ? "Immediate" : "Timeout";
@@ -946,6 +1021,7 @@ function withGlobal(_global) {
             return enqueueJob(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 1),
+                error: isNearInfiniteLimit ? new Error() : null,
             });
         };
 
@@ -1253,20 +1329,22 @@ function withGlobal(_global) {
             runJobs(clock);
             for (i = 0; i < clock.loopLimit; i++) {
                 if (!clock.timers) {
+                    resetIsNearInfiniteLimit();
                     return clock.now;
                 }
 
                 numTimers = Object.keys(clock.timers).length;
                 if (numTimers === 0) {
+                    resetIsNearInfiniteLimit();
                     return clock.now;
                 }
 
                 clock.next();
+                checkIsNearInfiniteLimit(clock, i);
             }
 
-            throw new Error(
-                `Aborting after running ${clock.loopLimit} timers, assuming an infinite loop!`
-            );
+            var excessJob = firstTimer(clock);
+            throw getInfiniteLoopError(clock, excessJob);
         };
 
         clock.runToFrame = function runToFrame() {
@@ -1286,6 +1364,7 @@ function withGlobal(_global) {
                                 var numTimers;
                                 if (i < clock.loopLimit) {
                                     if (!clock.timers) {
+                                        resetIsNearInfiniteLimit();
                                         resolve(clock.now);
                                         return;
                                     }
@@ -1293,6 +1372,7 @@ function withGlobal(_global) {
                                     numTimers = Object.keys(clock.timers)
                                         .length;
                                     if (numTimers === 0) {
+                                        resetIsNearInfiniteLimit();
                                         resolve(clock.now);
                                         return;
                                     }
@@ -1302,14 +1382,12 @@ function withGlobal(_global) {
                                     i++;
 
                                     doRun();
+                                    checkIsNearInfiniteLimit(clock, i);
                                     return;
                                 }
 
-                                reject(
-                                    new Error(
-                                        `Aborting after running ${clock.loopLimit} timers, assuming an infinite loop!`
-                                    )
-                                );
+                                var excessJob = firstTimer(clock);
+                                reject(getInfiniteLoopError(clock, excessJob));
                             } catch (e) {
                                 reject(e);
                             }
