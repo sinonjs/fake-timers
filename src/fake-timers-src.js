@@ -444,7 +444,11 @@ function withGlobal(_global) {
         if (clock.timers.hasOwnProperty(id)) {
             // check that the ID matches a timer of the correct type
             var timer = clock.timers[id];
-            if (timer.type === ttype) {
+            if (
+                timer.type === ttype ||
+                (timer.type === "Timeout" && ttype === "Interval") ||
+                (timer.type === "Interval" && ttype === "Timeout")
+            ) {
                 delete clock.timers[id];
             } else {
                 var clear =
