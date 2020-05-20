@@ -4805,7 +4805,7 @@ describe("loop limit stack trace", function() {
     describe("setInterval", function() {
         beforeEach(function() {
             function recursiveCreateTimer() {
-                test.clock.setInterval(function recursiveCreateTimerTimeout() {
+                setInterval(function recursiveCreateTimerTimeout() {
                     recursiveCreateTimer();
                 }, 10);
             }
@@ -4861,9 +4861,9 @@ describe("loop limit stack trace", function() {
             }
 
             function recursiveCreateTimer() {
-                test.clock.setImmediate(function recursiveCreateTimerTimeout() {
+                setImmediate(function recursiveCreateTimerTimeout() {
                     recursiveCreateTimer();
-                }, 10);
+                });
             }
             recursiveCreateTimer();
         });
@@ -4916,8 +4916,7 @@ describe("loop limit stack trace", function() {
                 test.clock.requestAnimationFrame(
                     function recursiveCreateTimerTimeout() {
                         recursiveCreateTimer();
-                    },
-                    10
+                    }
                 );
             }
             recursiveCreateTimer();
