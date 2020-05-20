@@ -155,16 +155,42 @@ function withGlobal(_global) {
         throw new TypeError("now should be milliseconds since UNIX epoch");
     }
 
-    function getInfiniteLoopError(loopLimit, job) {
+    function getInfiniteLoopError(clock, job) {
         var infiniteLoopError = new Error(
             "Aborting after running " +
-                loopLimit +
+                clock.loopLimit +
                 " timers, assuming an infinite loop!"
         );
+        var computedTargetPattern = /\s+at target\.[<|(].*?[>|)]\s+/;
+        var clockMethodPattern = new RegExp(
+            "\\s+at Object\\.(?:" + Object.keys(clock).join("|") + ")\\s+"
+        );
 
-        var sliceSize = job.type ? 4 : 3;
+        var matchedLineIndex = -1;
+        job.error.stack.split("\n").some(function(line, i) {
+            // If we've matched a computed target line (e.g. setTimeout) then we
+            // don't need to look any further. Return true to stop iterating.
+            var matchedComputedTarget = line.match(computedTargetPattern);
+            if (matchedComputedTarget) {
+                matchedLineIndex = i;
+                return true;
+            }
 
-        infiniteLoopError.stack =
+            // If we've matched a clock method line, then there may still be
+            // others further down the trace. Return false to keep iterating.
+            var matchedClockMethod = line.match(clockMethodPattern);
+            if (matchedClockMethod) {
+                matchedLineIndex = i;
+                return false;
+            }
+
+            // If we haven't matched anything on this line, but we matched
+            // previously and set the matched line index, then we can stop.
+            // If we haven't matched previously, then we should keep iterating.
+            return matchedLineIndex >= 0;
+        });
+
+        var stack =
             infiniteLoopError +
             "\n" +
             (job.type || "Microtask") +
@@ -173,8 +199,16 @@ function withGlobal(_global) {
             "\n" +
             job.error.stack
                 .split("\n")
-                .slice(sliceSize)
+                .slice(matchedLineIndex + 1)
                 .join("\n");
+
+        try {
+            Object.defineProperty(infiniteLoopError, "stack", {
+                value: stack
+            });
+        } catch (e) {
+            // noop
+        }
 
         return infiniteLoopError;
     }
@@ -290,7 +324,7 @@ function withGlobal(_global) {
 
             checkIsNearInfiniteLimit(clock, i);
             if (clock.loopLimit && i > clock.loopLimit) {
-                throw getInfiniteLoopError(clock.loopLimit, job);
+                throw getInfiniteLoopError(clock, job);
             }
         }
         resetIsNearInfiniteLimit();
@@ -1122,7 +1156,7 @@ function withGlobal(_global) {
             }
 
             var excessJob = firstTimer(clock);
-            throw getInfiniteLoopError(clock.loopLimit, excessJob);
+            throw getInfiniteLoopError(clock, excessJob);
         };
 
         clock.runToFrame = function runToFrame() {
@@ -1162,12 +1196,7 @@ function withGlobal(_global) {
                                 }
 
                                 var excessJob = firstTimer(clock);
-                                reject(
-                                    getInfiniteLoopError(
-                                        clock.loopLimit,
-                                        excessJob
-                                    )
-                                );
+                                reject(getInfiniteLoopError(clock, excessJob));
                             } catch (e) {
                                 reject(e);
                             }
