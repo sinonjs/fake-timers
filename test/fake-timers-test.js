@@ -330,7 +330,7 @@ describe("FakeTimers", function() {
                 }.bind(this),
                 {
                     message:
-                        "TypeError [ERR_INVALID_CALLBACK]: Callback must be a function. Received " +
+                        "[ERR_INVALID_CALLBACK]: Callback must be a function. Received " +
                         notTypeofFunction +
                         " of type " +
                         typeof notTypeofFunction
