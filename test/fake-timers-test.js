@@ -320,11 +320,22 @@ describe("FakeTimers", function() {
             assert(FakeTimers.evalCalled);
         });
 
-        it("evals non-function callbacks", function() {
-            this.clock.setTimeout("FakeTimers.evalCalled = true", 10);
-            this.clock.tick(10);
+        it("does not accept non-function callbacks", function() {
+            var notTypeofFunction = "FakeTimers.evalCalled = true";
+            this.clock.setTimeout(notTypeofFunction, 10);
 
-            assert(FakeTimers.evalCalled);
+            assert.exception(
+                function() {
+                    this.clock.tick(10);
+                }.bind(this),
+                {
+                    message:
+                        "TypeError [ERR_INVALID_CALLBACK]: Callback must be a function. Received " +
+                        notTypeofFunction +
+                        " of type " +
+                        typeof notTypeofFunction
+                }
+            );
         });
 
         it("passes setTimeout parameters", function() {

@@ -421,8 +421,12 @@ function withGlobal(_global) {
         if (typeof timer.func === "function") {
             timer.func.apply(null, timer.args);
         } else {
-            /* eslint no-eval: "off" */
-            eval(timer.func);
+            throw new Error(
+                "TypeError [ERR_INVALID_CALLBACK]: Callback must be a function. Received " +
+                    timer.func +
+                    " of type " +
+                    typeof timer.func
+            );
         }
     }
 
