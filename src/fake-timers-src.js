@@ -312,7 +312,8 @@ function withGlobal(_global) {
                     return res;
                 },
                 refresh: function() {
-                    return res;
+                    clearTimeout(timer.id);
+                    return setTimeout(timer.func, timer.delay);
                 }
             };
             return res;
