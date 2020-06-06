@@ -332,7 +332,6 @@ describe("FakeTimers", function() {
             try {
                 this.clock.setTimeout("x", x);
                 this.clock.tick(x);
-                // fail the test if got here
                 assert.fail();
             } catch (e) {
                 assert(e instanceof ReferenceError);
