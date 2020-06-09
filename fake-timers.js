@@ -1726,7 +1726,10 @@ function withGlobal(_global) {
             timer.func.apply(null, timer.args);
         } else {
             /* eslint no-eval: "off" */
-            eval(timer.func);
+            var eval2 = eval;
+            (function() {
+                eval2(timer.func);
+            })();
         }
     }
 
