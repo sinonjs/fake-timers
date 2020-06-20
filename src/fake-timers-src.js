@@ -339,6 +339,7 @@ function withGlobal(_global) {
         if (isNearInfiniteLimit) {
             timer.error = new Error();
         }
+
         if (addTimerReturnsObject) {
             // Node.js environment
             if (typeof timer.func !== "function") {
