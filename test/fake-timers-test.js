@@ -273,7 +273,7 @@ describe("FakeTimers", function() {
         });
 
         it("returns numeric id or object with numeric id", function() {
-            var result = this.clock.setTimeout("");
+            var result = this.clock.setTimeout(function() {}, 10);
 
             if (typeof result === "object") {
                 assert.isNumber(result.id);
@@ -283,8 +283,8 @@ describe("FakeTimers", function() {
         });
 
         it("returns unique id", function() {
-            var id1 = this.clock.setTimeout("");
-            var id2 = this.clock.setTimeout("");
+            var id1 = this.clock.setTimeout(function() {}, 10);
+            var id2 = this.clock.setTimeout(function() {}, 10);
 
             refute.equals(id2, id1);
         });
@@ -3096,7 +3096,7 @@ describe("FakeTimers", function() {
         });
 
         it("returns numeric id or object with numeric id", function() {
-            var result = this.clock.setInterval("");
+            var result = this.clock.setInterval(function() {}, 10);
 
             if (typeof result === "object") {
                 assert.isNumber(result.id);
@@ -3106,8 +3106,8 @@ describe("FakeTimers", function() {
         });
 
         it("returns unique id", function() {
-            var id1 = this.clock.setInterval("");
-            var id2 = this.clock.setInterval("");
+            var id1 = this.clock.setInterval(function() {}, 10);
+            var id2 = this.clock.setInterval(function() {}, 10);
 
             refute.equals(id2, id1);
         });
