@@ -51,6 +51,8 @@ var performanceMarkPresent =
 var setImmediatePresent =
     global.setImmediate && typeof global.setImmediate === "function";
 var utilPromisify = global.process && require("util").promisify;
+var timeoutResult = global.setTimeout(NOOP, 0);
+var addTimerReturnsObject = typeof timeoutResult === "object";
 
 describe("issue #59", function() {
     var setTimeoutFake = sinon.fake();
@@ -320,24 +322,6 @@ describe("FakeTimers", function() {
             assert(FakeTimers.evalCalled);
         });
 
-        it("evals non-function callbacks", function() {
-            this.clock.setTimeout("FakeTimers.evalCalled = true", 10);
-            this.clock.tick(10);
-
-            assert(FakeTimers.evalCalled);
-        });
-
-        it("only evals on global scope", function() {
-            var x = 15;
-            try {
-                this.clock.setTimeout("x", x);
-                this.clock.tick(x);
-                assert.fail();
-            } catch (e) {
-                assert(e instanceof ReferenceError);
-            }
-        });
-
         it("passes setTimeout parameters", function() {
             var clock = FakeTimers.createClock();
             var stub = sinon.stub();
@@ -460,6 +444,74 @@ describe("FakeTimers", function() {
             }, Number.NEGATIVE_INFINITY);
             this.clock.runAll();
             assert.equals(calls, ["NaN", "Infinity", "-Infinity"]);
+        });
+
+        describe("use of eval when not in node", function() {
+            before(function() {
+                if (addTimerReturnsObject) {
+                    this.skip();
+                }
+            });
+
+            beforeEach(function() {
+                this.clock = FakeTimers.createClock();
+                FakeTimers.evalCalled = false;
+            });
+
+            afterEach(function() {
+                delete FakeTimers.evalCalled;
+            });
+
+            it("evals non-function callbacks", function() {
+                this.clock.setTimeout("FakeTimers.evalCalled = true", 10);
+                this.clock.tick(10);
+
+                assert(FakeTimers.evalCalled);
+            });
+
+            it("only evals on global scope", function() {
+                var x = 15;
+                try {
+                    this.clock.setTimeout("x", x);
+                    this.clock.tick(x);
+                    assert.fail();
+                } catch (e) {
+                    assert(e instanceof ReferenceError);
+                }
+            });
+        });
+        describe("use of eval in node", function() {
+            before(function() {
+                if (!addTimerReturnsObject) {
+                    this.skip();
+                }
+            });
+
+            beforeEach(function() {
+                this.clock = FakeTimers.createClock();
+                FakeTimers.evalCalled = false;
+            });
+
+            afterEach(function() {
+                delete FakeTimers.evalCalled;
+            });
+
+            it("does not eval non-function callbacks", function() {
+                var notTypeofFunction = "FakeTimers.evalCalled = true";
+
+                assert.exception(
+                    function() {
+                        this.clock.setTimeout(notTypeofFunction, 10);
+                    }.bind(this),
+                    {
+                        message:
+                            "[ERR_INVALID_CALLBACK]: Callback must be a function. Received " +
+                            notTypeofFunction +
+                            " of type " +
+                            typeof notTypeofFunction
+                    }
+                );
+            });
         });
 
         if (typeof global.Promise !== "undefined" && utilPromisify) {
