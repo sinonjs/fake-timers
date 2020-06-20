@@ -267,6 +267,18 @@ function withGlobal(_global) {
             throw new Error("Callback must be provided to timer calls");
         }
 
+        if (addTimerReturnsObject) {
+            // Node.js environment
+            if (typeof timer.func !== "function") {
+                throw new TypeError(
+                    "[ERR_INVALID_CALLBACK]: Callback must be a function. Received " +
+                        timer.func +
+                        " of type " +
+                        typeof timer.func
+                );
+            }
+        }
+
         timer.type = timer.immediate ? "Immediate" : "Timeout";
 
         if (timer.hasOwnProperty("delay")) {

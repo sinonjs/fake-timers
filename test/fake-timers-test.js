@@ -51,6 +51,8 @@ var performanceMarkPresent =
 var setImmediatePresent =
     global.setImmediate && typeof global.setImmediate === "function";
 var utilPromisify = global.process && require("util").promisify;
+var timeoutResult = global.setTimeout(NOOP, 0);
+var addTimerReturnsObject = typeof timeoutResult === "object";
 
 describe("issue #59", function () {
     var setTimeoutFake = sinon.fake();
@@ -272,13 +274,8 @@ describe("FakeTimers", function () {
             });
         });
 
-<<<<<<< HEAD
-        it("returns numeric id or object with numeric id", function () {
-            var result = this.clock.setTimeout("");
-=======
         it("returns numeric id or object with numeric id", function() {
             var result = this.clock.setTimeout(function() {}, 10);
->>>>>>> strings were replaced from tests who do not require eval
 
             if (typeof result === "object") {
                 assert.isNumber(result.id);
@@ -287,15 +284,9 @@ describe("FakeTimers", function () {
             }
         });
 
-<<<<<<< HEAD
-        it("returns unique id", function () {
-            var id1 = this.clock.setTimeout("");
-            var id2 = this.clock.setTimeout("");
-=======
         it("returns unique id", function() {
             var id1 = this.clock.setTimeout(function() {}, 10);
             var id2 = this.clock.setTimeout(function() {}, 10);
->>>>>>> strings were replaced from tests who do not require eval
 
             refute.equals(id2, id1);
         });
@@ -331,25 +322,7 @@ describe("FakeTimers", function () {
             assert(FakeTimers.evalCalled);
         });
 
-        it("evals non-function callbacks", function () {
-            this.clock.setTimeout("FakeTimers.evalCalled = true", 10);
-            this.clock.tick(10);
-
-            assert(FakeTimers.evalCalled);
-        });
-
-        it("only evals on global scope", function () {
-            var x = 15;
-            try {
-                this.clock.setTimeout("x", x);
-                this.clock.tick(x);
-                assert.fail();
-            } catch (e) {
-                assert(e instanceof ReferenceError);
-            }
-        });
-
-        it("passes setTimeout parameters", function () {
+        it("passes setTimeout parameters", function() {
             var clock = FakeTimers.createClock();
             var stub = sinon.stub();
 
@@ -471,6 +444,74 @@ describe("FakeTimers", function () {
             }, Number.NEGATIVE_INFINITY);
             this.clock.runAll();
             assert.equals(calls, ["NaN", "Infinity", "-Infinity"]);
+        });
+
+        describe("use of eval when not in node", function() {
+            before(function() {
+                if (addTimerReturnsObject) {
+                    this.skip();
+                }
+            });
+
+            beforeEach(function() {
+                this.clock = FakeTimers.createClock();
+                FakeTimers.evalCalled = false;
+            });
+
+            afterEach(function() {
+                delete FakeTimers.evalCalled;
+            });
+
+            it("evals non-function callbacks", function() {
+                this.clock.setTimeout("FakeTimers.evalCalled = true", 10);
+                this.clock.tick(10);
+
+                assert(FakeTimers.evalCalled);
+            });
+
+            it("only evals on global scope", function() {
+                var x = 15;
+                try {
+                    this.clock.setTimeout("x", x);
+                    this.clock.tick(x);
+                    assert.fail();
+                } catch (e) {
+                    assert(e instanceof ReferenceError);
+                }
+            });
+        });
+        describe("use of eval in node", function() {
+            before(function() {
+                if (!addTimerReturnsObject) {
+                    this.skip();
+                }
+            });
+
+            beforeEach(function() {
+                this.clock = FakeTimers.createClock();
+                FakeTimers.evalCalled = false;
+            });
+
+            afterEach(function() {
+                delete FakeTimers.evalCalled;
+            });
+
+            it("does not eval non-function callbacks", function() {
+                var notTypeofFunction = "FakeTimers.evalCalled = true";
+
+                assert.exception(
+                    function() {
+                        this.clock.setTimeout(notTypeofFunction, 10);
+                    }.bind(this),
+                    {
+                        message:
+                            "[ERR_INVALID_CALLBACK]: Callback must be a function. Received " +
+                            notTypeofFunction +
+                            " of type " +
+                            typeof notTypeofFunction
+                    }
+                );
+            });
         });
 
         if (typeof global.Promise !== "undefined" && utilPromisify) {
@@ -3102,13 +3143,8 @@ describe("FakeTimers", function () {
             });
         });
 
-<<<<<<< HEAD
-        it("returns numeric id or object with numeric id", function () {
-            var result = this.clock.setInterval("");
-=======
         it("returns numeric id or object with numeric id", function() {
             var result = this.clock.setInterval(function() {}, 10);
->>>>>>> strings were replaced from tests who do not require eval
 
             if (typeof result === "object") {
                 assert.isNumber(result.id);
@@ -3117,15 +3153,9 @@ describe("FakeTimers", function () {
             }
         });
 
-<<<<<<< HEAD
-        it("returns unique id", function () {
-            var id1 = this.clock.setInterval("");
-            var id2 = this.clock.setInterval("");
-=======
         it("returns unique id", function() {
             var id1 = this.clock.setInterval(function() {}, 10);
             var id2 = this.clock.setInterval(function() {}, 10);
->>>>>>> strings were replaced from tests who do not require eval
 
             refute.equals(id2, id1);
         });
