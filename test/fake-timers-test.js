@@ -272,8 +272,13 @@ describe("FakeTimers", function () {
             });
         });
 
+<<<<<<< HEAD
         it("returns numeric id or object with numeric id", function () {
             var result = this.clock.setTimeout("");
+=======
+        it("returns numeric id or object with numeric id", function() {
+            var result = this.clock.setTimeout(function() {}, 10);
+>>>>>>> strings were replaced from tests who do not require eval
 
             if (typeof result === "object") {
                 assert.isNumber(result.id);
@@ -282,9 +287,15 @@ describe("FakeTimers", function () {
             }
         });
 
+<<<<<<< HEAD
         it("returns unique id", function () {
             var id1 = this.clock.setTimeout("");
             var id2 = this.clock.setTimeout("");
+=======
+        it("returns unique id", function() {
+            var id1 = this.clock.setTimeout(function() {}, 10);
+            var id2 = this.clock.setTimeout(function() {}, 10);
+>>>>>>> strings were replaced from tests who do not require eval
 
             refute.equals(id2, id1);
         });
@@ -3091,8 +3102,13 @@ describe("FakeTimers", function () {
             });
         });
 
+<<<<<<< HEAD
         it("returns numeric id or object with numeric id", function () {
             var result = this.clock.setInterval("");
+=======
+        it("returns numeric id or object with numeric id", function() {
+            var result = this.clock.setInterval(function() {}, 10);
+>>>>>>> strings were replaced from tests who do not require eval
 
             if (typeof result === "object") {
                 assert.isNumber(result.id);
@@ -3101,9 +3117,15 @@ describe("FakeTimers", function () {
             }
         });
 
+<<<<<<< HEAD
         it("returns unique id", function () {
             var id1 = this.clock.setInterval("");
             var id2 = this.clock.setInterval("");
+=======
+        it("returns unique id", function() {
+            var id1 = this.clock.setInterval(function() {}, 10);
+            var id2 = this.clock.setInterval(function() {}, 10);
+>>>>>>> strings were replaced from tests who do not require eval
 
             refute.equals(id2, id1);
         });
