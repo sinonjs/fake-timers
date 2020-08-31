@@ -97,9 +97,9 @@ Usually you want to install the timers onto the global object, so call `install`
 without arguments.
 
 #### Automatically incrementing mocked time
-Since version 2.0 FakeTimers supports the possibility to attach the faked timers
-to any change in the real system time. This basically means you no longer need
-to `tick()` the clock in a situation where you won't know **when** to call `tick()`.
+FakeTimers supports the possibility to attach the faked timers to any change
+in the real system time. This means that there is no need to `tick()` the
+clock in a situation where you won't know **when** to call `tick()`.
 
 Please note that this is achieved using the original setImmediate() API at a certain
 configurable interval `config.advanceTimeDelta` (default: 20ms). Meaning time would
