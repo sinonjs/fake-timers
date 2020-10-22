@@ -105,7 +105,6 @@ module.exports = function every(obj, fn) {
     var pass = true;
 
     try {
-        /* eslint-disable-next-line local-rules/no-prototype-methods */
         obj.forEach(function() {
             if (!fn.apply(this, arguments)) {
                 // Throwing an error is the only way to break `forEach`
@@ -205,7 +204,6 @@ module.exports = copyPrototype(Array.prototype);
 var call = Function.call;
 
 module.exports = function copyPrototypeMethods(prototype) {
-    /* eslint-disable local-rules/no-prototype-methods */
     return Object.getOwnPropertyNames(prototype).reduce(function(result, name) {
         // ignore size because it throws from Map
         if (
@@ -283,7 +281,6 @@ module.exports = function typeOf(value) {
 
 function valueToString(value) {
     if (value && value.toString) {
-        /* eslint-disable-next-line local-rules/no-prototype-methods */
         return value.toString();
     }
     return String(value);
