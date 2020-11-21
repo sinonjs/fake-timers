@@ -55,6 +55,6 @@ makeBundle(
             })
             .join("\n");
 
-        fs.writeFileSync("pkg/fake-timers-esm.js", source);
+        fs.writeFileSync("pkg/fake-timers-esm.mjs", source);
     }
 );

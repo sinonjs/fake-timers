@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import * as timers from "../pkg/fake-timers-esm.js";
+import * as timers from "../pkg/fake-timers-esm.mjs";
 
 const expectedExports = ["timers", "createClock", "install", "withGlobal"];
 
