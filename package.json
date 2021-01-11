@@ -22,7 +22,6 @@
     "test-cloud": "mochify --wd --no-detect-globals --timeout=10000",
     "test-coverage": "nyc --all --reporter text --reporter html --reporter lcovonly npm run test-node",
     "test": "npm run lint && npm run test-node && npm run test-headless",
-    "bundle": "browserify --no-detect-globals -s FakeTimers -o fake-timers.js src/fake-timers-src.js",
     "prepublishOnly": "npm run build",
     "preversion": "./scripts/preversion.sh",
     "version": "./scripts/version.sh",
@@ -37,7 +36,6 @@
   ],
   "devDependencies": {
     "@sinonjs/referee-sinon": "6.0.1",
-    "browserify": "16.5.0",
     "eslint": "6.8.0",
     "eslint-config-prettier": "6.10.0",
     "eslint-config-sinon": "3.0.1",
