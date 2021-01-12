@@ -1,4 +1,19 @@
 
+7.0.0 / 2021-01-12
+==================
+
+  * Remove bundle from package. If you're loading `fake-timers` via
+    script tag, you'll now have to provide your own bundled version
+  * Add .d.ts files to package
+  * Revert "Add stack trace to code recursively scheduling timers" (#338)
+  * Remove unnecessary durations and use globals
+  * Support timeout.refresh in node environments
+  * Fix #319: Error message changed to TypeError
+  * Fix #319: The use of 'eval' has been removed
+  * Fix #304: clearTimeout clears setInterval and clearInterval clears setTimeout
+  * Remove config.target (#318)
+
+
 6.0.1 / 2020-03-24
 ==================
 
