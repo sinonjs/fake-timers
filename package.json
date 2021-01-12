@@ -71,7 +71,6 @@
       ]
     }
   },
-  "module": "./fake-timers.js",
   "main": "./src/fake-timers-src.js",
   "types": "./types/fake-timers-src.d.ts",
   "dependencies": {
