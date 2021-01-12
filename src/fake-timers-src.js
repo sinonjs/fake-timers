@@ -535,7 +535,6 @@ function withGlobal(_global) {
     }
 
     function hijackMethod(target, method, clock) {
-        var prop;
         clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(
             target,
             method
@@ -575,11 +574,10 @@ function withGlobal(_global) {
                 return clock[method].apply(clock, arguments);
             };
 
-            for (prop in clock[method]) {
-                if (clock[method].hasOwnProperty(prop)) {
-                    target[method][prop] = clock[method][prop];
-                }
-            }
+            Object.defineProperties(
+                target[method],
+                Object.getOwnPropertyDescriptors(clock[method])
+            );
         }
 
         target[method].clock = clock;
