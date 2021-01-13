@@ -634,21 +634,6 @@ function withGlobal(_global) {
         timers.cancelIdleCallback = _global.cancelIdleCallback;
     }
 
-    var keys =
-        Object.keys ||
-        function(obj) {
-            var ks = [];
-            var key;
-
-            for (key in obj) {
-                if (obj.hasOwnProperty(key)) {
-                    ks.push(key);
-                }
-            }
-
-            return ks;
-        };
-
     var originalSetTimeout = _global.setImmediate || _global.setTimeout;
 
     /**
@@ -1073,7 +1058,7 @@ function withGlobal(_global) {
                     return clock.now;
                 }
 
-                numTimers = keys(clock.timers).length;
+                numTimers = Object.keys(clock.timers).length;
                 if (numTimers === 0) {
                     return clock.now;
                 }
@@ -1271,7 +1256,7 @@ function withGlobal(_global) {
 
         if (clock.methods.length === 0) {
             // do not fake nextTick by default - GitHub#126
-            clock.methods = keys(timers).filter(function(key) {
+            clock.methods = Object.keys(timers).filter(function(key) {
                 return key !== "nextTick" && key !== "queueMicrotask";
             });
         }
