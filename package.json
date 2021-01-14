@@ -21,7 +21,7 @@
     "test-check-coverage": "npm run test-coverage && nyc check-coverage",
     "test-cloud": "mochify --wd --no-detect-globals --timeout=10000",
     "test-coverage": "nyc --all --reporter text --reporter html --reporter lcovonly npm run test-node",
-    "test": "npm run lint && npm run test-node && npm run test-headless",
+    "test": "npm run test-node && npm run test-headless",
     "prepublishOnly": "npm run build",
     "preversion": "./scripts/preversion.sh",
     "version": "./scripts/version.sh",
@@ -78,7 +78,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run lint && npm run test-node"
+      "pre-commit": "npm run lint"
     }
   },
   "nyc": {
