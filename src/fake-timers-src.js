@@ -1212,12 +1212,18 @@ function withGlobal(_global) {
     }
 
     /**
-     * @param config {Object} optional config
-     * @param config.now {number|Date}  a number (in milliseconds) or a Date object (default epoch)
-     * @param config.toFake {string[]} names of the methods that should be faked.
-     * @param config.loopLimit {number} the maximum number of timers that will be run when calling runAll()
-     * @param config.shouldAdvanceTime {Boolean} tells FakeTimers to increment mocked time automatically (default false)
-     * @param config.advanceTimeDelta {Number} increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
+     * Configuration object for the `install` method.
+     *
+     * @typedef {object} Config
+     * @property [now] {number|Date}  a number (in milliseconds) or a Date object (default epoch)
+     * @property [toFake] {string[]} names of the methods that should be faked.
+     * @property [loopLimit] {number} the maximum number of timers that will be run when calling runAll()
+     * @property [shouldAdvanceTime] {Boolean} tells FakeTimers to increment mocked time automatically (default false)
+     * @property [advanceTimeDelta] {Number} increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
+     */
+
+    /**
+     * @param [config] {Config} optional config
      */
     // eslint-disable-next-line complexity
     function install(config) {
