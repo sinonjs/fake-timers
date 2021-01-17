@@ -81,7 +81,7 @@ var FakeTimers = require("@sinonjs/fake-timers");
 var context = {
     setTimeout: setTimeout // By default context.setTimeout uses the global setTimeout
 }
-var clock = FakeTimers.install({target: context});
+var clock = FakeTimers.withGlobal(context).install();
 
 context.setTimeout(fn, 15); // Schedules with clock.setTimeout
 
@@ -137,7 +137,6 @@ Installs FakeTimers using the specified config (otherwise with epoch `0` on the 
 
 Parameter | Type | Default | Description
 --------- | ---- | ------- | ------------
-`config.target`| Object | global | installs FakeTimers onto the specified target context
 `config.now` | Number/Date | 0 | installs FakeTimers with the specified unix epoch
 `config.toFake` | String[] | ["setTimeout", "clearTimeout", "setImmediate", "clearImmediate","setInterval", "clearInterval", "Date", "requestAnimationFrame", "cancelAnimationFrame", "requestIdleCallback", "cancelIdleCallback", "hrtime"] | an array with explicit function names to hijack. *When not set, FakeTimers will automatically fake all methods **except** `nextTick`* e.g., `FakeTimers.install({ toFake: ["setTimeout","nextTick"]})` will fake only `setTimeout` and `nextTick`
 `config.loopLimit` | Number | 1000 | the maximum number of timers that will be run when calling runAll()
@@ -290,8 +289,8 @@ setSystemTime().
 
 ### `clock.uninstall()`
 
-Restores the original methods on the `target` that was passed to
-`FakeTimers.install`, or the native timers if no `target` was given.
+Restores the original methods of the native timers or the methods on the object
+that was passed to `FakeTimers.withGlobal`
 
 ### `Date`
 
