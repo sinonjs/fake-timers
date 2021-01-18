@@ -1,4 +1,9 @@
 
+7.0.2 / 2021-01-18
+==================
+
+  * Make config options optional in TypeScript defs (#354)
+
 7.0.1 / 2021-01-14
 ==================
 
