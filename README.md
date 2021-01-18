@@ -14,7 +14,7 @@ wait.
 
 `@sinonjs/fake-timers` is extracted from [Sinon.JS](https://github.com/sinonjs/sinon.js) and targets the [same runtimes](https://sinonjs.org/releases/latest/#supported-runtimes).
 
-## Help us our TypeScript definitions production ready!
+## Help us get our TypeScript definitions production ready!
 In version 7 we introduced TypeScript definitions that are generated from our JSDoc. This makes importing types from [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/sinonjs__fake-timers/index.d.ts) superfluous, but we have just gotten started and we need your work for this to be up to the same quality. If you need good TypeScript definitions _now_ and find the ones included by `fake-timers` less than satisfactory, we suggest you install version 6 in the meantime.
 
 ## Installation
