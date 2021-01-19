@@ -10,6 +10,7 @@ if [ -z $SAUCE_ACCESS_KEY ]; then
     exit 1
 fi
 
+npm run lint
 npm test # lints and tests
 
 npm run test-cloud # should not take more than approx 25 seconds

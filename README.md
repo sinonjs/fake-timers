@@ -14,6 +14,9 @@ wait.
 
 `@sinonjs/fake-timers` is extracted from [Sinon.JS](https://github.com/sinonjs/sinon.js) and targets the [same runtimes](https://sinonjs.org/releases/latest/#supported-runtimes).
 
+## Help us get our TypeScript definitions production ready!
+In version 7 we introduced TypeScript definitions that are generated from our JSDoc. This makes importing types from [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/sinonjs__fake-timers/index.d.ts) superfluous, but we have just gotten started and we need your work for this to be up to the same quality. If you need good TypeScript definitions _now_ and find the ones included by `fake-timers` less than satisfactory, we suggest you install version 6 in the meantime.
+
 ## Installation
 
 `@sinonjs/fake-timers` can be used in both Node and browser environments. Installation is as easy as
@@ -22,11 +25,7 @@ wait.
 npm install @sinonjs/fake-timers
 ```
 
-If you want to use `@sinonjs/fake-timers` in a browser you can use [the pre-built
-version](https://github.com/sinonjs/fake-timers/blob/master/fake-timers.js) available in the repo
-and the npm package. Using npm you only need to reference `./node_modules/@sinonjs/fake-timers/fake-timers.js` in your `<script>` tags.
-
-You are always free to [build it yourself](https://github.com/sinonjs/fake-timers/blob/53ea4d9b9e5bcff53cc7c9755dc9aa340368cf1c/package.json#L22), of course.
+If you want to use `@sinonjs/fake-timers` in a browser you can either build your own bundle or use [Skypack](https://www.skypack.dev).
 
 ## Usage
 
@@ -85,7 +84,7 @@ var FakeTimers = require("@sinonjs/fake-timers");
 var context = {
     setTimeout: setTimeout // By default context.setTimeout uses the global setTimeout
 }
-var clock = FakeTimers.install({target: context});
+var clock = FakeTimers.withGlobal(context).install();
 
 context.setTimeout(fn, 15); // Schedules with clock.setTimeout
 
@@ -97,9 +96,9 @@ Usually you want to install the timers onto the global object, so call `install`
 without arguments.
 
 #### Automatically incrementing mocked time
-Since version 2.0 FakeTimers supports the possibility to attach the faked timers
-to any change in the real system time. This basically means you no longer need
-to `tick()` the clock in a situation where you won't know **when** to call `tick()`.
+FakeTimers supports the possibility to attach the faked timers to any change
+in the real system time. This means that there is no need to `tick()` the
+clock in a situation where you won't know **when** to call `tick()`.
 
 Please note that this is achieved using the original setImmediate() API at a certain
 configurable interval `config.advanceTimeDelta` (default: 20ms). Meaning time would
@@ -141,7 +140,6 @@ Installs FakeTimers using the specified config (otherwise with epoch `0` on the 
 
 Parameter | Type | Default | Description
 --------- | ---- | ------- | ------------
-`config.target`| Object | global | installs FakeTimers onto the specified target context
 `config.now` | Number/Date | 0 | installs FakeTimers with the specified unix epoch
 `config.toFake` | String[] | ["setTimeout", "clearTimeout", "setImmediate", "clearImmediate","setInterval", "clearInterval", "Date", "requestAnimationFrame", "cancelAnimationFrame", "requestIdleCallback", "cancelIdleCallback", "hrtime"] | an array with explicit function names to hijack. *When not set, FakeTimers will automatically fake all methods **except** `nextTick`* e.g., `FakeTimers.install({ toFake: ["setTimeout","nextTick"]})` will fake only `setTimeout` and `nextTick`
 `config.loopLimit` | Number | 1000 | the maximum number of timers that will be run when calling runAll()
@@ -294,8 +292,8 @@ setSystemTime().
 
 ### `clock.uninstall()`
 
-Restores the original methods on the `target` that was passed to
-`FakeTimers.install`, or the native timers if no `target` was given.
+Restores the original methods of the native timers or the methods on the object
+that was passed to `FakeTimers.withGlobal`
 
 ### `Date`
 

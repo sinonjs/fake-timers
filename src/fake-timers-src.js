@@ -67,18 +67,6 @@ function withGlobal(_global) {
     var NativeDate = _global.Date;
     var uniqueTimerId = 1;
 
-    var isNearInfiniteLimit = false;
-
-    function checkIsNearInfiniteLimit(clock, i) {
-        if (clock.loopLimit && i === clock.loopLimit - 1) {
-            isNearInfiniteLimit = true;
-        }
-    }
-
-    function resetIsNearInfiniteLimit() {
-        isNearInfiniteLimit = false;
-    }
-
     function isNumberFinite(num) {
         if (Number.isFinite) {
             return Number.isFinite(num);
@@ -153,64 +141,6 @@ function withGlobal(_global) {
             return epoch;
         }
         throw new TypeError("now should be milliseconds since UNIX epoch");
-    }
-
-    function getInfiniteLoopError(clock, job) {
-        var infiniteLoopError = new Error(
-            "Aborting after running " +
-                clock.loopLimit +
-                " timers, assuming an infinite loop!"
-        );
-        var computedTargetPattern = /\s+at target\.[<|(].*?[>|)]\s+/;
-        var clockMethodPattern = new RegExp(
-            "\\s+at Object\\.(?:" + Object.keys(clock).join("|") + ")\\s+"
-        );
-
-        var matchedLineIndex = -1;
-        job.error.stack.split("\n").some(function(line, i) {
-            // If we've matched a computed target line (e.g. setTimeout) then we
-            // don't need to look any further. Return true to stop iterating.
-            var matchedComputedTarget = line.match(computedTargetPattern);
-            if (matchedComputedTarget) {
-                matchedLineIndex = i;
-                return true;
-            }
-
-            // If we've matched a clock method line, then there may still be
-            // others further down the trace. Return false to keep iterating.
-            var matchedClockMethod = line.match(clockMethodPattern);
-            if (matchedClockMethod) {
-                matchedLineIndex = i;
-                return false;
-            }
-
-            // If we haven't matched anything on this line, but we matched
-            // previously and set the matched line index, then we can stop.
-            // If we haven't matched previously, then we should keep iterating.
-            return matchedLineIndex >= 0;
-        });
-
-        var stack =
-            infiniteLoopError +
-            "\n" +
-            (job.type || "Microtask") +
-            " - " +
-            (job.func.name || "anonymous") +
-            "\n" +
-            job.error.stack
-                .split("\n")
-                .slice(matchedLineIndex + 1)
-                .join("\n");
-
-        try {
-            Object.defineProperty(infiniteLoopError, "stack", {
-                value: stack
-            });
-        } catch (e) {
-            // noop
-        }
-
-        return infiniteLoopError;
     }
 
     function inRange(from, to, timer) {
@@ -321,13 +251,14 @@ function withGlobal(_global) {
         for (var i = 0; i < clock.jobs.length; i++) {
             var job = clock.jobs[i];
             job.func.apply(null, job.args);
-
-            checkIsNearInfiniteLimit(clock, i);
             if (clock.loopLimit && i > clock.loopLimit) {
-                throw getInfiniteLoopError(clock, job);
+                throw new Error(
+                    "Aborting after running " +
+                        clock.loopLimit +
+                        " timers, assuming an infinite loop!"
+                );
             }
         }
-        resetIsNearInfiniteLimit();
         clock.jobs = [];
     }
 
@@ -719,21 +650,6 @@ function withGlobal(_global) {
         timers.cancelIdleCallback = _global.cancelIdleCallback;
     }
 
-    var keys =
-        Object.keys ||
-        function(obj) {
-            var ks = [];
-            var key;
-
-            for (key in obj) {
-                if (obj.hasOwnProperty(key)) {
-                    ks.push(key);
-                }
-            }
-
-            return ks;
-        };
-
     var originalSetTimeout = _global.setImmediate || _global.setTimeout;
 
     /**
@@ -860,8 +776,7 @@ function withGlobal(_global) {
         clock.nextTick = function nextTick(func) {
             return enqueueJob(clock, {
                 func: func,
-                args: Array.prototype.slice.call(arguments, 1),
-                error: isNearInfiniteLimit ? new Error() : null
+                args: Array.prototype.slice.call(arguments, 1)
             });
         };
 
@@ -1156,22 +1071,22 @@ function withGlobal(_global) {
             runJobs(clock);
             for (i = 0; i < clock.loopLimit; i++) {
                 if (!clock.timers) {
-                    resetIsNearInfiniteLimit();
                     return clock.now;
                 }
 
-                numTimers = keys(clock.timers).length;
+                numTimers = Object.keys(clock.timers).length;
                 if (numTimers === 0) {
-                    resetIsNearInfiniteLimit();
                     return clock.now;
                 }
 
                 clock.next();
-                checkIsNearInfiniteLimit(clock, i);
             }
 
-            var excessJob = firstTimer(clock);
-            throw getInfiniteLoopError(clock, excessJob);
+            throw new Error(
+                "Aborting after running " +
+                    clock.loopLimit +
+                    " timers, assuming an infinite loop!"
+            );
         };
 
         clock.runToFrame = function runToFrame() {
@@ -1188,7 +1103,6 @@ function withGlobal(_global) {
                                 var numTimers;
                                 if (i < clock.loopLimit) {
                                     if (!clock.timers) {
-                                        resetIsNearInfiniteLimit();
                                         resolve(clock.now);
                                         return;
                                     }
@@ -1196,7 +1110,6 @@ function withGlobal(_global) {
                                     numTimers = Object.keys(clock.timers)
                                         .length;
                                     if (numTimers === 0) {
-                                        resetIsNearInfiniteLimit();
                                         resolve(clock.now);
                                         return;
                                     }
@@ -1206,12 +1119,16 @@ function withGlobal(_global) {
                                     i++;
 
                                     doRun();
-                                    checkIsNearInfiniteLimit(clock, i);
                                     return;
                                 }
 
-                                var excessJob = firstTimer(clock);
-                                reject(getInfiniteLoopError(clock, excessJob));
+                                reject(
+                                    new Error(
+                                        "Aborting after running " +
+                                            clock.loopLimit +
+                                            " timers, assuming an infinite loop!"
+                                    )
+                                );
                             } catch (e) {
                                 reject(e);
                             }
@@ -1311,12 +1228,18 @@ function withGlobal(_global) {
     }
 
     /**
-     * @param config {Object} optional config
-     * @param config.now {number|Date}  a number (in milliseconds) or a Date object (default epoch)
-     * @param config.toFake {string[]} names of the methods that should be faked.
-     * @param config.loopLimit {number} the maximum number of timers that will be run when calling runAll()
-     * @param config.shouldAdvanceTime {Boolean} tells FakeTimers to increment mocked time automatically (default false)
-     * @param config.advanceTimeDelta {Number} increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
+     * Configuration object for the `install` method.
+     *
+     * @typedef {object} Config
+     * @property [now] {number|Date}  a number (in milliseconds) or a Date object (default epoch)
+     * @property [toFake] {string[]} names of the methods that should be faked.
+     * @property [loopLimit] {number} the maximum number of timers that will be run when calling runAll()
+     * @property [shouldAdvanceTime] {Boolean} tells FakeTimers to increment mocked time automatically (default false)
+     * @property [advanceTimeDelta] {Number} increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
+     */
+
+    /**
+     * @param [config] {Config} optional config
      */
     // eslint-disable-next-line complexity
     function install(config) {
@@ -1355,7 +1278,7 @@ function withGlobal(_global) {
 
         if (clock.methods.length === 0) {
             // do not fake nextTick by default - GitHub#126
-            clock.methods = keys(timers).filter(function(key) {
+            clock.methods = Object.keys(timers).filter(function(key) {
                 return key !== "nextTick" && key !== "queueMicrotask";
             });
         }

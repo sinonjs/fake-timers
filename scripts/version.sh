@@ -13,8 +13,4 @@ echo 'Updating AUTHORS'
 git authors --list > AUTHORS
 git add AUTHORS
 
-echo 'Build bundle'
-npm run bundle
-git add fake-timers.js
-
 git commit -m "Updated release files for $PACKAGE_VERSION"
