@@ -48,6 +48,16 @@ jobs:
           name: lint
           command: npm run lint
 
+  prettier:
+    <<: *work-dir
+    docker:
+      - image: node
+    steps:
+      - *attach-step
+      - run:
+          name: prettier
+          command: npm run prettier:check
+
   node-10:
     docker:
       - image: circleci/node:10
@@ -104,6 +114,9 @@ workflows:
       - lint:
           requires:
             - install-dependencies
+      - prettier:
+          requires:
+            - install-dependencies
       - node-10:
           requires:
             - install-dependencies
@@ -120,6 +133,7 @@ workflows:
           context: SAUCE_LABS
           requires:
             - lint
+            - prettier
             - node-10
             - node-12
             - node-14

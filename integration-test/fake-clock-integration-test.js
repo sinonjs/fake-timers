@@ -21,10 +21,10 @@ var assert = require("@sinonjs/referee-sinon").assert;
 var FakeTimers = require("../src/fake-timers-src");
 var sinon = require("@sinonjs/referee-sinon").sinon;
 
-describe("withGlobal", function() {
+describe("withGlobal", function () {
     var jsdomGlobal, withGlobal, timers;
 
-    beforeEach(function() {
+    beforeEach(function () {
         var dom = new jsdom.JSDOM("", { runScripts: "dangerously" });
         jsdomGlobal = dom.window;
 
@@ -32,11 +32,11 @@ describe("withGlobal", function() {
         timers = Object.keys(withGlobal.timers);
     });
 
-    it("matches the normal FakeTimers API", function() {
+    it("matches the normal FakeTimers API", function () {
         assert.equals(Object.keys(withGlobal), Object.keys(FakeTimers));
     });
 
-    it("should support basic setTimeout", function() {
+    it("should support basic setTimeout", function () {
         var clock = withGlobal.install({ toFake: timers });
         var stub = sinon.stub();
 
@@ -47,7 +47,7 @@ describe("withGlobal", function() {
         clock.uninstall();
     });
 
-    it("Date is instanceof itself", function() {
+    it("Date is instanceof itself", function () {
         assert(new jsdomGlobal.Date() instanceof jsdomGlobal.Date);
 
         var clock = withGlobal.install({ toFake: timers });
@@ -58,7 +58,7 @@ describe("withGlobal", function() {
     });
 });
 
-describe("globally configured browser objects", function() {
+describe("globally configured browser objects", function () {
     var withGlobal, originalDescriptors;
 
     // We use a set up function instead of beforeEach to avoid Mocha's check leaks detector
@@ -79,10 +79,10 @@ describe("globally configured browser objects", function() {
         global.window = window;
         global.document = window.document;
         global.navigator = window.navigator;
-        global.requestAnimationFrame = function(callback) {
+        global.requestAnimationFrame = function (callback) {
             return setTimeout(callback, 0);
         };
-        global.cancelAnimationFrame = function(id) {
+        global.cancelAnimationFrame = function (id) {
             clearTimeout(id);
         };
         copyProps(window, global);
@@ -93,7 +93,7 @@ describe("globally configured browser objects", function() {
     function tearDownGlobal() {
         var originalDescriptorNames = Object.keys(originalDescriptors);
         var windowDescriptorNames = Object.getOwnPropertyNames(global.window);
-        windowDescriptorNames.forEach(function(descriptorName) {
+        windowDescriptorNames.forEach(function (descriptorName) {
             if (!originalDescriptorNames.includes(descriptorName)) {
                 delete global[descriptorName];
             }
@@ -106,13 +106,13 @@ describe("globally configured browser objects", function() {
         delete global.cancelAnimationFrame;
     }
 
-    it("correctly instantiates and tears down", function() {
+    it("correctly instantiates and tears down", function () {
         setUpGlobal();
 
         try {
             var mockNow = new Date("1990-1-1");
             var clock = withGlobal.install({
-                now: mockNow
+                now: mockNow,
             });
 
             assert.equals(new Date(Date.now()), mockNow);

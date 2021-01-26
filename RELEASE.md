@@ -21,4 +21,3 @@ $ npm publish
 Create a GitHub release where you highlight
 interesting additions from the changelog.
 Just add a release notes to [the existing tag](https://github.com/sinonjs/fake-timers/tags).
-
