@@ -11,7 +11,7 @@ rules:
   ie11/no-weak-collections: error
 
 overrides:
-  - files: "test/**/*.js"
+  - files: "**/*-test.js"
     plugins:
       - mocha
     env:
