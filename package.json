@@ -22,12 +22,15 @@
     "test-cloud": "mochify --wd --no-detect-globals --timeout=10000",
     "test-coverage": "nyc --all --reporter text --reporter html --reporter lcovonly npm run test-node",
     "test": "npm run test-node && npm run test-headless",
+    "prettier:check": "prettier --check '**/*.{js,css,md}'",
+    "prettier:write": "prettier --write '**/*.{js,css,md}'",
     "prepublishOnly": "npm run build",
     "preversion": "./scripts/preversion.sh",
     "version": "./scripts/version.sh",
     "postversion": "./scripts/postversion.sh"
   },
   "lint-staged": {
+    "*.{js,css,md}": "prettier --check",
     "*.js": "eslint"
   },
   "files": [
@@ -48,7 +51,7 @@
     "mocha": "7.0.1",
     "mochify": "6.6.0",
     "nyc": "14.1.1",
-    "prettier": "1.19.1",
+    "prettier": "2.2.1",
     "typescript": "4.1.3"
   },
   "main": "./src/fake-timers-src.js",
