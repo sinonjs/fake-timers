@@ -304,7 +304,6 @@ function withGlobal(_global) {
 
         if (addTimerReturnsObject) {
             var res = {
-                id: timer.id,
                 ref: function () {
                     return res;
                 },
@@ -316,6 +315,25 @@ function withGlobal(_global) {
                     return setTimeout(timer.func, timer.delay);
                 },
             };
+
+            var keys = Object.keys(timer);
+            for (var i = 0; i < keys.length; i++) {
+                var key = keys[i];
+                if (timer.hasOwnProperty(key)) {
+                    /* eslint-disable */
+                    (function (key) {
+                        Object.defineProperty(res, key, {
+                            get: function () {
+                                return timer[key];
+                            },
+                            configurable: false,
+                            enumerable: true,
+                        });
+                    })(key);
+                    /* eslint-enable */
+                }
+            }
+
             return res;
         }
 

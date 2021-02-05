@@ -277,6 +277,13 @@ describe("FakeTimers", function () {
 
             if (typeof result === "object") {
                 assert.isNumber(result.id);
+
+                var timer = this.clock.timers[result.id];
+                for (var key in timer) {
+                    if (timer.hasOwnProperty(key)) {
+                        assert.equals(result[key], timer[key]);
+                    }
+                }
             } else {
                 assert.isNumber(result);
             }
@@ -507,6 +514,13 @@ describe("FakeTimers", function () {
 
             if (typeof result === "object") {
                 assert.isNumber(result.id);
+
+                var timer = this.clock.timers[result.id];
+                for (var key in timer) {
+                    if (timer.hasOwnProperty(key)) {
+                        assert.equals(result[key], timer[key]);
+                    }
+                }
             } else {
                 assert.isNumber(result);
             }
@@ -3096,6 +3110,13 @@ describe("FakeTimers", function () {
 
             if (typeof result === "object") {
                 assert.isNumber(result.id);
+
+                var timer = this.clock.timers[result.id];
+                for (var key in timer) {
+                    if (timer.hasOwnProperty(key)) {
+                        assert.equals(result[key], timer[key]);
+                    }
+                }
             } else {
                 assert.isNumber(result);
             }
