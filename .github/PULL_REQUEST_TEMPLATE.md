@@ -1,10 +1,10 @@
 #### Purpose (TL;DR) - mandatory
+
 <!--
 > give a concise (one or two short sentences) description of what problem is being solved by this PR
 >
 > Example: Fix issue #123456 by re-structuring the colour selection conditional in method `paintBlue`
 -->
-
 
 <!--
 #### Background (Problem in detail)  - optional
@@ -16,7 +16,6 @@
 > * How you discovered the issue if it's not already described as an issue on GitHub
 > * Discussion of different approaches to solving this problem and why you chose your proposed solution
 -->
-
 
 <!--
 #### Solution  - optional

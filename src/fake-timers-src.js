@@ -7,10 +7,10 @@ function withGlobal(_global) {
     var userAgent = _global.navigator && _global.navigator.userAgent;
     var isRunningInIE = userAgent && userAgent.indexOf("MSIE ") > -1;
     var maxTimeout = Math.pow(2, 31) - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
-    var NOOP = function() {
+    var NOOP = function () {
         return undefined;
     };
-    var NOOP_ARRAY = function() {
+    var NOOP_ARRAY = function () {
         return [];
     };
     var timeoutResult = _global.setTimeout(NOOP, 0);
@@ -321,16 +321,16 @@ function withGlobal(_global) {
         if (addTimerReturnsObject) {
             var res = {
                 id: timer.id,
-                ref: function() {
+                ref: function () {
                     return res;
                 },
-                unref: function() {
+                unref: function () {
                     return res;
                 },
-                refresh: function() {
+                refresh: function () {
                     clearTimeout(timer.id);
                     return setTimeout(timer.func, timer.delay);
-                }
+                },
             };
             return res;
         }
@@ -440,7 +440,7 @@ function withGlobal(_global) {
         } else {
             /* eslint no-eval: "off" */
             var eval2 = eval;
-            (function() {
+            (function () {
                 eval2(timer.func);
             })();
         }
@@ -587,7 +587,7 @@ function withGlobal(_global) {
                 target[method] = clock[method];
             }
         } else {
-            target[method] = function() {
+            target[method] = function () {
                 return clock[method].apply(clock, arguments);
             };
 
@@ -610,7 +610,7 @@ function withGlobal(_global) {
         clearTimeout: _global.clearTimeout,
         setInterval: _global.setInterval,
         clearInterval: _global.clearInterval,
-        Date: _global.Date
+        Date: _global.Date,
     };
 
     if (setImmediatePresent) {
@@ -675,7 +675,7 @@ function withGlobal(_global) {
             now: start,
             timeouts: {},
             Date: createDate(),
-            loopLimit: loopLimit
+            loopLimit: loopLimit,
         };
 
         clock.Date.clock = clock;
@@ -714,7 +714,7 @@ function withGlobal(_global) {
         }
 
         if (hrtimeBigintPresent) {
-            hrtime.bigint = function() {
+            hrtime.bigint = function () {
                 var parts = hrtime();
                 return BigInt(parts[0]) * BigInt(1e9) + BigInt(parts[1]); // eslint-disable-line
             };
@@ -736,7 +736,7 @@ function withGlobal(_global) {
                 delay:
                     typeof timeout === "undefined"
                         ? timeToNextIdlePeriod
-                        : Math.min(timeout, timeToNextIdlePeriod)
+                        : Math.min(timeout, timeToNextIdlePeriod),
             });
 
             return result.id || result;
@@ -750,7 +750,7 @@ function withGlobal(_global) {
             return addTimer(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 2),
-                delay: timeout
+                delay: timeout,
             });
         };
         if (typeof _global.Promise !== "undefined" && utilPromisify) {
@@ -763,7 +763,7 @@ function withGlobal(_global) {
                     addTimer(clock, {
                         func: resolve,
                         args: [arg],
-                        delay: timeout
+                        delay: timeout,
                     });
                 });
             };
@@ -776,7 +776,7 @@ function withGlobal(_global) {
         clock.nextTick = function nextTick(func) {
             return enqueueJob(clock, {
                 func: func,
-                args: Array.prototype.slice.call(arguments, 1)
+                args: Array.prototype.slice.call(arguments, 1),
             });
         };
 
@@ -791,7 +791,7 @@ function withGlobal(_global) {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 2),
                 delay: timeout,
-                interval: timeout
+                interval: timeout,
             });
         };
 
@@ -804,7 +804,7 @@ function withGlobal(_global) {
                 return addTimer(clock, {
                     func: func,
                     args: Array.prototype.slice.call(arguments, 1),
-                    immediate: true
+                    immediate: true,
                 });
             };
 
@@ -818,7 +818,7 @@ function withGlobal(_global) {
                         addTimer(clock, {
                             func: resolve,
                             args: [arg],
-                            immediate: true
+                            immediate: true,
                         });
                     });
                 };
@@ -841,7 +841,7 @@ function withGlobal(_global) {
                 func: func,
                 delay: getTimeToNextFrame(),
                 args: [clock.now + getTimeToNextFrame()],
-                animation: true
+                animation: true,
             });
 
             return result.id || result;
@@ -964,7 +964,7 @@ function withGlobal(_global) {
 
             nextPromiseTick =
                 isAsync &&
-                function() {
+                function () {
                     try {
                         compensationCheck();
                         postTimerCall();
@@ -974,7 +974,7 @@ function withGlobal(_global) {
                     }
                 };
 
-            compensationCheck = function() {
+            compensationCheck = function () {
                 // compensate for any setSystemTime() call during timer callback
                 if (oldNow !== clock.now) {
                     tickFrom += clock.now - oldNow;
@@ -983,7 +983,7 @@ function withGlobal(_global) {
                 }
             };
 
-            postTimerCall = function() {
+            postTimerCall = function () {
                 timer = firstTimerInRange(clock, previous, tickTo);
                 previous = tickFrom;
             };
@@ -1000,8 +1000,8 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             clock.tickAsync = function tickAsync(ms) {
-                return new _global.Promise(function(resolve, reject) {
-                    originalSetTimeout(function() {
+                return new _global.Promise(function (resolve, reject) {
+                    originalSetTimeout(function () {
                         try {
                             doTick(ms, true, resolve, reject);
                         } catch (e) {
@@ -1032,8 +1032,8 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             clock.nextAsync = function nextAsync() {
-                return new _global.Promise(function(resolve, reject) {
-                    originalSetTimeout(function() {
+                return new _global.Promise(function (resolve, reject) {
+                    originalSetTimeout(function () {
                         try {
                             var timer = firstTimer(clock);
                             if (!timer) {
@@ -1051,7 +1051,7 @@ function withGlobal(_global) {
                             }
                             clock.duringTick = false;
 
-                            originalSetTimeout(function() {
+                            originalSetTimeout(function () {
                                 if (err) {
                                     reject(err);
                                 } else {
@@ -1095,10 +1095,10 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             clock.runAllAsync = function runAllAsync() {
-                return new _global.Promise(function(resolve, reject) {
+                return new _global.Promise(function (resolve, reject) {
                     var i = 0;
                     function doRun() {
-                        originalSetTimeout(function() {
+                        originalSetTimeout(function () {
                             try {
                                 var numTimers;
                                 if (i < clock.loopLimit) {
@@ -1151,8 +1151,8 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             clock.runToLastAsync = function runToLastAsync() {
-                return new _global.Promise(function(resolve, reject) {
-                    originalSetTimeout(function() {
+                return new _global.Promise(function (resolve, reject) {
+                    originalSetTimeout(function () {
                         try {
                             var timer = lastTimer(clock);
                             if (!timer) {
@@ -1203,7 +1203,7 @@ function withGlobal(_global) {
             if (hasPerformancePrototype) {
                 var proto = _global.Performance.prototype;
 
-                Object.getOwnPropertyNames(proto).forEach(function(name) {
+                Object.getOwnPropertyNames(proto).forEach(function (name) {
                     if (name.indexOf("getEntries") === 0) {
                         // match expected return type for getEntries functions
                         clock.performance[name] = NOOP_ARRAY;
@@ -1270,7 +1270,7 @@ function withGlobal(_global) {
         var i, l;
         var clock = createClock(config.now, config.loopLimit);
 
-        clock.uninstall = function() {
+        clock.uninstall = function () {
             return uninstall(clock, config);
         };
 
@@ -1278,7 +1278,7 @@ function withGlobal(_global) {
 
         if (clock.methods.length === 0) {
             // do not fake nextTick by default - GitHub#126
-            clock.methods = Object.keys(timers).filter(function(key) {
+            clock.methods = Object.keys(timers).filter(function (key) {
                 return key !== "nextTick" && key !== "queueMicrotask";
             });
         }
@@ -1325,7 +1325,7 @@ function withGlobal(_global) {
         timers: timers,
         createClock: createClock,
         install: install,
-        withGlobal: withGlobal
+        withGlobal: withGlobal,
     };
 }
 
