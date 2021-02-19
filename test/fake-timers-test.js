@@ -322,25 +322,6 @@ describe("FakeTimers", function () {
             assert(FakeTimers.evalCalled);
         });
 
-
-        it("evals non-function callbacks", function () {
-            this.clock.setTimeout("FakeTimers.evalCalled = true", 10);
-            this.clock.tick(10);
-
-            assert(FakeTimers.evalCalled);
-        });
-
-        it("only evals on global scope", function () {
-            var x = 15;
-            try {
-                this.clock.setTimeout("x", x);
-                this.clock.tick(x);
-                assert.fail();
-            } catch (e) {
-                assert(e instanceof ReferenceError);
-            }
-        });
-
         it("passes setTimeout parameters", function () {
             var clock = FakeTimers.createClock();
             var stub = sinon.stub();
