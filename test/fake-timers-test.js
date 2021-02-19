@@ -276,7 +276,7 @@ describe("FakeTimers", function () {
 
         it("returns numeric id or object with numeric id", function() {
             var result = this.clock.setTimeout(function() {}, 10);
-
+ 
             if (typeof result === "object") {
                 assert.isNumber(result.id);
             } else {
@@ -322,7 +322,26 @@ describe("FakeTimers", function () {
             assert(FakeTimers.evalCalled);
         });
 
-        it("passes setTimeout parameters", function() {
+
+        it("evals non-function callbacks", function () {
+            this.clock.setTimeout("FakeTimers.evalCalled = true", 10);
+            this.clock.tick(10);
+
+            assert(FakeTimers.evalCalled);
+        });
+
+        it("only evals on global scope", function () {
+            var x = 15;
+            try {
+                this.clock.setTimeout("x", x);
+                this.clock.tick(x);
+                assert.fail();
+            } catch (e) {
+                assert(e instanceof ReferenceError);
+            }
+        });
+
+        it("passes setTimeout parameters", function () {
             var clock = FakeTimers.createClock();
             var stub = sinon.stub();
 
