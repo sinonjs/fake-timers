@@ -1,4 +1,11 @@
 
+7.0.3 / 2021-03-02
+==================
+
+  * Removing the use of eval in Node.js (#331)
+  * Drop Node 8
+  * Add docs about typings (#357)
+
 7.0.2 / 2021-01-18
 ==================
 
