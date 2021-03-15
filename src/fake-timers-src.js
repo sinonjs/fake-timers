@@ -2,6 +2,42 @@
 
 var globalObject = require("@sinonjs/commons").global;
 
+/**
+ * @typedef {object} Clock
+ * @property {number} now
+ * @property {any} timeouts
+ * @property {any} Date
+ * @property {number} loopLimit
+ * @property {(func: Function, timeout: number) => any} requestIdleCallback
+ * @property {(timerId: number) => any} cancelIdleCallback
+ * @property {(timerId: number, func: Function) => any} setTimeout
+ * @property {(timerId: number) => any} clearTimeout
+ * @property {(func: Function) => any} nextTick
+ * @property {(func: Function) => any} queueMicrotask
+ * @property {(func: Function, timeout: number) => any} setInterval
+ * @property {(timerId: number) => any} clearInterval
+ * @property {(func: Function) => any} setImmediate
+ * @property {(timerId: number) => any} clearImmediate
+ * @property {() => number} countTimers
+ * @property {(func: Function) => any} requestAnimationFrame
+ * @property {(timerId: number) => any} cancelAnimationFrame
+ * @property {() => void} runMicrotasks
+ * @property {(tickValue: string | number) => number} tick
+ * @property {() => number} next
+ * @property {(func: Function) => Promise<number>} nextAsync
+ * @property {(func: Function) => number} runAll
+ * @property {(func: Function) => number} runToFrame
+ * @property {(func: Function) => Promise<number>} runAllAsync
+ * @property {() => number} runToLast
+ * @property {() => Promise<number>} runToLastAsync
+ * @property {() => void} reset
+ * @property {(systemTime: number | Date) => void} setSystemTime
+ * @property {any} performance
+ * @property {(prev: any) => number[]} hrTime
+ * @property {() => void} uninstall Uninstall the clock.
+ * @property {any} methods
+ */
+
 // eslint-disable-next-line complexity
 function withGlobal(_global) {
     var userAgent = _global.navigator && _global.navigator.userAgent;
@@ -651,6 +687,7 @@ function withGlobal(_global) {
     /**
      * @param start {Date|number} the system time - non-integer values are floored
      * @param loopLimit {number}  maximum number of timers that will be run when calling runAll()
+     * @returns {Clock}
      */
     function createClock(start, loopLimit) {
         // eslint-disable-next-line no-param-reassign
@@ -1236,6 +1273,7 @@ function withGlobal(_global) {
 
     /**
      * @param [config] {Config} optional config
+     * @returns {Clock}
      */
     // eslint-disable-next-line complexity
     function install(config) {
