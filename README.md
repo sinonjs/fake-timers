@@ -68,7 +68,7 @@ clock.tick(15);
 ```
 
 Upon executing the last line, an interesting fact about the
-[Poblano](http://en.wikipedia.org/wiki/Poblano) will be printed synchronously to
+[Poblano](https://en.wikipedia.org/wiki/Poblano) will be printed synchronously to
 the screen. If you want to simulate asynchronous behavior, you have to use your
 imagination when calling the various functions.
 

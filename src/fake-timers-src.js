@@ -80,7 +80,7 @@ function withGlobal(_global) {
         _global.setImmediate && typeof _global.setImmediate === "function";
 
     // Make properties writable in IE, as per
-    // http://www.adequatelygood.com/Replacing-setTimeout-Globally.html
+    // https://www.adequatelygood.com/Replacing-setTimeout-Globally.html
     /* eslint-disable no-self-assign */
     if (isRunningInIE) {
         _global.setTimeout = _global.setTimeout;

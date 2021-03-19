@@ -6,7 +6,7 @@ Please note that this project is released with a [Contributor Code of Conduct](.
 
 ## Use EditorConfig
 
-To save everyone some time, please use [EditorConfig](http://editorconfig.org), so your editor helps make
+To save everyone some time, please use [EditorConfig](https://editorconfig.org), so your editor helps make
 sure we all use the same encoding, indentation, line endings, etc.
 
 ## Compatibility
