@@ -2,15 +2,15 @@
   "name": "@sinonjs/fake-timers",
   "description": "Fake JavaScript timers",
   "version": "7.0.3",
-  "homepage": "http://github.com/sinonjs/fake-timers",
+  "homepage": "https://github.com/sinonjs/fake-timers",
   "author": "Christian Johansen",
   "repository": {
     "type": "git",
-    "url": "http://github.com/sinonjs/fake-timers.git"
+    "url": "https://github.com/sinonjs/fake-timers.git"
   },
   "bugs": {
     "mail": "christian@cjohansen.no",
-    "url": "http://github.com/sinonjs/fake-timers/issues"
+    "url": "https://github.com/sinonjs/fake-timers/issues"
   },
   "license": "BSD-3-Clause",
   "scripts": {
