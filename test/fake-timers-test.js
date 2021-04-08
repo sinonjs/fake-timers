@@ -4655,6 +4655,23 @@ describe("issue #315 - praseInt if delay is not a number", function () {
     });
 });
 
+describe("#368 - timeout.refresh setTimeout arguments", function () {
+  it("should forward  argumnts passed to setTimeout", function () {
+    var clock = FakeTimers.install();
+    var stub = sinon.stub();
+
+    if (typeof setTimeout(NOOP, 0) === "object") {
+    var t = setTimeout(stub, 1000, "test");
+      clock.tick(1000);
+      t.refresh();
+      clock.tick(1000);
+      assert.calledTwice(stub);
+      assert.alwaysCalledWith(stub, "test");
+    }
+    clock.uninstall();
+  });
+});
+
 describe("#187 - Support timeout.refresh in node environments", function () {
     it("calls the stub again after refreshing the timeout", function () {
         var clock = FakeTimers.install();
