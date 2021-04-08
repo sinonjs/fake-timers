@@ -361,7 +361,7 @@ function withGlobal(_global) {
                 },
                 refresh: function () {
                     clearTimeout(timer.id);
-                    var args = [ timer.func, timer.delay ].concat(timer.args);
+                    var args = [timer.func, timer.delay].concat(timer.args);
                     return setTimeout.apply(null, args);
                 },
             };
