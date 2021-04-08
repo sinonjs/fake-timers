@@ -4656,7 +4656,7 @@ describe("issue #315 - praseInt if delay is not a number", function () {
 });
 
 describe("#368 - timeout.refresh setTimeout arguments", function () {
-  it("should forward  argumnts passed to setTimeout", function () {
+  it("should forward  arguments passed to setTimeout", function () {
     var clock = FakeTimers.install();
     var stub = sinon.stub();
 
