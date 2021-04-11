@@ -48,7 +48,7 @@
     "husky": "4.2.1",
     "jsdom": "15.1.1",
     "lint-staged": "10.0.7",
-    "mocha": "7.0.1",
+    "mocha": "8.3.2",
     "mochify": "6.6.0",
     "nyc": "14.1.1",
     "prettier": "2.2.1",
