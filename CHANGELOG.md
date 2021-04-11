@@ -1,4 +1,10 @@
 
+7.0.5 / 2021-04-11
+==================
+
+  * Fix up some clock types in JSDoc (becomes `.d.ts`) (#370)
+  * Fix refresh arguments forwarding (#369)
+
 7.0.4 / 2021-04-08
 ==================
 
