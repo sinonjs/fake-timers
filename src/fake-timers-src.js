@@ -1309,7 +1309,7 @@ function withGlobal(_global) {
     /* eslint-disable complexity */
 
     /**
-     * @param {Config} config Optional config
+     * @param {Config=} config Optional config
      * @returns {Clock}
      */
     function install(config) {
