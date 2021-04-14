@@ -46,8 +46,8 @@ var globalObject = require("@sinonjs/commons").global;
  * @property {number|Date} now a number (in milliseconds) or a Date object (default epoch)
  * @property {string[]} toFake names of the methods that should be faked.
  * @property {number} loopLimit the maximum number of timers that will be run when calling runAll()
- * @property {Boolean} shouldAdvanceTime tells FakeTimers to increment mocked time automatically (default false)
- * @property {Number} advanceTimeDelta increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
+ * @property {boolean} shouldAdvanceTime tells FakeTimers to increment mocked time automatically (default false)
+ * @property {number} advanceTimeDelta increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
  */
 
 /**
@@ -174,8 +174,8 @@ function withGlobal(_global) {
     /**
      * Get the decimal part of the millisecond value as nanoseconds
      *
-     * @param {Number} msFloat the number of milliseconds
-     * @returns {Number} an integer number of nanoseconds in the range [0,1e6)
+     * @param {number} msFloat the number of milliseconds
+     * @returns {number} an integer number of nanoseconds in the range [0,1e6)
      *
      * Example: nanoRemainer(123.456789) -> 456789
      */
@@ -1071,7 +1071,7 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {tickValue} {String|Number} number of milliseconds or a human-readable value like "01:11:15"
+         * @param {tickValue} {string|number} number of milliseconds or a human-readable value like "01:11:15"
          */
         clock.tick = function tick(tickValue) {
             return doTick(tickValue, false);
