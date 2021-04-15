@@ -20,3 +20,9 @@ overrides:
     rules:
       max-nested-callbacks: off
       mocha/no-exclusive-tests: error
+  - files: "**/*.ts"
+    parserOptions:
+      ecmaVersion: 2020
+      sourceType: 'module'
+    rules:
+      no-unused-expressions: off
