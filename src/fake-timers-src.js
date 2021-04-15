@@ -6,21 +6,21 @@ var globalObject = require("@sinonjs/commons").global;
  * @typedef {object} Clock
  * @property {number} now
  * @property {any} timeouts
- * @property {any} Date
+ * @property {typeof globalThis.Date} Date
  * @property {number} loopLimit
- * @property {(func: Function, timeout: number) => any} requestIdleCallback
- * @property {(timerId: number) => any} cancelIdleCallback
- * @property {(func: Function, timerId: number) => any} setTimeout
- * @property {(timerId: number) => any} clearTimeout
- * @property {(func: Function) => any} nextTick
- * @property {(func: Function) => any} queueMicrotask
- * @property {(func: Function, timeout: number) => any} setInterval
- * @property {(timerId: number) => any} clearInterval
- * @property {(func: Function) => any} setImmediate
- * @property {(timerId: number) => any} clearImmediate
+ * @property {(func: Function, timeout: number) => number} requestIdleCallback
+ * @property {(timerId: number) => void} cancelIdleCallback
+ * @property {setTimeout} setTimeout
+ * @property {clearTimeout} clearTimeout
+ * @property {(func: Function, ...args: any[]) => void} nextTick
+ * @property {queueMicrotask} queueMicrotask
+ * @property {setInterval} setInterval
+ * @property {clearInterval} clearInterval
+ * @property {(func: (...args: any[]) => void, ...args: any[]) => NodeTimer} setImmediate
+ * @property {(timerId: NodeTimer) => void} clearImmediate
  * @property {() => number} countTimers
- * @property {(func: Function) => any} requestAnimationFrame
- * @property {(timerId: number) => any} cancelAnimationFrame
+ * @property {(func: (timer: number) => void) => number} requestAnimationFrame
+ * @property {(timerId: number) => void} cancelAnimationFrame
  * @property {() => void} runMicrotasks
  * @property {(tickValue: string | number) => number} tick
  * @property {(tickValue: string | number) => Promise<number>} tickAsync
@@ -33,13 +33,37 @@ var globalObject = require("@sinonjs/commons").global;
  * @property {() => Promise<number>} runToLastAsync
  * @property {() => void} reset
  * @property {(systemTime: number | Date) => void} setSystemTime
- * @property {any} performance
+ * @property {({now(): number})} performance
  * @property {(prev: any) => number[]} hrTime
  * @property {() => void} uninstall Uninstall the clock.
  * @property {any} methods
  */
 
-// eslint-disable-next-line complexity
+/**
+ * Configuration object for the `install` method.
+ *
+ * @typedef {object} Config
+ * @property {number|Date} now a number (in milliseconds) or a Date object (default epoch)
+ * @property {string[]} toFake names of the methods that should be faked.
+ * @property {number} loopLimit the maximum number of timers that will be run when calling runAll()
+ * @property {boolean} shouldAdvanceTime tells FakeTimers to increment mocked time automatically (default false)
+ * @property {number} advanceTimeDelta increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
+ */
+
+/**
+ * @typedef {object} NodeTimer
+ * @property {() => boolean} hasRef
+ * @property {() => any} ref
+ * @property {() => any} unref
+ */
+
+/* eslint-disable complexity */
+
+/**
+ * Mocks available features in the specified global namespace.
+ *
+ * @param {*} _global Namespace to mock (e.g. `window`)
+ */
 function withGlobal(_global) {
     var userAgent = _global.navigator && _global.navigator.userAgent;
     var isRunningInIE = userAgent && userAgent.indexOf("MSIE ") > -1;
@@ -150,8 +174,8 @@ function withGlobal(_global) {
     /**
      * Get the decimal part of the millisecond value as nanoseconds
      *
-     * @param {Number} msFloat the number of milliseconds
-     * @returns {Number} an integer number of nanoseconds in the range [0,1e6)
+     * @param {number} msFloat the number of milliseconds
+     * @returns {number} an integer number of nanoseconds in the range [0,1e6)
      *
      * Example: nanoRemainer(123.456789) -> 456789
      */
@@ -165,7 +189,7 @@ function withGlobal(_global) {
 
     /**
      * Used to grok the `now` parameter to createClock.
-     * @param epoch {Date|number} the system time
+     * @param {Date|number} epoch the system time
      */
     function getEpoch(epoch) {
         if (!epoch) {
@@ -639,6 +663,26 @@ function withGlobal(_global) {
         clock.tick(advanceTimeDelta);
     }
 
+    /**
+     * @typedef {object} Timers
+     * @property {setTimeout} setTimeout
+     * @property {clearTimeout} clearTimeout
+     * @property {setInterval} setInterval
+     * @property {clearInterval} clearInterval
+     * @property {typeof globalThis.Date} Date
+     * @property {((fn: (...args: any[]) => void, ...args: any[]) => NodeTimer)=} setImmediate
+     * @property {((id: NodeTimer) => void)=} clearImmediate
+     * @property {((time?: [number, number]) => [number, number])=} hrtime
+     * @property {((fn: Function, ...args: any[]) => void)=} nextTick
+     * @property {({now(): number})=} performance
+     * @property {((fn: (timer: number) => void) => number)=} requestAnimationFrame
+     * @property {boolean=} queueMicrotask
+     * @property {((id: number) => void)=} cancelAnimationFrame
+     * @property {((fn: (deadline: any) => void, options?: any) => number)=} requestIdleCallback
+     * @property {((id: number) => void)=} cancelIdleCallback
+     */
+
+    /** @type {Timers} */
     var timers = {
         setTimeout: _global.setTimeout,
         clearTimeout: _global.clearTimeout,
@@ -687,8 +731,8 @@ function withGlobal(_global) {
     var originalSetTimeout = _global.setImmediate || _global.setTimeout;
 
     /**
-     * @param start {Date|number} the system time - non-integer values are floored
-     * @param loopLimit {number}  maximum number of timers that will be run when calling runAll()
+     * @param {Date|number} start the system time - non-integer values are floored
+     * @param {number} loopLimit maximum number of timers that will be run when calling runAll()
      * @returns {Clock}
      */
     function createClock(start, loopLimit) {
@@ -1027,7 +1071,7 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {tickValue} {String|Number} number of milliseconds or a human-readable value like "01:11:15"
+         * @param {tickValue} {string|number} number of milliseconds or a human-readable value like "01:11:15"
          */
         clock.tick = function tick(tickValue) {
             return doTick(tickValue, false);
@@ -1262,22 +1306,12 @@ function withGlobal(_global) {
         return clock;
     }
 
-    /**
-     * Configuration object for the `install` method.
-     *
-     * @typedef {object} Config
-     * @property [now] {number|Date}  a number (in milliseconds) or a Date object (default epoch)
-     * @property [toFake] {string[]} names of the methods that should be faked.
-     * @property [loopLimit] {number} the maximum number of timers that will be run when calling runAll()
-     * @property [shouldAdvanceTime] {Boolean} tells FakeTimers to increment mocked time automatically (default false)
-     * @property [advanceTimeDelta] {Number} increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
-     */
+    /* eslint-disable complexity */
 
     /**
-     * @param [config] {Config} optional config
+     * @param {Config=} config Optional config
      * @returns {Clock}
      */
-    // eslint-disable-next-line complexity
     function install(config) {
         if (
             arguments.length > 1 ||
@@ -1357,6 +1391,8 @@ function withGlobal(_global) {
         return clock;
     }
 
+    /* eslint-enable complexity */
+
     return {
         timers: timers,
         createClock: createClock,
@@ -1364,6 +1400,8 @@ function withGlobal(_global) {
         withGlobal: withGlobal,
     };
 }
+
+/* eslint-enable complexity */
 
 var defaultImplementation = withGlobal(globalObject);
 
