@@ -2,5 +2,9 @@
   "sauceLabs": true,
   "browsers": [{
     "name": "firefox"
+  }, {
+    "name": "MicrosoftEdge"
+  }, {
+    "name": "safari"
   }]
 }
