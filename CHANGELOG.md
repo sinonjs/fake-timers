@@ -1,4 +1,25 @@
 
+7.0.6 / 2021-05-20
+==================
+
+  * Remove Safari from Sauce Lab (ref #380)
+  * Bump hosted-git-info from 2.6.0 to 2.8.9
+  * Bump handlebars from 4.7.6 to 4.7.7
+  * Bump lodash from 4.17.19 to 4.17.21
+  * Add in latest Safari and evergreen Edge
+  * Drop IE11 and Safari 9
+  * chore: add type tests (#373)
+  * remove constructor types
+  * use globalThis to avoid conflicts
+  * Update yargs-parser
+  * Update mkdirp
+  * Upgrade jsdom
+  * Upgrade mochify to latest
+  * Upgrade Mocha to latest
+  * Bump y18n from 4.0.0 to 4.0.1
+  * make config optional
+  * add a bunch more types
+
 7.0.5 / 2021-04-11
 ==================
 
