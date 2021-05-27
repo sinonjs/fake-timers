@@ -731,8 +731,8 @@ function withGlobal(_global) {
     var originalSetTimeout = _global.setImmediate || _global.setTimeout;
 
     /**
-     * @param {Date|number} start the system time - non-integer values are floored
-     * @param {number} loopLimit maximum number of timers that will be run when calling runAll()
+     * @param {Date|number} [start] the system time - non-integer values are floored
+     * @param {number} [loopLimit] maximum number of timers that will be run when calling runAll()
      * @returns {Clock}
      */
     function createClock(start, loopLimit) {
@@ -1309,7 +1309,7 @@ function withGlobal(_global) {
     /* eslint-disable complexity */
 
     /**
-     * @param {Config=} config Optional config
+     * @param {Config=} [config] Optional config
      * @returns {Clock}
      */
     function install(config) {
