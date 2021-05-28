@@ -1,4 +1,10 @@
 
+7.1.2 / 2021-05-28
+==================
+
+  * Fix #382 by making config fields optional (#383)
+  * Fix #347 : Support util.promisify
+
 7.1.1 / 2021-05-27
 ==================
 
