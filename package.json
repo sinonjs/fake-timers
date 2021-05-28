@@ -39,13 +39,8 @@
     "types"
   ],
   "devDependencies": {
+    "@sinonjs/eslint-config": "4.0.2",
     "@sinonjs/referee-sinon": "6.0.1",
-    "eslint": "6.8.0",
-    "eslint-config-prettier": "6.10.0",
-    "eslint-config-sinon": "3.0.1",
-    "eslint-plugin-ie11": "1.0.0",
-    "eslint-plugin-mocha": "6.2.2",
-    "eslint-plugin-prettier": "3.1.1",
     "husky": "4.2.1",
     "jsdom": "16.5.2",
     "lint-staged": "10.0.7",
