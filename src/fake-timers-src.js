@@ -43,11 +43,11 @@ var globalObject = require("@sinonjs/commons").global;
  * Configuration object for the `install` method.
  *
  * @typedef {object} Config
- * @property {number|Date} now a number (in milliseconds) or a Date object (default epoch)
- * @property {string[]} toFake names of the methods that should be faked.
- * @property {number} loopLimit the maximum number of timers that will be run when calling runAll()
- * @property {boolean} shouldAdvanceTime tells FakeTimers to increment mocked time automatically (default false)
- * @property {number} advanceTimeDelta increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
+ * @property {number|Date} [now] a number (in milliseconds) or a Date object (default epoch)
+ * @property {string[]} [toFake] names of the methods that should be faked.
+ * @property {number} [loopLimit] the maximum number of timers that will be run when calling runAll()
+ * @property {boolean} [shouldAdvanceTime] tells FakeTimers to increment mocked time automatically (default false)
+ * @property {number} [advanceTimeDelta] increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
  */
 
 /**

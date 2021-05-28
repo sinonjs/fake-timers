@@ -4702,43 +4702,43 @@ describe("#187 - Support timeout.refresh in node environments", function () {
     });
 });
 
-describe("#347 - Support util.promisify once installed", function() {
-    before(function() {
+describe("#347 - Support util.promisify once installed", function () {
+    before(function () {
         if (typeof global.Promise === "undefined" || !utilPromisify) {
             this.skip();
         }
     });
 
-    beforeEach(function() {
+    beforeEach(function () {
         this.clock = FakeTimers.install();
     });
 
-    afterEach(function() {
+    afterEach(function () {
         this.clock.uninstall();
     });
 
-    it("setTimeout", function() {
+    it("setTimeout", function () {
         var resolved = false;
-        utilPromisify(global.setTimeout)(100).then(function() {
+        utilPromisify(global.setTimeout)(100).then(function () {
             resolved = true;
         });
 
-        return this.clock.tickAsync(100).then(function() {
+        return this.clock.tickAsync(100).then(function () {
             assert.isTrue(resolved);
         });
     });
 
-    it("setImmediate", function() {
+    it("setImmediate", function () {
         if (!setImmediatePresent) {
             this.skip();
         }
 
         var resolved = false;
-        utilPromisify(global.setImmediate)().then(function() {
+        utilPromisify(global.setImmediate)().then(function () {
             resolved = true;
         });
 
-        return this.clock.tickAsync(0).then(function() {
+        return this.clock.tickAsync(0).then(function () {
             assert.isTrue(resolved);
         });
     });
