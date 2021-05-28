@@ -55,16 +55,14 @@ var timeoutResult = global.setTimeout(NOOP, 0);
 var addTimerReturnsObject = typeof timeoutResult === "object";
 
 describe("issue #59", function () {
-    var setTimeoutFake = sinon.fake();
-    var context = {
-        Date: Date,
-        setTimeout: setTimeoutFake,
-        clearTimeout: sinon.fake(),
-    };
-    var clock;
-
     it("should install and uninstall the clock on a custom target", function () {
-        clock = FakeTimers.withGlobal(context).install();
+        const setTimeoutFake = sinon.fake();
+        const context = {
+            Date: Date,
+            setTimeout: setTimeoutFake,
+            clearTimeout: sinon.fake(),
+        };
+        const clock = FakeTimers.withGlobal(context).install();
         assert.equals(setTimeoutFake.callCount, 1);
         clock.setTimeout(NOOP, 0);
         assert.equals(setTimeoutFake.callCount, 1);
@@ -504,11 +502,7 @@ describe("FakeTimers", function () {
                         this.clock.setTimeout(notTypeofFunction, 10);
                     }.bind(this),
                     {
-                        message:
-                            "[ERR_INVALID_CALLBACK]: Callback must be a function. Received " +
-                            notTypeofFunction +
-                            " of type " +
-                            typeof notTypeofFunction,
+                        message: `[ERR_INVALID_CALLBACK]: Callback must be a function. Received ${notTypeofFunction} of type ${typeof notTypeofFunction}`,
                     }
                 );
             });
