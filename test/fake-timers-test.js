@@ -4359,7 +4359,7 @@ describe("FakeTimers", function () {
             var i;
 
             for (i = 0; i < 99; i++) {
-                // eslint-disable-next-line no-loop-func,ie11/no-loop-func
+                // eslint-disable-next-line no-loop-func
                 clock.nextTick(function () {
                     i--;
                 });
@@ -4371,7 +4371,6 @@ describe("FakeTimers", function () {
         it("respects loopLimit from above in runMicrotasks", function () {
             var clock = FakeTimers.createClock(0, 100);
             for (var i = 0; i < 120; i++) {
-                // eslint-disable-next-line ie11/no-loop-func
                 clock.nextTick(function () {});
             }
             assert.exception(function () {
@@ -4512,7 +4511,6 @@ describe("FakeTimers", function () {
 
             for (i = 0; i < 5; i++) {
                 // yes, it's silly to create a function in a loop. This is a test, we can live with it
-                // eslint-disable-next-line ie11/no-loop-func
                 clock.setTimeout(function () {}, 100 * i);
             }
             var timers = clock.uninstall();
