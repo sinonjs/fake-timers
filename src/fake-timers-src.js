@@ -6,7 +6,6 @@ var globalObject = require("@sinonjs/commons").global;
 /**
  * @typedef {object} Clock
  * @property {number} now
- * @property {any} timeouts
  * @property {typeof globalThis.Date} Date
  * @property {number} loopLimit
  * @property {(func: Function, timeout: number) => number} requestIdleCallback
@@ -840,7 +839,6 @@ function withGlobal(_global) {
 
         var clock = {
             now: start,
-            timeouts: {},
             Date: createDate(),
             loopLimit: loopLimit,
         };
