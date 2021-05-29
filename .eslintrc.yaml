@@ -1,15 +1,5 @@
 extends:
-  - sinon
-
-plugins:
-  - ie11
-
-rules:
-  ie11/no-collection-args: error
-  ie11/no-for-in-const: error
-  ie11/no-loop-func: warn
-  ie11/no-weak-collections: error
-  prettier/prettier: off
+  - "@sinonjs/eslint-config"
 
 overrides:
   - files: "**/*-test.js"
@@ -20,7 +10,7 @@ overrides:
     rules:
       max-nested-callbacks: off
       mocha/no-exclusive-tests: error
-  - files: "**/*.ts"
+  - files: "test/**.ts"
     parserOptions:
       ecmaVersion: 2020
       sourceType: 'module'

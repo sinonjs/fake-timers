@@ -21,16 +21,7 @@ FakeTimers.createClock(new Date(), 10);
 clock1.uninstall();
 
 // timers
-FakeTimers.timers.setInterval(
-    () => {
-        return 42;
-    },
-    10,
-    1,
-    2,
-    3,
-    4
-);
+FakeTimers.timers.setInterval(() => 42, 10, 1, 2, 3, 4);
 
 // withContext
 const clock2 = FakeTimers.withGlobal({}).install();
@@ -38,6 +29,6 @@ clock2.uninstall();
 
 // clock.*
 clock1.runToLast();
-async () => await clock1.runToLastAsync();
+clock1.runToLastAsync();
 clock1.runToFrame();
 clock1.setInterval((myArg) => myArg, 42, 100000);

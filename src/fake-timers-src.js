@@ -2,6 +2,7 @@
 
 var globalObject = require("@sinonjs/commons").global;
 
+// FIX: revert TS definitions that are invalid JSDoc types / Syntax error
 /**
  * @typedef {object} Clock
  * @property {number} now
@@ -48,6 +49,17 @@ var globalObject = require("@sinonjs/commons").global;
  * @property {number} [loopLimit] the maximum number of timers that will be run when calling runAll()
  * @property {boolean} [shouldAdvanceTime] tells FakeTimers to increment mocked time automatically (default false)
  * @property {number} [advanceTimeDelta] increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
+ */
+
+/**
+ * @typedef {object} Timer
+ * @property {Function} func
+ * @property {*[]} args
+ * @property {number} delay
+ * @property {number} callAt
+ * @property {number} createdAt
+ * @property {boolean} immediate
+ * @property {number} id
  */
 
 /**
@@ -128,6 +140,10 @@ function withGlobal(_global) {
     var NativeDate = _global.Date;
     var uniqueTimerId = 1;
 
+    /**
+     * @param {number} num
+     * @returns {boolean}
+     */
     function isNumberFinite(num) {
         if (Number.isFinite) {
             return Number.isFinite(num);
@@ -140,6 +156,9 @@ function withGlobal(_global) {
      * Parse strings like "01:10:00" (meaning 1 hour, 10 minutes, 0 seconds) into
      * number of milliseconds. This is used to support human-readable strings passed
      * to clock.tick()
+     *
+     * @param {string} str
+     * @returns {number}
      */
     function parseTime(str) {
         if (!str) {
@@ -162,7 +181,7 @@ function withGlobal(_global) {
             parsed = parseInt(strings[i], 10);
 
             if (parsed >= 60) {
-                throw new Error("Invalid time " + str);
+                throw new Error(`Invalid time ${str}`);
             }
 
             ms += parsed * Math.pow(60, l - i - 1);
@@ -189,7 +208,9 @@ function withGlobal(_global) {
 
     /**
      * Used to grok the `now` parameter to createClock.
+     *
      * @param {Date|number} epoch the system time
+     * @returns {number}
      */
     function getEpoch(epoch) {
         if (!epoch) {
@@ -204,10 +225,21 @@ function withGlobal(_global) {
         throw new TypeError("now should be milliseconds since UNIX epoch");
     }
 
+    /**
+     * @param {number} from
+     * @param {number} to
+     * @param {Timer} timer
+     * @returns {boolean}
+     */
     function inRange(from, to, timer) {
         return timer && timer.callAt >= from && timer.callAt <= to;
     }
 
+    /**
+     * @param {Date} target
+     * @param {Date} source
+     * @returns {Date} the target after modifications
+     */
     function mirrorDateProperties(target, source) {
         var prop;
         for (prop in source) {
@@ -247,7 +279,19 @@ function withGlobal(_global) {
         return target;
     }
 
+    //eslint-disable-next-line jsdoc/require-jsdoc
     function createDate() {
+        /**
+         * @param {number} year
+         * @param {number} month
+         * @param {number} date
+         * @param {number} hour
+         * @param {number} minute
+         * @param {number} second
+         * @param {number} ms
+         *
+         * @returns {Date}
+         */
         function ClockDate(year, month, date, hour, minute, second, ms) {
             // the Date constructor called as a function, ref Ecma-262 Edition 5.1, section 15.9.2.
             // This remains so in the 10th edition of 2019 as well.
@@ -296,6 +340,7 @@ function withGlobal(_global) {
         return mirrorDateProperties(ClockDate, NativeDate);
     }
 
+    //eslint-disable-next-line jsdoc/require-jsdoc
     function enqueueJob(clock, job) {
         // enqueues a microtick-deferred task - ecma262/#sec-enqueuejob
         if (!clock.jobs) {
@@ -304,6 +349,7 @@ function withGlobal(_global) {
         clock.jobs.push(job);
     }
 
+    //eslint-disable-next-line jsdoc/require-jsdoc
     function runJobs(clock) {
         // runs all microtick-deferred tasks - ecma262/#sec-runjobs
         if (!clock.jobs) {
@@ -314,15 +360,18 @@ function withGlobal(_global) {
             job.func.apply(null, job.args);
             if (clock.loopLimit && i > clock.loopLimit) {
                 throw new Error(
-                    "Aborting after running " +
-                        clock.loopLimit +
-                        " timers, assuming an infinite loop!"
+                    `Aborting after running ${clock.loopLimit} timers, assuming an infinite loop!`
                 );
             }
         }
         clock.jobs = [];
     }
 
+    /**
+     * @param {Clock} clock
+     * @param {Timer} timer
+     * @returns {number} id of the created timer
+     */
     function addTimer(clock, timer) {
         if (timer.func === undefined) {
             throw new Error("Callback must be provided to timer calls");
@@ -332,10 +381,9 @@ function withGlobal(_global) {
             // Node.js environment
             if (typeof timer.func !== "function") {
                 throw new TypeError(
-                    "[ERR_INVALID_CALLBACK]: Callback must be a function. Received " +
-                        timer.func +
-                        " of type " +
-                        typeof timer.func
+                    `[ERR_INVALID_CALLBACK]: Callback must be a function. Received ${
+                        timer.func
+                    } of type ${typeof timer.func}`
                 );
             }
         }
@@ -397,6 +445,13 @@ function withGlobal(_global) {
     }
 
     /* eslint consistent-return: "off" */
+    /**
+     * Timer comparitor
+     *
+     * @param {Timer} a
+     * @param {Timer} b
+     * @returns {number}
+     */
     function compareTimers(a, b) {
         // Sort first by absolute timing
         if (a.callAt < b.callAt) {
@@ -433,6 +488,13 @@ function withGlobal(_global) {
         // As timer ids are unique, no fallback `0` is necessary
     }
 
+    /**
+     * @param {Clock} clock
+     * @param {number} from
+     * @param {number} to
+     *
+     * @returns {Timer}
+     */
     function firstTimerInRange(clock, from, to) {
         var timers = clock.timers;
         var timer = null;
@@ -454,6 +516,10 @@ function withGlobal(_global) {
         return timer;
     }
 
+    /**
+     * @param {Clock} clock
+     * @returns {Timer}
+     */
     function firstTimer(clock) {
         var timers = clock.timers;
         var timer = null;
@@ -470,6 +536,10 @@ function withGlobal(_global) {
         return timer;
     }
 
+    /**
+     * @param {Clock} clock
+     * @returns {Timer}
+     */
     function lastTimer(clock) {
         var timers = clock.timers;
         var timer = null;
@@ -486,6 +556,10 @@ function withGlobal(_global) {
         return timer;
     }
 
+    /**
+     * @param {Clock} clock
+     * @param {Timer} timer
+     */
     function callTimer(clock, timer) {
         if (typeof timer.interval === "number") {
             clock.timers[timer.id].callAt += timer.interval;
@@ -504,6 +578,11 @@ function withGlobal(_global) {
         }
     }
 
+    /**
+     * @param {Clock} clock
+     * @param {number} timerId
+     * @param {string} ttype
+     */
     function clearTimer(clock, timerId, ttype) {
         if (!timerId) {
             // null appears to be allowed in most browsers, and appears to be
@@ -532,22 +611,23 @@ function withGlobal(_global) {
                 var clear =
                     ttype === "AnimationFrame"
                         ? "cancelAnimationFrame"
-                        : "clear" + ttype;
+                        : `clear${ttype}`;
                 var schedule =
                     timer.type === "AnimationFrame"
                         ? "requestAnimationFrame"
-                        : "set" + timer.type;
+                        : `set${timer.type}`;
                 throw new Error(
-                    "Cannot clear timer: timer created with " +
-                        schedule +
-                        "() but cleared with " +
-                        clear +
-                        "()"
+                    `Cannot clear timer: timer created with ${schedule}() but cleared with ${clear}()`
                 );
             }
         }
     }
 
+    /**
+     * @param {Clock} clock
+     * @param {Config} config
+     * @returns {Timer[]}
+     */
     function uninstall(clock, config) {
         var method, i, l;
         var installedHrTime = "_hrtime";
@@ -562,7 +642,7 @@ function withGlobal(_global) {
             } else if (method === "performance") {
                 var originalPerfDescriptor = Object.getOwnPropertyDescriptor(
                     clock,
-                    "_" + method
+                    `_${method}`
                 );
                 if (
                     originalPerfDescriptor &&
@@ -575,11 +655,11 @@ function withGlobal(_global) {
                         originalPerfDescriptor
                     );
                 } else if (originalPerfDescriptor.configurable) {
-                    _global[method] = clock["_" + method];
+                    _global[method] = clock[`_${method}`];
                 }
             } else {
                 if (_global[method] && _global[method].hadOwnProperty) {
-                    _global[method] = clock["_" + method];
+                    _global[method] = clock[`_${method}`];
                     if (
                         method === "clearInterval" &&
                         config.shouldAdvanceTime === true
@@ -608,12 +688,17 @@ function withGlobal(_global) {
         });
     }
 
+    /**
+     * @param {object} target the target containing the method to replace
+     * @param {string} method the keyname of the method on the target
+     * @param {Clock} clock
+     */
     function hijackMethod(target, method, clock) {
         clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(
             target,
             method
         );
-        clock["_" + method] = target[method];
+        clock[`_${method}`] = target[method];
 
         if (method === "Date") {
             var date = mirrorDateProperties(clock[method], target[method]);
@@ -631,7 +716,7 @@ function withGlobal(_global) {
             ) {
                 Object.defineProperty(
                     clock,
-                    "_" + method,
+                    `_${method}`,
                     originalPerfDescriptor
                 );
 
@@ -657,10 +742,15 @@ function withGlobal(_global) {
         target[method].clock = clock;
     }
 
+    /**
+     * @param {Clock} clock
+     * @param {number} advanceTimeDelta
+     */
     function doIntervalTick(clock, advanceTimeDelta) {
         clock.tick(advanceTimeDelta);
     }
 
+    // FIX: revert TS definitions that are invalid JSDoc types / Syntax error
     /**
      * @typedef {object} Timers
      * @property {setTimeout} setTimeout
@@ -757,10 +847,12 @@ function withGlobal(_global) {
 
         clock.Date.clock = clock;
 
+        //eslint-disable-next-line jsdoc/require-jsdoc
         function getTimeToNextFrame() {
             return 16 - ((clock.now - start) % 16);
         }
 
+        //eslint-disable-next-line jsdoc/require-jsdoc
         function hrtime(prev) {
             var millisSinceStart = clock.now - adjustedSystemTime[0] - start;
             var secsSinceStart = Math.floor(millisSinceStart / 1000);
@@ -932,6 +1024,13 @@ function withGlobal(_global) {
             runJobs(clock);
         };
 
+        /**
+         * @param {number|string} tickValue milliseconds or a string parseable by parseTime
+         * @param {boolean} isAsync
+         * @param {Function} resolve
+         * @param {Function} reject
+         * @returns {number|undefined} will return the new `now` value or nothing for async
+         */
         function doTick(tickValue, isAsync, resolve, reject) {
             var msFloat =
                 typeof tickValue === "number"
@@ -973,6 +1072,7 @@ function withGlobal(_global) {
                 tickTo += clock.now - oldNow;
             }
 
+            //eslint-disable-next-line jsdoc/require-jsdoc
             function doTickInner() {
                 // perform each timer in the requested range
                 timer = firstTimerInRange(clock, tickFrom, tickTo);
@@ -1069,18 +1169,23 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {tickValue} {string|number} number of milliseconds or a human-readable value like "01:11:15"
+         * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
+         * @returns {number} will return the new `now` value
          */
         clock.tick = function tick(tickValue) {
             return doTick(tickValue, false);
         };
 
         if (typeof _global.Promise !== "undefined") {
-            clock.tickAsync = function tickAsync(ms) {
+            /**
+             * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
+             * @returns {Promise}
+             */
+            clock.tickAsync = function tickAsync(tickValue) {
                 return new _global.Promise(function (resolve, reject) {
                     originalSetTimeout(function () {
                         try {
-                            doTick(ms, true, resolve, reject);
+                            doTick(tickValue, true, resolve, reject);
                         } catch (e) {
                             reject(e);
                         }
@@ -1160,9 +1265,7 @@ function withGlobal(_global) {
             }
 
             throw new Error(
-                "Aborting after running " +
-                    clock.loopLimit +
-                    " timers, assuming an infinite loop!"
+                `Aborting after running ${clock.loopLimit} timers, assuming an infinite loop!`
             );
         };
 
@@ -1174,6 +1277,9 @@ function withGlobal(_global) {
             clock.runAllAsync = function runAllAsync() {
                 return new _global.Promise(function (resolve, reject) {
                     var i = 0;
+                    /**
+                     *
+                     */
                     function doRun() {
                         originalSetTimeout(function () {
                             try {
@@ -1201,9 +1307,7 @@ function withGlobal(_global) {
 
                                 reject(
                                     new Error(
-                                        "Aborting after running " +
-                                            clock.loopLimit +
-                                            " timers, assuming an infinite loop!"
+                                        `Aborting after running ${clock.loopLimit} timers, assuming an infinite loop!`
                                     )
                                 );
                             } catch (e) {
@@ -1318,9 +1422,9 @@ function withGlobal(_global) {
             typeof config === "number"
         ) {
             throw new TypeError(
-                "FakeTimers.install called with " +
-                    String(config) +
-                    " install requires an object parameter"
+                `FakeTimers.install called with ${String(
+                    config
+                )} install requires an object parameter`
             );
         }
 
