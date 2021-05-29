@@ -2,6 +2,7 @@
 
 var globalObject = require("@sinonjs/commons").global;
 
+// FIX: revert TS definitions that are invalid JSDoc types / Syntax error
 /**
  * @typedef {object} Clock
  * @property {number} now
@@ -48,6 +49,17 @@ var globalObject = require("@sinonjs/commons").global;
  * @property {number} [loopLimit] the maximum number of timers that will be run when calling runAll()
  * @property {boolean} [shouldAdvanceTime] tells FakeTimers to increment mocked time automatically (default false)
  * @property {number} [advanceTimeDelta] increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
+ */
+
+/**
+ * @typedef {object} Timer
+ * @property {Function} func
+ * @property {*[]} args
+ * @property {number} delay
+ * @property {number} callAt
+ * @property {number} createdAt
+ * @property {boolean} immediate
+ * @property {number} id
  */
 
 /**
@@ -129,7 +141,8 @@ function withGlobal(_global) {
     var uniqueTimerId = 1;
 
     /**
-     * @param num
+     * @param {number} num
+     * @returns {boolean}
      */
     function isNumberFinite(num) {
         if (Number.isFinite) {
@@ -144,7 +157,8 @@ function withGlobal(_global) {
      * number of milliseconds. This is used to support human-readable strings passed
      * to clock.tick()
      *
-     * @param str
+     * @param {string} str
+     * @returns {number}
      */
     function parseTime(str) {
         if (!str) {
@@ -196,6 +210,7 @@ function withGlobal(_global) {
      * Used to grok the `now` parameter to createClock.
      *
      * @param {Date|number} epoch the system time
+     * @returns {number}
      */
     function getEpoch(epoch) {
         if (!epoch) {
@@ -211,17 +226,19 @@ function withGlobal(_global) {
     }
 
     /**
-     * @param from
-     * @param to
-     * @param timer
+     * @param {number} from
+     * @param {number} to
+     * @param {Timer} timer
+     * @returns {boolean}
      */
     function inRange(from, to, timer) {
         return timer && timer.callAt >= from && timer.callAt <= to;
     }
 
     /**
-     * @param target
-     * @param source
+     * @param {Date} target
+     * @param {Date} source
+     * @returns {Date} the target after modifications
      */
     function mirrorDateProperties(target, source) {
         var prop;
@@ -265,13 +282,13 @@ function withGlobal(_global) {
     //eslint-disable-next-line jsdoc/require-jsdoc
     function createDate() {
         /**
-         * @param year
-         * @param month
-         * @param date
-         * @param hour
-         * @param minute
-         * @param second
-         * @param ms
+         * @param {number} year
+         * @param {number} month
+         * @param {number} date
+         * @param {number} hour
+         * @param {number} minute
+         * @param {number} second
+         * @param {number} ms
          *
          * @returns {Date}
          */
@@ -351,8 +368,8 @@ function withGlobal(_global) {
     }
 
     /**
-     * @param clock
-     * @param timer
+     * @param {Clock} clock
+     * @param {Timer} timer
      * @returns {number} id of the created timer
      */
     function addTimer(clock, timer) {
@@ -431,8 +448,8 @@ function withGlobal(_global) {
     /**
      * Timer comparitor
      *
-     * @param a
-     * @param b
+     * @param {Timer} a
+     * @param {Timer} b
      * @returns {number}
      */
     function compareTimers(a, b) {
@@ -472,9 +489,9 @@ function withGlobal(_global) {
     }
 
     /**
-     * @param clock {Clock}
-     * @param from {number}
-     * @param to {number}
+     * @param {Clock} clock
+     * @param {number} from
+     * @param {number} to
      *
      * @returns {Timer}
      */
@@ -672,9 +689,9 @@ function withGlobal(_global) {
     }
 
     /**
-     * @param target
-     * @param method
-     * @param clock
+     * @param {object} target the target containing the method to replace
+     * @param {string} method the keyname of the method on the target
+     * @param {Clock} clock
      */
     function hijackMethod(target, method, clock) {
         clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(
@@ -733,6 +750,7 @@ function withGlobal(_global) {
         clock.tick(advanceTimeDelta);
     }
 
+    // FIX: revert TS definitions that are invalid JSDoc types / Syntax error
     /**
      * @typedef {object} Timers
      * @property {setTimeout} setTimeout
@@ -881,13 +899,6 @@ function withGlobal(_global) {
                 timeToNextIdlePeriod = 50; // const for now
             }
 
-            /**
-             * @typedef Timer
-             * @property {Function} func
-             * @property {*[]} args
-             * @property {number} delay
-             */
-
             var result = addTimer(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 2),
@@ -1014,10 +1025,11 @@ function withGlobal(_global) {
         };
 
         /**
-         * @param tickValue
-         * @param isAsync
-         * @param resolve
-         * @param reject
+         * @param {number|string} tickValue milliseconds or a string parseable by parseTime
+         * @param {boolean} isAsync
+         * @param {Function} resolve
+         * @param {Function} reject
+         * @returns {number|undefined} will return the new `now` value or nothing for async
          */
         function doTick(tickValue, isAsync, resolve, reject) {
             var msFloat =
@@ -1157,19 +1169,23 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {tickValue} {string|number} number of milliseconds or a human-readable value like "01:11:15"
-         * @param tickValue
+         * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
+         * @returns {number} will return the new `now` value
          */
         clock.tick = function tick(tickValue) {
             return doTick(tickValue, false);
         };
 
         if (typeof _global.Promise !== "undefined") {
-            clock.tickAsync = function tickAsync(ms) {
+            /**
+             * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
+             * @returns {Promise}
+             */
+            clock.tickAsync = function tickAsync(tickValue) {
                 return new _global.Promise(function (resolve, reject) {
                     originalSetTimeout(function () {
                         try {
-                            doTick(ms, true, resolve, reject);
+                            doTick(tickValue, true, resolve, reject);
                         } catch (e) {
                             reject(e);
                         }
