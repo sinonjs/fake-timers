@@ -2,42 +2,89 @@
 
 var globalObject = require("@sinonjs/commons").global;
 
-// FIX: revert TS definitions that are invalid JSDoc types / Syntax error
+/**
+ * @typedef {object} IdleDeadline
+ * @property {boolean} didTimeout - whether or not the callback was called before reaching the optional timeout
+ * @property {function():number} timeRemaining - a floating-point value providing an estimate of the number of milliseconds remaining in the current idle period
+ */
+
+/**
+ * Queues a function to be called during a browser's idle periods
+ *
+ * @callback RequestIdleCallback
+ * @param {function(IdleDeadline)} callback
+ * @param {{timeout: number}} options - an options object
+ * @returns {number} the id
+ */
+
+/**
+ * @callback NextTick
+ * @param {VoidVarArgsFunc} callback - the callback to run
+ * @param {...*} arguments - optional arguments to call the callback with
+ * @returns {void}
+ */
+
+/**
+ * @callback SetImmediate
+ * @param {VoidVarArgsFunc} callback - the callback to run
+ * @param {...*} arguments - optional arguments to call the callback with
+ * @returns {NodeImmediate}
+ */
+
+/**
+ * @callback VoidVarArgsFunc
+ * @param {...*} callback - the callback to run
+ * @returns {void}
+ */
+
+/**
+ * @typedef RequestAnimationFrame
+ * @property {function(number):void} requestAnimationFrame
+ * @returns {number} - the id
+ */
+
+/**
+ * @typedef Performance
+ * @property {function(): number} now
+ */
+
+/* eslint-disable jsdoc/require-property-description */
 /**
  * @typedef {object} Clock
- * @property {number} now
- * @property {typeof globalThis.Date} Date
- * @property {number} loopLimit
- * @property {(func: Function, timeout: number) => number} requestIdleCallback
- * @property {(timerId: number) => void} cancelIdleCallback
+ * @property {number} now - the current time
+ * @property {Date} Date - the Date constructor
+ * @property {number} loopLimit - the maximum number of timers before assuming an infinite loop
+ * @property {RequestIdleCallback} requestIdleCallback
+ * @property {function(number):void} cancelIdleCallback
  * @property {setTimeout} setTimeout
  * @property {clearTimeout} clearTimeout
- * @property {(func: Function, ...args: any[]) => void} nextTick
+ * @property {NextTick} nextTick
  * @property {queueMicrotask} queueMicrotask
  * @property {setInterval} setInterval
  * @property {clearInterval} clearInterval
- * @property {(func: (...args: any[]) => void, ...args: any[]) => NodeTimer} setImmediate
- * @property {(timerId: NodeTimer) => void} clearImmediate
- * @property {() => number} countTimers
- * @property {(func: (timer: number) => void) => number} requestAnimationFrame
- * @property {(timerId: number) => void} cancelAnimationFrame
- * @property {() => void} runMicrotasks
- * @property {(tickValue: string | number) => number} tick
- * @property {(tickValue: string | number) => Promise<number>} tickAsync
- * @property {() => number} next
- * @property {() => Promise<number>} nextAsync
- * @property {() => number} runAll
- * @property {() => number} runToFrame
- * @property {() => Promise<number>} runAllAsync
- * @property {() => number} runToLast
- * @property {() => Promise<number>} runToLastAsync
- * @property {() => void} reset
- * @property {(systemTime: number | Date) => void} setSystemTime
- * @property {({now(): number})} performance
- * @property {(prev: any) => number[]} hrTime
- * @property {() => void} uninstall Uninstall the clock.
- * @property {any} methods
+ * @property {SetImmediate} setImmediate
+ * @property {function(NodeImmediate):void} clearImmediate
+ * @property {function():number} countTimers
+ * @property {RequestAnimationFrame} requestAnimationFrame
+ * @property {function(number):void} cancelAnimationFrame
+ * @property {function():void} runMicrotasks
+ * @property {function(string | number): number} tick
+ * @property {function(string | number): Promise<number>} tickAsync
+ * @property {function(): number} next
+ * @property {function(): Promise<number>} nextAsync
+ * @property {function(): number} runAll
+ * @property {function(): number} runToFrame
+ * @property {function(): Promise<number>} runAllAsync
+ * @property {function(): number} runToLast
+ * @property {function(): Promise<number>} runToLastAsync
+ * @property {function(): void} reset
+ * @property {function(number | Date): void} setSystemTime
+ * @property {Performance} performance
+ * @property {function(number[]): number[]} hrtime - process.hrtime (legacy)
+ * @property {function(): void} uninstall Uninstall the clock.
+ * @property {Function[]} methods - the methods that are faked
  */
+/* eslint-enable jsdoc/require-property-description */
 
 /**
  * Configuration object for the `install` method.
@@ -50,7 +97,10 @@ var globalObject = require("@sinonjs/commons").global;
  * @property {number} [advanceTimeDelta] increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
  */
 
+/* eslint-disable jsdoc/require-property-description */
 /**
+ * The internal structure to describe a scheduled fake timer
+ *
  * @typedef {object} Timer
  * @property {Function} func
  * @property {*[]} args
@@ -62,11 +112,14 @@ var globalObject = require("@sinonjs/commons").global;
  */
 
 /**
- * @typedef {object} NodeTimer
- * @property {() => boolean} hasRef
- * @property {() => any} ref
- * @property {() => any} unref
+ * A Node timer
+ *
+ * @typedef {object} NodeImmediate
+ * @property {function(): boolean} hasRef
+ * @property {function(): NodeImmediate} ref
+ * @property {function(): NodeImmediate} unref
  */
+/* eslint-enable jsdoc/require-property-description */
 
 /* eslint-disable complexity */
 
@@ -74,6 +127,7 @@ var globalObject = require("@sinonjs/commons").global;
  * Mocks available features in the specified global namespace.
  *
  * @param {*} _global Namespace to mock (e.g. `window`)
+ * @returns {FakeTimers}
  */
 function withGlobal(_global) {
     var userAgent = _global.navigator && _global.navigator.userAgent;
@@ -749,24 +803,23 @@ function withGlobal(_global) {
         clock.tick(advanceTimeDelta);
     }
 
-    // FIX: revert TS definitions that are invalid JSDoc types / Syntax error
     /**
      * @typedef {object} Timers
      * @property {setTimeout} setTimeout
      * @property {clearTimeout} clearTimeout
      * @property {setInterval} setInterval
      * @property {clearInterval} clearInterval
-     * @property {typeof globalThis.Date} Date
-     * @property {((fn: (...args: any[]) => void, ...args: any[]) => NodeTimer)=} setImmediate
-     * @property {((id: NodeTimer) => void)=} clearImmediate
-     * @property {((time?: [number, number]) => [number, number])=} hrtime
-     * @property {((fn: Function, ...args: any[]) => void)=} nextTick
-     * @property {({now(): number})=} performance
-     * @property {((fn: (timer: number) => void) => number)=} requestAnimationFrame
+     * @property {Date} Date
+     * @property {SetImmediate=} setImmediate
+     * @property {function(NodeImmediate): void=} clearImmediate
+     * @property {function(number[]):number[]=} hrtime
+     * @property {NextTick=} nextTick
+     * @property {Performance=} performance
+     * @property {RequestAnimationFrame=} requestAnimationFrame
      * @property {boolean=} queueMicrotask
-     * @property {((id: number) => void)=} cancelAnimationFrame
-     * @property {((fn: (deadline: any) => void, options?: any) => number)=} requestIdleCallback
-     * @property {((id: number) => void)=} cancelIdleCallback
+     * @property {function(number): void=} cancelAnimationFrame
+     * @property {RequestIdleCallback=} requestIdleCallback
+     * @property {function(number): void=} cancelIdleCallback
      */
 
     /** @type {Timers} */
@@ -1501,8 +1554,17 @@ function withGlobal(_global) {
     };
 }
 
+/**
+ * @typedef {object} FakeTimers
+ * @property {Timers} timers
+ * @property {createClock} createClock
+ * @property {Function} install
+ * @property {withGlobal} withGlobal
+ */
+
 /* eslint-enable complexity */
 
+/** @type {FakeTimers} */
 var defaultImplementation = withGlobal(globalObject);
 
 exports.timers = defaultImplementation.timers;
