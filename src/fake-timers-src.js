@@ -252,30 +252,30 @@ function withGlobal(_global) {
             `Aborting after running ${clock.loopLimit} timers, assuming an infinite loop!`
         );
 
-        var clockMethodPattern;
-
-        // pattern never matched in Firefox and Node
+        // pattern never matched in Node
         var computedTargetPattern = /target\.*[<|(|[].*?[>|\]|)]\s*/;
+        var clockMethodPattern = new RegExp(
+            String(Object.keys(clock).join("|"))
+        );
 
         if (addTimerReturnsObject) {
             // node.js environment
             clockMethodPattern = new RegExp(
                 `\\s+at (Object\\.)?(?:${Object.keys(clock).join("|")})\\s+`
             );
-        } else {
-            clockMethodPattern = new RegExp(
-                String(Object.keys(clock).join("|"))
-            );
         }
 
         var matchedLineIndex = -1;
         job.error.stack.split("\n").some(function (line, i) {
-            // If we've matched a computed target line (e.g. setTimeout) then we
-            // don't need to look any further. Return true to stop iterating.
-            var matchedComputedTarget = line.match(computedTargetPattern);
-            if (matchedComputedTarget) {
-                matchedLineIndex = i;
-                return true;
+            if (!addTimerReturnsObject) {
+                // when not in node
+                // If we've matched a computed target line (e.g. setTimeout) then we
+                // don't need to look any further. Return true to stop iterating.
+                var matchedComputedTarget = line.match(computedTargetPattern);
+                if (matchedComputedTarget) {
+                    matchedLineIndex = i;
+                    return true;
+                }
             }
 
             // If we've matched a clock method line, then there may still be
