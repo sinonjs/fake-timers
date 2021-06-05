@@ -249,14 +249,24 @@ function withGlobal(_global) {
 
     function getInfiniteLoopError(clock, job) {
         var infiniteLoopError = new Error(
-            "Aborting after running " +
-                clock.loopLimit +
-                " timers, assuming an infinite loop!"
+            `Aborting after running ${clock.loopLimit} timers, assuming an infinite loop!`
         );
+
+        var clockMethodPattern;
+
+        // pattern never matched in Firefox and Node
         var computedTargetPattern = /target\.*[<|(|[].*?[>|\]|)]\s*/;
-        var clockMethodPattern = new RegExp(
-            String(Object.keys(clock).join("|"))
-        );
+
+        if (addTimerReturnsObject) {
+            // node.js environment
+            clockMethodPattern = new RegExp(
+                `\\s+at (Object\\.)?(?:${Object.keys(clock).join("|")})\\s+`
+            );
+        } else {
+            clockMethodPattern = new RegExp(
+                String(Object.keys(clock).join("|"))
+            );
+        }
 
         var matchedLineIndex = -1;
         job.error.stack.split("\n").some(function (line, i) {
@@ -282,17 +292,12 @@ function withGlobal(_global) {
             return matchedLineIndex >= 0;
         });
 
-        var stack =
-            infiniteLoopError +
-            "\n" +
-            (job.type || "Microtask") +
-            " - " +
-            (job.func.name || "anonymous") +
-            "\n" +
-            job.error.stack
-                .split("\n")
-                .slice(matchedLineIndex + 1)
-                .join("\n");
+        var stack = `${infiniteLoopError}\n${job.type || "Microtask"} - ${
+            job.func.name || "anonymous"
+        }\n${job.error.stack
+            .split("\n")
+            .slice(matchedLineIndex + 1)
+            .join("\n")}`;
 
         try {
             Object.defineProperty(infiniteLoopError, "stack", {
