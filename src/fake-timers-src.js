@@ -267,15 +267,13 @@ function withGlobal(_global) {
 
         var matchedLineIndex = -1;
         job.error.stack.split("\n").some(function (line, i) {
-            if (!addTimerReturnsObject) {
-                // when not in node
-                // If we've matched a computed target line (e.g. setTimeout) then we
-                // don't need to look any further. Return true to stop iterating.
-                var matchedComputedTarget = line.match(computedTargetPattern);
-                if (matchedComputedTarget) {
-                    matchedLineIndex = i;
-                    return true;
-                }
+            // If we've matched a computed target line (e.g. setTimeout) then we
+            // don't need to look any further. Return true to stop iterating.
+            var matchedComputedTarget = line.match(computedTargetPattern);
+            /* istanbul ignore if */
+            if (matchedComputedTarget) {
+                matchedLineIndex = i;
+                return true;
             }
 
             // If we've matched a clock method line, then there may still be
