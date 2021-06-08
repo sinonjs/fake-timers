@@ -14,26 +14,12 @@ wait.
 
 `@sinonjs/fake-timers` is extracted from [Sinon.JS](https://github.com/sinonjs/sinon.js) and targets the [same runtimes](https://sinonjs.org/releases/latest/#supported-runtimes).
 
-## Help us get our TypeScript definitions production ready!
+## Autocomplete, IntelliSense and TypeScript definitions
 
-In version 7 we introduced TypeScript definitions that are generated from our JSDoc. This makes importing types from [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/sinonjs__fake-timers/index.d.ts) superfluous, but we have just gotten started and we need your work for this to be up to the same quality. Until that happens typings from DefinitelyTyped still can be used:
+Version 7 introduced JSDoc to the codebase. This should provide autocomplete and type suggestions in supporting IDEs. If you need more elaborate type support, TypeScript definitions for the Sinon projects are independently maintained by the Definitely Types community:
 
-```sh
+```
 npm install -D @types/sinonjs__fake-timers
-```
-
-Add this to tsconfig.json
-
-```
-{
-  "compilerOptions": {
-    ...
-    "paths": {
-      ...
-      "@sinonjs/fake-timers": ["node_modules/@types/sinonjs__fake-timers"]
-    }
-  }
-}
 ```
 
 ## Installation
