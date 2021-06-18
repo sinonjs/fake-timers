@@ -1614,22 +1614,23 @@ function withGlobal(_global) {
         }
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
-            if (clock.methods[i] === "hrtime") {
+            const nameOfMethodToReplace = clock.methods[i];
+            if (nameOfMethodToReplace === "hrtime") {
                 if (
                     _global.process &&
                     typeof _global.process.hrtime === "function"
                 ) {
-                    hijackMethod(_global.process, clock.methods[i], clock);
+                    hijackMethod(_global.process, nameOfMethodToReplace, clock);
                 }
-            } else if (clock.methods[i] === "nextTick") {
+            } else if (nameOfMethodToReplace === "nextTick") {
                 if (
                     _global.process &&
                     typeof _global.process.nextTick === "function"
                 ) {
-                    hijackMethod(_global.process, clock.methods[i], clock);
+                    hijackMethod(_global.process, nameOfMethodToReplace, clock);
                 }
             } else {
-                hijackMethod(_global, clock.methods[i], clock);
+                hijackMethod(_global, nameOfMethodToReplace, clock);
             }
         }
 
