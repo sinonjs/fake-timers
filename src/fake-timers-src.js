@@ -803,12 +803,6 @@ function withGlobal(_global) {
             } else {
                 if (_global[method] && _global[method].hadOwnProperty) {
                     _global[method] = clock[`_${method}`];
-                    if (
-                        method === "clearInterval" &&
-                        config.shouldAdvanceTime === true
-                    ) {
-                        _global[method](clock.attachedInterval);
-                    }
                 } else {
                     try {
                         delete _global[method];
@@ -817,6 +811,10 @@ function withGlobal(_global) {
                     }
                 }
             }
+        }
+
+        if (config.shouldAdvanceTime === true) {
+            _global.clearInterval(clock.attachedInterval);
         }
 
         // Prevent multiple executions which will completely remove these props
@@ -1602,6 +1600,19 @@ function withGlobal(_global) {
             });
         }
 
+        if (config.shouldAdvanceTime === true) {
+            const intervalTick = doIntervalTick.bind(
+                null,
+                clock,
+                config.advanceTimeDelta
+            );
+            const intervalId = _global.setInterval(
+                intervalTick,
+                config.advanceTimeDelta
+            );
+            clock.attachedInterval = intervalId;
+        }
+
         for (i = 0, l = clock.methods.length; i < l; i++) {
             if (clock.methods[i] === "hrtime") {
                 if (
@@ -1618,21 +1629,6 @@ function withGlobal(_global) {
                     hijackMethod(_global.process, clock.methods[i], clock);
                 }
             } else {
-                if (
-                    clock.methods[i] === "setInterval" &&
-                    config.shouldAdvanceTime === true
-                ) {
-                    const intervalTick = doIntervalTick.bind(
-                        null,
-                        clock,
-                        config.advanceTimeDelta
-                    );
-                    const intervalId = _global[clock.methods[i]](
-                        intervalTick,
-                        config.advanceTimeDelta
-                    );
-                    clock.attachedInterval = intervalId;
-                }
                 hijackMethod(_global, clock.methods[i], clock);
             }
         }
