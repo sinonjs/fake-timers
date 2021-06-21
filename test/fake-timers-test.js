@@ -3955,6 +3955,24 @@ describe("FakeTimers", function () {
                 }
             }, interval);
         });
+
+        it("should not depend on having to stub setInterval or clearInterval to work", function (done) {
+            const origSetInterval = globalObject.setInterval;
+            const origClearInterval = globalObject.clearInterval;
+
+            var clock = FakeTimers.install({
+                shouldAdvanceTime: true,
+                toFake: ["setTimeout"],
+            });
+
+            assert.equals(globalObject.setInterval, origSetInterval);
+            assert.equals(globalObject.clearInterval, origClearInterval);
+
+            setTimeout(function () {
+                clock.uninstall();
+                done();
+            }, 0);
+        });
     });
 
     describe("requestAnimationFrame", function () {
