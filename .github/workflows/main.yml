@@ -1,0 +1,157 @@
+name: Node CI
+
+on: [push]
+
+jobs:
+    prettier:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions/setup-node@v2
+              with:
+                  node-version: "16"
+            - name: Cache modules
+              uses: actions/cache@v2
+              with:
+                  path: ~/.npm
+                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
+            - name: Install dependencies
+              run: |
+                  npm ci
+              env:
+                  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1
+                  HUSKY_SKIP_INSTALL: 1
+            - name: Prettier
+              run: |
+                  npm run prettier:check
+
+    lint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions/setup-node@v2
+              with:
+                  node-version: "16"
+            - name: Cache modules
+              uses: actions/cache@v2
+              with:
+                  path: ~/.npm
+                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
+            - name: Install dependencies
+              run: |
+                  npm ci
+              env:
+                  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1
+            - name: ESLint
+              run: |
+                  npm run lint
+
+    chromium:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions/setup-node@v2
+              with:
+                  node-version: "16"
+            - name: Cache npm
+              uses: actions/cache@v2
+              with:
+                  path: ~/.npm
+                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
+            - name: Install dependencies
+              run: |
+                  npm ci
+              env:
+                  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1
+            - name: Integration
+              run: |
+                  export SINON_CHROME_BIN=$(which google-chrome-stable)
+
+                  # test-coverage runs test-headless in Chrome
+                  npm run test-headless -- --chrome $SINON_CHROME_BIN --allow-chrome-as-root
+
+    saucelabs-test:
+        if: ${{ github.ref == 'refs/heads/master' }}
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions/setup-node@v2
+              with:
+                  node-version: "16"
+            - name: Cache npm
+              uses: actions/cache@v2
+              with:
+                  path: ~/.npm
+                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
+            - name: Install dependencies
+              run: |
+                  npm ci
+              env:
+                  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1
+            - name: Saucelabs test
+              env:
+                  SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+                  SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+              run: |
+                  npm run test-cloud
+
+    coverage:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions/setup-node@v2
+              with:
+                  node-version: "16"
+            - name: Cache npm
+              uses: actions/cache@v2
+              with:
+                  path: ~/.npm
+                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
+            - name: Install dependencies
+              run: |
+                  npm ci
+              env:
+                  HUSKY_SKIP_INSTALL: 1
+            - name: Integration
+              run: |
+                  npm run test-coverage
+            - name: Upload coverage report
+              run: bash <(curl -s https://codecov.io/bash) -F unit -s coverage/lcov.info
+
+    test:
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                node-version: [12, 14, 16]
+
+        steps:
+            - uses: actions/checkout@v2
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v2
+              with:
+                  node-version: ${{ matrix.node-version }}
+            - name: Cache modules
+              uses: actions/cache@v2
+              with:
+                  path: ~/.npm
+                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-node-
+            - name: Install dependencies
+              run: |
+                  npm ci
+              env:
+                  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1
+            - name: npm test
+              run: npm run test-node
