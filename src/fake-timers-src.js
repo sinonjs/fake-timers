@@ -825,6 +825,8 @@ function withGlobal(_global) {
         // Prevent multiple executions which will completely remove these props
         clock.methods = [];
 
+        resetIsNearInfiniteLimit();
+
         // return pending timers, to enable checking what timers remained on uninstall
         if (!clock.timers) {
             return [];
