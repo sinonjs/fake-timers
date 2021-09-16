@@ -3706,6 +3706,21 @@ describe("FakeTimers", function () {
             });
         }
 
+        if (!performanceNowPresent) {
+            it("throws when adding performance to tofake array when performance not present", function () {
+                try {
+                    this.clock = FakeTimers.install({
+                        toFake: ["performance"],
+                    });
+                } catch (e) {
+                    const expectedMsg =
+                        "non-existent performance object cannot be faked";
+                    assert(e instanceof ReferenceError);
+                    assert.equals(e.message, expectedMsg);
+                }
+            });
+        }
+
         if (performanceNowPresent) {
             it("replaces global performance.now", function () {
                 this.clock = FakeTimers.install();

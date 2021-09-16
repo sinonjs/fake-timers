@@ -1584,20 +1584,6 @@ function withGlobal(_global) {
 
         if (performancePresent) {
             clock.performance = Object.create(null);
-
-            if (hasPerformancePrototype) {
-                const proto = _global.Performance.prototype;
-
-                Object.getOwnPropertyNames(proto).forEach(function (name) {
-                    if (name.indexOf("getEntries") === 0) {
-                        // match expected return type for getEntries functions
-                        clock.performance[name] = NOOP_ARRAY;
-                    } else {
-                        clock.performance[name] = NOOP;
-                    }
-                });
-            }
-
             clock.performance.now = function FakeTimersNow() {
                 const hrt = hrtime();
                 const millis = hrt[0] * 1000 + hrt[1] / 1e6;
@@ -1673,6 +1659,25 @@ function withGlobal(_global) {
                 config.advanceTimeDelta
             );
             clock.attachedInterval = intervalId;
+        }
+
+        if (clock.methods.includes("performance")) {
+            if (hasPerformancePrototype) {
+                var proto = _global.Performance.prototype;
+                Object.getOwnPropertyNames(proto).forEach(function (name) {
+                    if (name !== "now") {
+                        clock.performance[name] =
+                            name.indexOf("getEntries") === 0
+                                ? NOOP_ARRAY
+                                : NOOP;
+                    }
+                });
+            } else if (config.toFake.includes("performance")) {
+                // user explicitly tried to fake performance when not present
+                throw new ReferenceError(
+                    "non-existent performance object cannot be faked"
+                );
+            }
         }
 
         for (i = 0, l = clock.methods.length; i < l; i++) {
