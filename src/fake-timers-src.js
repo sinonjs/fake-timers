@@ -109,6 +109,7 @@ const globalObject = require("@sinonjs/commons").global;
  * @property {number} createdAt
  * @property {boolean} immediate
  * @property {number} id
+ * @property {Error} [error]
  */
 
 /**
@@ -208,8 +209,8 @@ function withGlobal(_global) {
     let isNearInfiniteLimit = false;
 
     /**
-     * @param clock
-     * @param i
+     * @param {Clock} clock
+     * @param {number} i
      */
     function checkIsNearInfiniteLimit(clock, i) {
         if (clock.loopLimit && i === clock.loopLimit - 1) {
@@ -309,13 +310,17 @@ function withGlobal(_global) {
     }
 
     /**
-     * @param clock
-     * @param job
+     * @param {Clock} clock
+     * @param {Timer} job
      */
     function getInfiniteLoopError(clock, job) {
         const infiniteLoopError = new Error(
             `Aborting after running ${clock.loopLimit} timers, assuming an infinite loop!`
         );
+
+        if (!job.error) {
+            return infiniteLoopError
+        }
 
         // pattern never matched in Node
         const computedTargetPattern = /target\.*[<|(|[].*?[>|\]|)]\s*/;
