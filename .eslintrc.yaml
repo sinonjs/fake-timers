@@ -1,8 +1,6 @@
 extends:
   - "@sinonjs/eslint-config"
-
-rules:
-  semi: error
+  - "plugin:prettier/recommended"
 
 overrides:
   - files: "**/*-test.js"
