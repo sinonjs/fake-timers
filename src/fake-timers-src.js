@@ -319,7 +319,7 @@ function withGlobal(_global) {
         );
 
         if (!job.error) {
-            return infiniteLoopError
+            return infiniteLoopError;
         }
 
         // pattern never matched in Node
