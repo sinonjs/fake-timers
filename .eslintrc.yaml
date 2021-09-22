@@ -1,6 +1,9 @@
 extends:
   - "@sinonjs/eslint-config"
 
+rules:
+  semi: error
+
 overrides:
   - files: "**/*-test.js"
     plugins:
