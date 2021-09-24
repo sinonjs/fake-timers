@@ -43,7 +43,7 @@
     "jsdom": "16.5.2",
     "lint-staged": "10.0.7",
     "mocha": "8.3.2",
-    "mochify": "7.0.0",
+    "mochify": "8.1.0",
     "nyc": "14.1.1",
     "prettier": "2.2.1"
   },
