@@ -1,4 +1,9 @@
 
+8.0.1 / 2021-09-25
+==================
+
+  * fix: handle missing stack when throwing recursion errors (#401)
+
 8.0.0 / 2021-09-15
 ==================
 
