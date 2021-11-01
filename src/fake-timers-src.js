@@ -83,6 +83,7 @@ const globalObject = require("@sinonjs/commons").global;
  * @property {function(number[]): number[]} hrtime - process.hrtime (legacy)
  * @property {function(): void} uninstall Uninstall the clock.
  * @property {Function[]} methods - the methods that are faked
+ * @property {boolean} [shouldClearNativeTimers] inherited from config
  */
 /* eslint-enable jsdoc/require-property-description */
 
@@ -95,6 +96,7 @@ const globalObject = require("@sinonjs/commons").global;
  * @property {number} [loopLimit] the maximum number of timers that will be run when calling runAll()
  * @property {boolean} [shouldAdvanceTime] tells FakeTimers to increment mocked time automatically (default false)
  * @property {number} [advanceTimeDelta] increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
+ * @property {boolean} [shouldClearNativeTimers] forwards clear timer calls to native functions if they are not fakes (default: false)
  */
 
 /* eslint-disable jsdoc/require-property-description */
@@ -134,6 +136,7 @@ function withGlobal(_global) {
     const userAgent = _global.navigator && _global.navigator.userAgent;
     const isRunningInIE = userAgent && userAgent.indexOf("MSIE ") > -1;
     const maxTimeout = Math.pow(2, 31) - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
+    const idCounterStart = 1e12; // arbitrarily large number to avoid collisions with native timer IDs
     const NOOP = function () {
         return undefined;
     };
@@ -192,7 +195,7 @@ function withGlobal(_global) {
     _global.clearTimeout(timeoutResult);
 
     const NativeDate = _global.Date;
-    let uniqueTimerId = 1;
+    let uniqueTimerId = idCounterStart;
 
     /**
      * @param {number} num
@@ -560,6 +563,11 @@ function withGlobal(_global) {
             timer.animation = true;
         }
 
+        if (timer.hasOwnProperty("idleCallback")) {
+            timer.type = "IdleCallback";
+            timer.idleCallback = true;
+        }
+
         if (!clock.timers) {
             clock.timers = {};
         }
@@ -573,7 +581,6 @@ function withGlobal(_global) {
 
         if (addTimerReturnsObject) {
             const res = {
-                id: timer.id,
                 ref: function () {
                     return res;
                 },
@@ -584,6 +591,9 @@ function withGlobal(_global) {
                     clearTimeout(timer.id);
                     const args = [timer.func, timer.delay].concat(timer.args);
                     return setTimeout.apply(null, args);
+                },
+                [Symbol.toPrimitive]: function () {
+                    return timer.id;
                 },
             };
             return res;
@@ -727,6 +737,40 @@ function withGlobal(_global) {
     }
 
     /**
+     * Gets clear handler name for a given timer type
+     * @param {string} ttype
+     */
+    function getClearHandler(ttype) {
+        if (ttype === "IdleCallback" || ttype === "AnimationFrame") {
+            return `cancel${ttype}`;
+        }
+        return `clear${ttype}`;
+    }
+
+    /**
+     * Gets schedule handler name for a given timer type
+     * @param {string} ttype
+     */
+    function getScheduleHandler(ttype) {
+        if (ttype === "IdleCallback" || ttype === "AnimationFrame") {
+            return `request${ttype}`;
+        }
+        return `set${ttype}`;
+    }
+
+    /**
+     * Creates an anonymous function to warn only once
+     */
+    function createWarnOnce() {
+        let calls = 0;
+        return function (msg) {
+            // eslint-disable-next-line
+            !calls++ && console.warn(msg);
+        };
+    }
+    const warnOnce = createWarnOnce();
+
+    /**
      * @param {Clock} clock
      * @param {number} timerId
      * @param {string} ttype
@@ -742,9 +786,24 @@ function withGlobal(_global) {
             clock.timers = {};
         }
 
-        // in Node, timerId is an object with .ref()/.unref(), and
-        // its .id field is the actual timer id.
-        const id = typeof timerId === "object" ? timerId.id : timerId;
+        // in Node, the ID is stored as the primitive value for `Timeout` objects
+        // for `Immediate` objects, no ID exists, so it gets coerced to NaN
+        const id = Number(timerId);
+
+        if (Number.isNaN(id) || id < idCounterStart) {
+            const handlerName = getClearHandler(ttype);
+
+            if (clock.shouldClearNativeTimers === true) {
+                const nativeHandler = clock[`_${handlerName}`];
+                return typeof nativeHandler === "function"
+                    ? nativeHandler(timerId)
+                    : undefined;
+            }
+            warnOnce(
+                `FakeTimers: ${handlerName} was invoked to clear a native timer instead of one created by this library.` +
+                    "\nTo automatically clean-up native timers, use `shouldClearNativeTimers`."
+            );
+        }
 
         if (clock.timers.hasOwnProperty(id)) {
             // check that the ID matches a timer of the correct type
@@ -756,14 +815,8 @@ function withGlobal(_global) {
             ) {
                 delete clock.timers[id];
             } else {
-                const clear =
-                    ttype === "AnimationFrame"
-                        ? "cancelAnimationFrame"
-                        : `clear${ttype}`;
-                const schedule =
-                    timer.type === "AnimationFrame"
-                        ? "requestAnimationFrame"
-                        : `set${timer.type}`;
+                const clear = getClearHandler(ttype);
+                const schedule = getScheduleHandler(timer.type);
                 throw new Error(
                     `Cannot clear timer: timer created with ${schedule}() but cleared with ${clear}()`
                 );
@@ -1050,13 +1103,14 @@ function withGlobal(_global) {
                     typeof timeout === "undefined"
                         ? timeToNextIdlePeriod
                         : Math.min(timeout, timeToNextIdlePeriod),
+                idleCallback: true,
             });
 
-            return result.id || result;
+            return Number(result);
         };
 
         clock.cancelIdleCallback = function cancelIdleCallback(timerId) {
-            return clearTimer(clock, timerId, "Timeout");
+            return clearTimer(clock, timerId, "IdleCallback");
         };
 
         clock.setTimeout = function setTimeout(func, timeout) {
@@ -1158,7 +1212,7 @@ function withGlobal(_global) {
                 animation: true,
             });
 
-            return result.id || result;
+            return Number(result);
         };
 
         clock.cancelAnimationFrame = function cancelAnimationFrame(timerId) {
@@ -1582,6 +1636,8 @@ function withGlobal(_global) {
         config = typeof config !== "undefined" ? config : {};
         config.shouldAdvanceTime = config.shouldAdvanceTime || false;
         config.advanceTimeDelta = config.advanceTimeDelta || 20;
+        config.shouldClearNativeTimers =
+            config.shouldClearNativeTimers || false;
 
         if (config.target) {
             throw new TypeError(
@@ -1591,6 +1647,7 @@ function withGlobal(_global) {
 
         let i, l;
         const clock = createClock(config.now, config.loopLimit);
+        clock.shouldClearNativeTimers = config.shouldClearNativeTimers;
 
         clock.uninstall = function () {
             return uninstall(clock, config);
