@@ -786,7 +786,8 @@ function withGlobal(_global) {
             clock.timers = {};
         }
 
-        // in Node, the ID is stored as the primitive value for set
+        // in Node, the ID is stored as the primitive value for `Timeout` objects
+        // for `Immediate` objects, no ID exists, so it gets coerced to NaN
         const id = Number(timerId);
 
         if (Number.isNaN(id) || id < idCounterStart) {

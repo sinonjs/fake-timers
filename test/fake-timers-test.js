@@ -3998,13 +3998,14 @@ describe("FakeTimers", function () {
             }
         });
 
-        it("outputs a warning if not enabled", function (done) {
+        it("outputs a warning once if not enabled", function (done) {
             const timer = globalObject.setTimeout(createCallback(done, true));
             const stub = sinon.stub(globalObject.console, "warn");
 
             this.clock = FakeTimers.install();
             globalObject.clearTimeout(timer);
-            assert.isTrue(stub.called);
+            globalObject.clearTimeout(timer);
+            assert.equals(stub.callCount, 1);
         });
 
         it("can clear setTimeout", function (done) {
