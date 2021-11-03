@@ -1,4 +1,10 @@
 
+8.1.0 / 2021-11-03
+==================
+
+  * Add native timer clean-up behavior (#407)
+  * give a hint about how to get type defs (#405)
+
 8.0.1 / 2021-09-25
 ==================
 
