@@ -272,7 +272,7 @@ describe("FakeTimers", function () {
             const result = this.clock.setTimeout(function () {}, 10);
 
             if (typeof result === "object") {
-                assert.isNumber(result.id);
+                assert.isNumber(Number(result));
             } else {
                 assert.isNumber(result);
             }
@@ -283,6 +283,12 @@ describe("FakeTimers", function () {
             const id2 = this.clock.setTimeout(function () {}, 10);
 
             refute.equals(id2, id1);
+        });
+
+        it("starts id from a large number", function () {
+            const timer = this.clock.setTimeout(function () {}, 10);
+
+            assert.isTrue(Number(timer) >= 1e12);
         });
 
         it("sets timers on instance", function () {
@@ -552,7 +558,7 @@ describe("FakeTimers", function () {
             const result = this.clock.setImmediate(NOOP);
 
             if (typeof result === "object") {
-                assert.isNumber(result.id);
+                assert.isNumber(Number(result));
             } else {
                 assert.isNumber(result);
             }
@@ -3156,7 +3162,7 @@ describe("FakeTimers", function () {
             const result = this.clock.setInterval(function () {}, 10);
 
             if (typeof result === "object") {
-                assert.isNumber(result.id);
+                assert.isNumber(Number(result));
             } else {
                 assert.isNumber(result);
             }
@@ -3565,7 +3571,7 @@ describe("FakeTimers", function () {
             const to = setTimeout(stub, 1000);
 
             if (typeof setTimeout(NOOP, 0) === "object") {
-                assert.isNumber(to.id);
+                assert.isNumber(Number(to));
                 assert.isFunction(to.ref);
                 assert.isFunction(to.unref);
             } else {
@@ -3579,7 +3585,7 @@ describe("FakeTimers", function () {
 
             if (typeof setTimeout(NOOP, 0) === "object") {
                 const to = setTimeout(stub, 1000).ref();
-                assert.isNumber(to.id);
+                assert.isNumber(Number(to));
                 assert.isFunction(to.ref);
                 assert.isFunction(to.unref);
             }
@@ -3591,7 +3597,7 @@ describe("FakeTimers", function () {
 
             if (typeof setTimeout(NOOP, 0) === "object") {
                 const to = setTimeout(stub, 1000).unref();
-                assert.isNumber(to.id);
+                assert.isNumber(Number(to));
                 assert.isFunction(to.ref);
                 assert.isFunction(to.unref);
             }
@@ -3603,7 +3609,7 @@ describe("FakeTimers", function () {
 
             if (typeof setTimeout(NOOP, 0) === "object") {
                 const to = setTimeout(stub, 1000).refresh();
-                assert.isNumber(to.id);
+                assert.isNumber(Number(to));
                 assert.isFunction(to.ref);
                 assert.isFunction(to.refresh);
             }
@@ -3972,6 +3978,92 @@ describe("FakeTimers", function () {
                 clock.uninstall();
                 done();
             }, 0);
+        });
+    });
+
+    describe("shouldClearNativeTimers", function () {
+        function createCallback(done, succeed) {
+            return function () {
+                if (succeed) {
+                    done();
+                } else {
+                    done(new Error("Timer was not cleared."));
+                }
+            };
+        }
+
+        afterEach(function () {
+            if (this.clock) {
+                this.clock.uninstall();
+            }
+        });
+
+        it("outputs a warning once if not enabled", function (done) {
+            const timer = globalObject.setTimeout(createCallback(done, true));
+            const stub = sinon.stub(globalObject.console, "warn");
+
+            this.clock = FakeTimers.install();
+            globalObject.clearTimeout(timer);
+            globalObject.clearTimeout(timer);
+            assert.equals(stub.callCount, 1);
+        });
+
+        it("can clear setTimeout", function (done) {
+            const timer = globalObject.setTimeout(createCallback(done, false));
+            globalObject.setTimeout(createCallback(done, true));
+
+            this.clock = FakeTimers.install({ shouldClearNativeTimers: true });
+            globalObject.clearTimeout(timer);
+        });
+
+        it("can clear setInterval", function (done) {
+            const timer = globalObject.setInterval(createCallback(done, false));
+            if (timer && typeof timer === "object") {
+                timer.unref(); // prevents hung failed test for node
+            }
+
+            globalObject.setTimeout(createCallback(done, true));
+            this.clock = FakeTimers.install({ shouldClearNativeTimers: true });
+            globalObject.clearInterval(timer);
+        });
+
+        it("can clear setImmediate", function (done) {
+            if (globalObject.setImmediate === undefined) {
+                this.skip();
+            }
+
+            const timer = globalObject.setImmediate(
+                createCallback(done, false)
+            );
+            globalObject.setImmediate(createCallback(done, true));
+            this.clock = FakeTimers.install({ shouldClearNativeTimers: true });
+            globalObject.clearImmediate(timer);
+        });
+
+        it("can clear requestAnimationFrame", function (done) {
+            if (globalObject.requestAnimationFrame === undefined) {
+                this.skip();
+            }
+
+            const timer = globalObject.requestAnimationFrame(
+                createCallback(done, false)
+            );
+            globalObject.requestAnimationFrame(createCallback(done, true));
+            this.clock = FakeTimers.install({ shouldClearNativeTimers: true });
+            globalObject.cancelAnimationFrame(timer);
+        });
+
+        it("can clear requestIdleCallback", function (done) {
+            if (globalObject.requestIdleCallback === undefined) {
+                this.skip();
+            }
+
+            const timer = globalObject.requestIdleCallback(
+                createCallback(done, false)
+            );
+            globalObject.requestIdleCallback(createCallback(done, true));
+            this.clock = FakeTimers.install({ shouldClearNativeTimers: true });
+            globalObject.cancelIdleCallback(timer);
         });
     });
 
@@ -4729,7 +4821,7 @@ describe("#187 - Support timeout.refresh in node environments", function () {
         if (typeof setTimeout(NOOP, 0) === "object") {
             const t = setTimeout(stub, 1000);
             const t2 = t.refresh();
-            refute.same(t.id, t2.id);
+            refute.same(Number(t), Number(t2));
         }
         clock.uninstall();
     });
@@ -4918,7 +5010,7 @@ describe("loop limit stack trace", function () {
                     assert.equals(err.message, expectedMessage);
                     assert.equals(
                         new RegExp(
-                            `Error: ${expectedMessage}\\s+Timeout - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
+                            `Error: ${expectedMessage}\\s+IdleCallback - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
                         ).test(err.stack),
                         true
                     );
@@ -4935,7 +5027,7 @@ describe("loop limit stack trace", function () {
                 assert.equals(err.message, expectedMessage);
                 assert.equals(
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+Timeout - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
+                        `Error: ${expectedMessage}\\s+IdleCallback - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
                     ).test(err.stack),
                     true
                 );

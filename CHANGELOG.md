@@ -1,8 +1,13 @@
 
+8.0.1 / 2021-09-25
+==================
+
+  * fix: handle missing stack when throwing recursion errors (#401)
+
 8.0.0 / 2021-09-15
 ==================
 
-  * Remove generated typescript definitions (#386)
+  * Remove generated typescript definitions. If you use this package with TypeScript, install `@types/sinonjs__fake-timers` after upgrading (#386)
   * Issue 390 implicit dependencies on faking interval (#391)
   * replace var with const/let (#392)
   * Retry - Add stack trace to code recursively scheduling timers #325  (#375)
