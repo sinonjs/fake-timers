@@ -3706,20 +3706,26 @@ describe("FakeTimers", function () {
             });
         }
 
-        if (!performanceNowPresent) {
-            it("throws when adding performance to tofake array when performance not present", function () {
-                try {
-                    this.clock = FakeTimers.install({
+        it("throws when adding performance to tofake array when performance not present", function () {
+            assert.exception(
+                function () {
+                    const setTimeoutFake = sinon.fake();
+                    const context = {
+                        Date: Date,
+                        setTimeout: setTimeoutFake,
+                        clearTimeout: sinon.fake(),
+                        performance: undefined,
+                    };
+                    FakeTimers.withGlobal(context).install({
                         toFake: ["performance"],
                     });
-                } catch (e) {
-                    const expectedMsg =
-                        "non-existent performance object cannot be faked";
-                    assert(e instanceof ReferenceError);
-                    assert.equals(e.message, expectedMsg);
+                },
+                {
+                    name: "ReferenceError",
+                    message: "non-existent performance object cannot be faked",
                 }
-            });
-        }
+            );
+        });
 
         if (performanceNowPresent) {
             it("replaces global performance.now", function () {
