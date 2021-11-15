@@ -3706,6 +3706,27 @@ describe("FakeTimers", function () {
             });
         }
 
+        it("throws when adding performance to tofake array when performance not present", function () {
+            assert.exception(
+                function () {
+                    const setTimeoutFake = sinon.fake();
+                    const context = {
+                        Date: Date,
+                        setTimeout: setTimeoutFake,
+                        clearTimeout: sinon.fake(),
+                        performance: undefined,
+                    };
+                    FakeTimers.withGlobal(context).install({
+                        toFake: ["performance"],
+                    });
+                },
+                {
+                    name: "ReferenceError",
+                    message: "non-existent performance object cannot be faked",
+                }
+            );
+        });
+
         if (performanceNowPresent) {
             it("replaces global performance.now", function () {
                 this.clock = FakeTimers.install();
