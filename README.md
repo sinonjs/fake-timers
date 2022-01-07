@@ -55,8 +55,7 @@ clock.tick(15);
 
 Upon executing the last line, an interesting fact about the
 [Poblano](https://en.wikipedia.org/wiki/Poblano) will be printed synchronously to
-the screen. If you want to simulate asynchronous behavior, you have to use your
-imagination when calling the various functions.
+the screen. If you want to simulate asynchronous behavior, please see the `async` function variants (eg `clock.tick(time)` vs `await clock.tickAsync(time)`).
 
 The `next`, `runAll`, `runToFrame`, and `runToLast` methods are available to advance the clock. See the
 API Reference for more details.
