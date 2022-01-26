@@ -1,6 +1,13 @@
 "use strict";
 
-const globalObject = require("@sinonjs/commons").global;
+// Node.js stores certain things like the performance object on globalThis
+// but not on its `global` object which means we prefer it to `global` in
+// node versions that support it - diverging from the @sinonjs/commons behavior
+/* global globalThis */
+const globalObject =
+    typeof globalThis !== "undefined"
+        ? globalThis
+        : require("@sinonjs/commons").global;
 
 /**
  * @typedef {object} IdleDeadline
@@ -157,6 +164,10 @@ function withGlobal(_global) {
     const hasPerformancePrototype =
         _global.Performance &&
         (typeof _global.Performance).match(/^(function|object)$/);
+    const hasPerformanceConstructorPrototype =
+        _global.performance &&
+        _global.performance.constructor &&
+        _global.performance.constructor.prototype;
     const queueMicrotaskPresent = _global.hasOwnProperty("queueMicrotask");
     const requestAnimationFramePresent =
         _global.requestAnimationFrame &&
@@ -738,6 +749,7 @@ function withGlobal(_global) {
 
     /**
      * Gets clear handler name for a given timer type
+     *
      * @param {string} ttype
      */
     function getClearHandler(ttype) {
@@ -749,6 +761,7 @@ function withGlobal(_global) {
 
     /**
      * Gets schedule handler name for a given timer type
+     *
      * @param {string} ttype
      */
     function getScheduleHandler(ttype) {
@@ -1662,8 +1675,15 @@ function withGlobal(_global) {
         }
 
         if (clock.methods.includes("performance")) {
-            if (hasPerformancePrototype) {
-                var proto = _global.Performance.prototype;
+            const proto = (() => {
+                if (hasPerformancePrototype) {
+                    return _global.Performance.prototype;
+                }
+                if (hasPerformanceConstructorPrototype) {
+                    return _global.performance.constructor.prototype;
+                }
+            })();
+            if (proto) {
                 Object.getOwnPropertyNames(proto).forEach(function (name) {
                     if (name !== "now") {
                         clock.performance[name] =
@@ -1672,7 +1692,7 @@ function withGlobal(_global) {
                                 : NOOP;
                     }
                 });
-            } else if (config.toFake.includes("performance")) {
+            } else if ((config.toFake || []).includes("performance")) {
                 // user explicitly tried to fake performance when not present
                 throw new ReferenceError(
                     "non-existent performance object cannot be faked"
