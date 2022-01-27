@@ -1,13 +1,6 @@
 "use strict";
 
-// Node.js stores certain things like the performance object on globalThis
-// but not on its `global` object which means we prefer it to `global` in
-// node versions that support it - diverging from the @sinonjs/commons behavior
-/* global globalThis */
-const globalObject =
-    typeof globalThis !== "undefined"
-        ? globalThis
-        : require("@sinonjs/commons").global;
+const globalObject = require("@sinonjs/commons").global;
 
 /**
  * @typedef {object} IdleDeadline
