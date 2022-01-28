@@ -1,6 +1,7 @@
 #!/bin/bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SCRIPT_DIR > /dev/null
+set -e
 
 # check that that origin points to the sinonjs/fake-timers repo
 git remote -v | grep 'origin.*sinonjs/fake-timers.*push' > /dev/null
@@ -11,3 +12,4 @@ if [[ $? != 0 ]]; then
 fi
 
 git push --follow-tags origin
+npm publish
