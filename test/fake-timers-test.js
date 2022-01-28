@@ -1,6 +1,9 @@
 /* eslint-disable no-empty-function */
 "use strict";
 
+/* eslint-disable consistent-return */
+// This is because we need to do `return this.skip()` when feature detecting in tests
+
 /*
  * FIXME This is an interim hack to break a circular dependency between FakeTimers,
  * nise and sinon.
@@ -3083,7 +3086,7 @@ describe("FakeTimers", function () {
 
         it("does not remove immediate", function () {
             if (!setImmediatePresent) {
-                this.skip();
+                return this.skip();
             }
 
             const stub = sinon.stub();
@@ -3134,7 +3137,7 @@ describe("FakeTimers", function () {
 
         it("resets hrTime - issue #206", function () {
             if (!hrtimePresent) {
-                this.skip();
+                return this.skip();
             }
 
             const clock = FakeTimers.createClock();
@@ -3269,7 +3272,7 @@ describe("FakeTimers", function () {
 
         it("does not remove immediate", function () {
             if (!setImmediatePresent) {
-                this.skip();
+                return this.skip();
             }
 
             const stub = sinon.stub();
@@ -3450,8 +3453,9 @@ describe("FakeTimers", function () {
         describe("now", function () {
             it("returns clock.now", function () {
                 if (!Date.now) {
-                    this.skip();
+                    return this.skip();
                 }
+
                 /* eslint camelcase: "off" */
                 const clock_now = this.clock.Date.now();
                 const global_now = GlobalDate.now();
@@ -3461,8 +3465,9 @@ describe("FakeTimers", function () {
 
             it("is undefined", function () {
                 if (Date.now) {
-                    this.skip();
+                    return this.skip();
                 }
+
                 assert.isUndefined(this.clock.Date.now);
             });
         });
@@ -3483,17 +3488,17 @@ describe("FakeTimers", function () {
         });
 
         describe("toSource", function () {
-            it("is mirrored", function () {
+            before(function () {
                 if (!Date.toSource) {
                     this.skip();
                 }
+            });
+
+            it("is mirrored", function () {
                 assert.same(this.clock.Date.toSource(), Date.toSource());
             });
 
             it("is undefined", function () {
-                if (Date.toSource) {
-                    this.skip();
-                }
                 assert.isUndefined(this.clock.Date.toSource);
             });
         });
@@ -3759,8 +3764,9 @@ describe("FakeTimers", function () {
                 // In Phantom.js environment, Performance.prototype has only "now" method.
                 // For testing, some stub functions need to be assigned.
                 if (typeof Performance === "undefined") {
-                    this.skip();
+                    return this.skip();
                 }
+
                 Performance.prototype.someFunc1 = function () {};
                 Performance.prototype.someFunc2 = function () {};
                 Performance.prototype.someFunc3 = function () {};
@@ -3781,23 +3787,26 @@ describe("FakeTimers", function () {
             it("should mock performance on Node 16+", function () {
                 // node 16+ has a performance object but not a global constructor
                 if (typeof performance === "undefined") {
-                    this.skip();
+                    return this.skip();
                 }
                 if (typeof Performance !== "undefined") {
-                    this.skip();
+                    return this.skip();
                 }
+
                 // does not crash
                 this.clock = FakeTimers.install();
                 this.clock.uninstall();
             });
+
             it("should replace the getEntries, getEntriesByX methods with noops that return []", function () {
+                if (typeof Performance === "undefined") {
+                    return this.skip();
+                }
+
                 function noop() {
                     return ["foo"];
                 }
 
-                if (typeof Performance === "undefined") {
-                    this.skip();
-                }
                 Performance.prototype.getEntries = noop;
                 Performance.prototype.getEntriesByName = noop;
                 Performance.prototype.getEntriesByType = noop;
@@ -3959,7 +3968,7 @@ describe("FakeTimers", function () {
 
         it("should test setImmediate", function (done) {
             if (!setImmediatePresent) {
-                this.skip();
+                return this.skip();
             }
 
             const date = new Date("2015-09-25");
@@ -4068,7 +4077,7 @@ describe("FakeTimers", function () {
 
         it("can clear setImmediate", function (done) {
             if (globalObject.setImmediate === undefined) {
-                this.skip();
+                return this.skip();
             }
 
             const timer = globalObject.setImmediate(
@@ -4081,7 +4090,7 @@ describe("FakeTimers", function () {
 
         it("can clear requestAnimationFrame", function (done) {
             if (globalObject.requestAnimationFrame === undefined) {
-                this.skip();
+                return this.skip();
             }
 
             const timer = globalObject.requestAnimationFrame(
@@ -4094,7 +4103,7 @@ describe("FakeTimers", function () {
 
         it("can clear requestIdleCallback", function (done) {
             if (globalObject.requestIdleCallback === undefined) {
-                this.skip();
+                return this.skip();
             }
 
             const timer = globalObject.requestIdleCallback(
@@ -4252,7 +4261,7 @@ describe("FakeTimers", function () {
 
         it("does not remove immediate", function () {
             if (!setImmediatePresent) {
-                this.skip();
+                return this.skip();
             }
 
             const stub = sinon.stub();
