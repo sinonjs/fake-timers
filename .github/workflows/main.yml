@@ -15,7 +15,7 @@ jobs:
             - uses: actions/checkout@v2
             - uses: actions/setup-node@v2
               with:
-                  node-version: "16"
+                  node-version: "lts/*"
                   cache: npm
             - name: Install dependencies
               run: |
@@ -33,7 +33,7 @@ jobs:
             - uses: actions/checkout@v2
             - uses: actions/setup-node@v2
               with:
-                  node-version: "16"
+                  node-version: "lts/*"
                   cache: npm
             - name: Install dependencies
               run: |
@@ -50,7 +50,7 @@ jobs:
             - uses: actions/checkout@v2
             - uses: actions/setup-node@v2
               with:
-                  node-version: "16"
+                  node-version: "lts/*"
                   cache: npm
             - name: Install dependencies
               run: |
@@ -71,7 +71,7 @@ jobs:
             - uses: actions/checkout@v2
             - uses: actions/setup-node@v2
               with:
-                  node-version: "16"
+                  node-version: "lts/*"
                   cache: npm
             - name: Install dependencies
               run: |
@@ -91,7 +91,7 @@ jobs:
             - uses: actions/checkout@v2
             - uses: actions/setup-node@v2
               with:
-                  node-version: "14"
+                  node-version: "lts/*"
                   cache: npm
             - name: Install dependencies
               run: |
