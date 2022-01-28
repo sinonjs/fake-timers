@@ -3758,6 +3758,9 @@ describe("FakeTimers", function () {
             it("should not alter the global performance properties and methods", function () {
                 // In Phantom.js environment, Performance.prototype has only "now" method.
                 // For testing, some stub functions need to be assigned.
+                if (typeof Performance === "undefined") {
+                    this.skip();
+                }
                 Performance.prototype.someFunc1 = function () {};
                 Performance.prototype.someFunc2 = function () {};
                 Performance.prototype.someFunc3 = function () {};
@@ -3775,11 +3778,26 @@ describe("FakeTimers", function () {
                 delete Performance.prototype.someFunc3;
             });
 
+            it("should mock performance on Node 16+", function () {
+                // node 16+ has a performance object but not a global constructor
+                if (typeof performance === "undefined") {
+                    this.skip();
+                }
+                if (typeof Performance !== "undefined") {
+                    this.skip();
+                }
+                // does not crash
+                this.clock = FakeTimers.install();
+                this.clock.uninstall();
+            });
             it("should replace the getEntries, getEntriesByX methods with noops that return []", function () {
                 function noop() {
                     return ["foo"];
                 }
 
+                if (typeof Performance === "undefined") {
+                    this.skip();
+                }
                 Performance.prototype.getEntries = noop;
                 Performance.prototype.getEntriesByName = noop;
                 Performance.prototype.getEntriesByType = noop;
