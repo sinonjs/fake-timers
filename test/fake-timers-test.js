@@ -70,6 +70,38 @@ describe("issue #59", function () {
     });
 });
 
+describe("issue #419", function () {
+    it("should return the ref status as true after initiation", function () {
+        const clock = FakeTimers.install();
+        const stub = sinon.stub();
+        const refStatusForTimeout = clock.setTimeout(stub, 0).hasRef();
+        const refStatusForInterval = clock.setInterval(stub, 0).hasRef();
+        assert.isTrue(refStatusForTimeout);
+        assert.isTrue(refStatusForInterval);
+        clock.uninstall();
+    });
+
+    it("should return the ref status as false after using unref", function () {
+        const clock = FakeTimers.install();
+        const stub = sinon.stub();
+        const refStatusForTimeout = clock.setTimeout(stub, 0).unref().hasRef();
+        const refStatusForInterval = clock.setInterval(stub, 0).unref().hasRef();
+        assert.isFalse(refStatusForInterval);
+        assert.isFalse(refStatusForTimeout);
+        clock.uninstall();
+    });
+
+    it("should return the ref status as true after using unref and then ref ", function () {
+        const clock = FakeTimers.install();
+        const stub = sinon.stub();
+        const refStatusForTimeout = clock.setTimeout(stub, 0).unref().ref().hasRef();
+        const refStatusForInterval = clock.setInterval(stub, 0).unref().ref().hasRef();
+        assert.isTrue(refStatusForInterval);
+        assert.isTrue(refStatusForTimeout);
+        clock.uninstall();
+    });
+});
+
 describe("issue #73", function () {
     it("should install with date object", function () {
         const date = new Date("2015-09-25");
