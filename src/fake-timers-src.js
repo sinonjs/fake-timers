@@ -585,11 +585,17 @@ function withGlobal(_global) {
 
         if (addTimerReturnsObject) {
             const res = {
+                refed: true,
                 ref: function () {
+                    this.refed = true;
                     return res;
                 },
                 unref: function () {
+                    this.refed = false;
                     return res;
+                },
+                hasRef: function () {
+                    return this.refed;
                 },
                 refresh: function () {
                     clearTimeout(timer.id);
