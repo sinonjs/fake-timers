@@ -69,50 +69,6 @@ describe("issue #59", function () {
         clock.uninstall();
     });
 });
-
-describe("issue #419", function () {
-    it("should return the ref status as true after initiation", function () {
-        const clock = FakeTimers.install();
-        const stub = sinon.stub();
-        const refStatusForTimeout = clock.setTimeout(stub, 0).hasRef();
-        const refStatusForInterval = clock.setInterval(stub, 0).hasRef();
-        assert.isTrue(refStatusForTimeout);
-        assert.isTrue(refStatusForInterval);
-        clock.uninstall();
-    });
-
-    it("should return the ref status as false after using unref", function () {
-        const clock = FakeTimers.install();
-        const stub = sinon.stub();
-        const refStatusForTimeout = clock.setTimeout(stub, 0).unref().hasRef();
-        const refStatusForInterval = clock
-            .setInterval(stub, 0)
-            .unref()
-            .hasRef();
-        assert.isFalse(refStatusForInterval);
-        assert.isFalse(refStatusForTimeout);
-        clock.uninstall();
-    });
-
-    it("should return the ref status as true after using unref and then ref ", function () {
-        const clock = FakeTimers.install();
-        const stub = sinon.stub();
-        const refStatusForTimeout = clock
-            .setTimeout(stub, 0)
-            .unref()
-            .ref()
-            .hasRef();
-        const refStatusForInterval = clock
-            .setInterval(stub, 0)
-            .unref()
-            .ref()
-            .hasRef();
-        assert.isTrue(refStatusForInterval);
-        assert.isTrue(refStatusForTimeout);
-        clock.uninstall();
-    });
-});
-
 describe("issue #73", function () {
     it("should install with date object", function () {
         const date = new Date("2015-09-25");
@@ -4877,6 +4833,7 @@ describe("#368 - timeout.refresh setTimeout arguments", function () {
             this.skip();
         }
     });
+
     it("should forward  arguments passed to setTimeout", function () {
         const clock = FakeTimers.install();
         const stub = sinon.stub();
@@ -5275,5 +5232,58 @@ describe("loop limit stack trace", function () {
             }
             assert.equals(caughtError, true);
         });
+    });
+});
+
+describe("Node Timer: ref(), unref(),hasRef()", function () {
+    let clock;
+
+    before(function () {
+        if (!addTimerReturnsObject) {
+            this.skip();
+        }
+        clock = FakeTimers.install();
+    });
+
+    afterEach(function () {
+        clock.uninstall();
+    });
+
+    it("should return the ref status as true after initiation", function () {
+        const stub = sinon.stub();
+        const refStatusForTimeout = clock.setTimeout(stub, 0).hasRef();
+        const refStatusForInterval = clock.setInterval(stub, 0).hasRef();
+        assert.isTrue(refStatusForTimeout);
+        assert.isTrue(refStatusForInterval);
+        clock.uninstall();
+    });
+
+    it("should return the ref status as false after using unref", function () {
+        const stub = sinon.stub();
+        const refStatusForTimeout = clock.setTimeout(stub, 0).unref().hasRef();
+        const refStatusForInterval = clock
+            .setInterval(stub, 0)
+            .unref()
+            .hasRef();
+        assert.isFalse(refStatusForInterval);
+        assert.isFalse(refStatusForTimeout);
+        clock.uninstall();
+    });
+
+    it("should return the ref status as true after using unref and then ref ", function () {
+        const stub = sinon.stub();
+        const refStatusForTimeout = clock
+            .setTimeout(stub, 0)
+            .unref()
+            .ref()
+            .hasRef();
+        const refStatusForInterval = clock
+            .setInterval(stub, 0)
+            .unref()
+            .ref()
+            .hasRef();
+        assert.isTrue(refStatusForInterval);
+        assert.isTrue(refStatusForTimeout);
+        clock.uninstall();
     });
 });
