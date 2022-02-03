@@ -12,4 +12,6 @@ if [[ $? != 0 ]]; then
 fi
 
 git push --follow-tags origin
+
+cd ..  # to root dir
 npm publish
