@@ -85,7 +85,10 @@ describe("issue #419", function () {
         const clock = FakeTimers.install();
         const stub = sinon.stub();
         const refStatusForTimeout = clock.setTimeout(stub, 0).unref().hasRef();
-        const refStatusForInterval = clock.setInterval(stub, 0).unref().hasRef();
+        const refStatusForInterval = clock
+            .setInterval(stub, 0)
+            .unref()
+            .hasRef();
         assert.isFalse(refStatusForInterval);
         assert.isFalse(refStatusForTimeout);
         clock.uninstall();
@@ -94,8 +97,16 @@ describe("issue #419", function () {
     it("should return the ref status as true after using unref and then ref ", function () {
         const clock = FakeTimers.install();
         const stub = sinon.stub();
-        const refStatusForTimeout = clock.setTimeout(stub, 0).unref().ref().hasRef();
-        const refStatusForInterval = clock.setInterval(stub, 0).unref().ref().hasRef();
+        const refStatusForTimeout = clock
+            .setTimeout(stub, 0)
+            .unref()
+            .ref()
+            .hasRef();
+        const refStatusForInterval = clock
+            .setInterval(stub, 0)
+            .unref()
+            .ref()
+            .hasRef();
         assert.isTrue(refStatusForInterval);
         assert.isTrue(refStatusForTimeout);
         clock.uninstall();
