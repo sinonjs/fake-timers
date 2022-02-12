@@ -1103,9 +1103,23 @@ function withGlobal(_global) {
             timeout
         ) {
             let timeToNextIdlePeriod = 0;
+            const idleDeadline = {
+                didTimeout: true,
+                timeRemaining: function () {
+                    return timeToNextIdlePeriod;
+                },
+            };
 
             if (clock.countTimers() > 0) {
                 timeToNextIdlePeriod = 50; // const for now
+            }
+
+            if (typeof func === "function") {
+                try {
+                    func(idleDeadline);
+                } catch (error) {
+                    return error;
+                }
             }
 
             const result = addTimer(clock, {
@@ -1118,7 +1132,7 @@ function withGlobal(_global) {
                 idleCallback: true,
             });
 
-            return Number(result);
+            return result;
         };
 
         clock.cancelIdleCallback = function cancelIdleCallback(timerId) {
@@ -1133,19 +1147,18 @@ function withGlobal(_global) {
             });
         };
         if (typeof _global.Promise !== "undefined" && utilPromisify) {
-            clock.setTimeout[
-                utilPromisify.custom
-            ] = function promisifiedSetTimeout(timeout, arg) {
-                return new _global.Promise(function setTimeoutExecutor(
-                    resolve
-                ) {
-                    addTimer(clock, {
-                        func: resolve,
-                        args: [arg],
-                        delay: timeout,
+            clock.setTimeout[utilPromisify.custom] =
+                function promisifiedSetTimeout(timeout, arg) {
+                    return new _global.Promise(function setTimeoutExecutor(
+                        resolve
+                    ) {
+                        addTimer(clock, {
+                            func: resolve,
+                            args: [arg],
+                            delay: timeout,
+                        });
                     });
-                });
-            };
+                };
         }
 
         clock.clearTimeout = function clearTimeout(timerId) {
@@ -1189,19 +1202,18 @@ function withGlobal(_global) {
             };
 
             if (typeof _global.Promise !== "undefined" && utilPromisify) {
-                clock.setImmediate[
-                    utilPromisify.custom
-                ] = function promisifiedSetImmediate(arg) {
-                    return new _global.Promise(function setImmediateExecutor(
-                        resolve
-                    ) {
-                        addTimer(clock, {
-                            func: resolve,
-                            args: [arg],
-                            immediate: true,
-                        });
-                    });
-                };
+                clock.setImmediate[utilPromisify.custom] =
+                    function promisifiedSetImmediate(arg) {
+                        return new _global.Promise(
+                            function setImmediateExecutor(resolve) {
+                                addTimer(clock, {
+                                    func: resolve,
+                                    args: [arg],
+                                    immediate: true,
+                                });
+                            }
+                        );
+                    };
             }
 
             clock.clearImmediate = function clearImmediate(timerId) {
@@ -1507,8 +1519,9 @@ function withGlobal(_global) {
                                         return;
                                     }
 
-                                    numTimers = Object.keys(clock.timers)
-                                        .length;
+                                    numTimers = Object.keys(
+                                        clock.timers
+                                    ).length;
                                     if (numTimers === 0) {
                                         resetIsNearInfiniteLimit();
                                         resolve(clock.now);
