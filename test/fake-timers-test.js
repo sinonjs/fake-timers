@@ -4026,6 +4026,24 @@ describe("FakeTimers", function () {
                 done();
             }, 0);
         });
+
+        it("should advance time even if the code is synchronous", function () {
+            const date = new Date("2015-09-25");
+            const clock = FakeTimers.install({
+                now: date,
+                shouldAdvanceTime: true,
+                advanceTimeDelta: 1,
+            });
+            assert.same(Date.now(), 1443139200000);
+            const timeoutStarted = Date.now();
+
+            // Make sure 1 millisecond has passed synchronously
+            while (Date.now() - timeoutStarted <= 0);
+
+            assert.same(Date.now() - timeoutStarted, 1);
+
+            clock.uninstall();
+        });
     });
 
     describe("shouldClearNativeTimers", function () {
