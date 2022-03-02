@@ -598,9 +598,10 @@ function withGlobal(_global) {
                     return this.refed;
                 },
                 refresh: function () {
-                    clearTimeout(timer.id);
-                    const args = [timer.func, timer.delay].concat(timer.args);
-                    return setTimeout.apply(null, args);
+                    timer.callAt =
+                      clock.now + (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
+
+                    return timer;
                 },
                 [Symbol.toPrimitive]: function () {
                     return timer.id;
