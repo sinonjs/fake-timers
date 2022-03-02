@@ -599,7 +599,8 @@ function withGlobal(_global) {
                 },
                 refresh: function () {
                     timer.callAt =
-                      clock.now + (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
+                        clock.now +
+                        (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
                     return timer;
                 },
