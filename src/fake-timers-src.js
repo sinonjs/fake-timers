@@ -602,7 +602,12 @@ function withGlobal(_global) {
                         clock.now +
                         (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
-                    return timer;
+                    // re-add if removed
+                    if (!clock.timers[timer.id]) {
+                        clock.timers[timer.id] = timer;
+                    }
+
+                    return res;
                 },
                 [Symbol.toPrimitive]: function () {
                     return timer.id;
