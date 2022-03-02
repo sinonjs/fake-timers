@@ -4862,6 +4862,23 @@ describe("#187 - Support timeout.refresh in node environments", function () {
         }
         clock.uninstall();
     });
+
+    it("only calls stub once if not fired at time of refresh", function () {
+        const clock = FakeTimers.install();
+        const stub = sinon.stub();
+
+        if (typeof setTimeout(NOOP, 0) === "object") {
+            const t = setTimeout(stub, 1000);
+            clock.tick(999);
+            assert(stub.notCalled);
+            t.refresh();
+            clock.tick(999);
+            assert(stub.notCalled);
+            clock.tick(1);
+            assert(stub.calledOnce);
+        }
+        clock.uninstall();
+    });
 });
 
 describe("#347 - Support util.promisify once installed", function () {
