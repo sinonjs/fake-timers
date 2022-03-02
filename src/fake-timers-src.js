@@ -602,10 +602,8 @@ function withGlobal(_global) {
                         clock.now +
                         (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
-                    // re-add if removed
-                    if (!clock.timers[timer.id]) {
-                        clock.timers[timer.id] = timer;
-                    }
+                    // it _might_ have been removed, but if not the assignment is perfectly fine
+                    clock.timers[timer.id] = timer;
 
                     return res;
                 },
