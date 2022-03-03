@@ -3607,16 +3607,16 @@ describe("FakeTimers", function () {
             }
         });
 
-        it("global fake setTimeout().refresh() should return timer", function () {
+        it("global fake setTimeout().refresh() should return same timer", function () {
             this.clock = FakeTimers.install();
             const stub = sinon.stub();
 
             if (typeof setTimeout(NOOP, 0) === "object") {
-                const to = setTimeout(stub, 1000).refresh();
-                assert.isNumber(Number(to));
-                assert.isFunction(to.ref);
-                assert.isFunction(to.refresh);
+                const timeout = setTimeout(stub, 1000);
+                const to = timeout.refresh();
+                assert(timeout === to);
             }
+            this.clock.uninstall();
         });
 
         it("replaces global clearTimeout", function () {
@@ -4834,7 +4834,7 @@ describe("#368 - timeout.refresh setTimeout arguments", function () {
         }
     });
 
-    it("should forward  arguments passed to setTimeout", function () {
+    it("should forward arguments passed to setTimeout", function () {
         const clock = FakeTimers.install();
         const stub = sinon.stub();
 
@@ -4863,13 +4863,19 @@ describe("#187 - Support timeout.refresh in node environments", function () {
         clock.uninstall();
     });
 
-    it("assigns a new id to the refreshed timer", function () {
+    it("only calls stub once if not fired at time of refresh", function () {
         const clock = FakeTimers.install();
         const stub = sinon.stub();
+
         if (typeof setTimeout(NOOP, 0) === "object") {
             const t = setTimeout(stub, 1000);
-            const t2 = t.refresh();
-            refute.same(Number(t), Number(t2));
+            clock.tick(999);
+            assert(stub.notCalled);
+            t.refresh();
+            clock.tick(999);
+            assert(stub.notCalled);
+            clock.tick(1);
+            assert(stub.calledOnce);
         }
         clock.uninstall();
     });
