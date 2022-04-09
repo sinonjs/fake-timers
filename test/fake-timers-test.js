@@ -53,6 +53,69 @@ const utilPromisifyAvailable = promisePresent && utilPromisify;
 const timeoutResult = global.setTimeout(NOOP, 0);
 const addTimerReturnsObject = typeof timeoutResult === "object";
 
+describe("issue #2449: perminent loss of native functions", () => {
+    it("should not fake faked timers", () => {
+        const currentTime = new Date().getTime();
+        const date1 = new Date("2015-09-25");
+        const date2 = new Date("2015-09-26");
+        let clock = FakeTimers.install({ now: date1 });
+        assert.same(clock.now, date1.getTime());
+        assert.same(new Date().getTime(), 1443139200000);
+        assert.exception(function () {
+            FakeTimers.install({ now: date2 });
+        });
+        clock.uninstall();
+        clock = FakeTimers.install({ now: date2 });
+        assert.same(clock.now, date2.getTime());
+        clock.uninstall();
+        assert.greater(new Date().getTime(), currentTime, true);
+    });
+
+    it("should not fake faked timers on a custom target", () => {
+        const setTimeoutFake = sinon.fake();
+        const context = {
+            Date: Date,
+            setTimeout: setTimeoutFake,
+            clearTimeout: sinon.fake(),
+        };
+        let clock = FakeTimers.withGlobal(context).install();
+        assert.equals(setTimeoutFake.callCount, 1);
+        clock.setTimeout(NOOP, 0);
+        assert.equals(setTimeoutFake.callCount, 1);
+        assert.exception(function () {
+            clock = FakeTimers.withGlobal(context).install();
+        });
+        clock.uninstall();
+    });
+
+    it("should allow a fake on a custom target if the global is faked", () => {
+        const globalClock = FakeTimers.install();
+        const setTimeoutFake = sinon.fake();
+        const context = {
+            Date: Date,
+            setTimeout: setTimeoutFake,
+            clearTimeout: sinon.fake(),
+        };
+        const clock = FakeTimers.withGlobal(context).install();
+
+        clock.uninstall();
+        globalClock.uninstall();
+    });
+
+    it("should allow a fake on the global if a fake on a customer target is already defined", () => {
+        const setTimeoutFake = sinon.fake();
+        const context = {
+            Date: Date,
+            setTimeout: setTimeoutFake,
+            clearTimeout: sinon.fake(),
+        };
+        const clock = FakeTimers.withGlobal(context).install();
+        const globalClock = FakeTimers.install();
+
+        globalClock.uninstall();
+        clock.uninstall();
+    });
+});
 describe("issue #59", function () {
     it("should install and uninstall the clock on a custom target", function () {
         const setTimeoutFake = sinon.fake();

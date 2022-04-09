@@ -1,6 +1,7 @@
 "use strict";
 
 const globalObject = require("@sinonjs/commons").global;
+const globalDate = globalObject.Date;
 
 /**
  * @typedef {object} IdleDeadline
@@ -133,6 +134,7 @@ const globalObject = require("@sinonjs/commons").global;
  * @returns {FakeTimers}
  */
 function withGlobal(_global) {
+    const stockDate = _global.Date;
     const userAgent = _global.navigator && _global.navigator.userAgent;
     const isRunningInIE = userAgent && userAgent.indexOf("MSIE ") > -1;
     const maxTimeout = Math.pow(2, 31) - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
@@ -1633,6 +1635,16 @@ function withGlobal(_global) {
                     config
                 )} install requires an object parameter`
             );
+        }
+
+        if (
+            typeof stockDate === "function" &&
+            Math.abs(new Date().getTime() - new stockDate().getTime()) > 100
+        ) {
+            // Allow 100 ms variance for determining already faked timers.
+            // Timers are already faked; this is a problem.
+            // Make the user reset timers before continuing.
+            throw new TypeError("Can't fake timers twice.");
         }
 
         // eslint-disable-next-line no-param-reassign
