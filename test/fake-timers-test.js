@@ -53,8 +53,8 @@ const utilPromisifyAvailable = promisePresent && utilPromisify;
 const timeoutResult = global.setTimeout(NOOP, 0);
 const addTimerReturnsObject = typeof timeoutResult === "object";
 
-describe("issue #2449: perminent loss of native functions", () => {
-    it("should not fake faked timers", () => {
+describe("issue #2449: permanent loss of native functions", function () {
+    it("should not fake faked timers", function () {
         const currentTime = new Date().getTime();
         const date1 = new Date("2015-09-25");
         const date2 = new Date("2015-09-26");
@@ -71,7 +71,7 @@ describe("issue #2449: perminent loss of native functions", () => {
         assert.greater(new Date().getTime(), currentTime, true);
     });
 
-    it("should not fake faked timers on a custom target", () => {
+    it("should not fake faked timers on a custom target", function () {
         const setTimeoutFake = sinon.fake();
         const context = {
             Date: Date,
@@ -79,16 +79,18 @@ describe("issue #2449: perminent loss of native functions", () => {
             clearTimeout: sinon.fake(),
         };
         let clock = FakeTimers.withGlobal(context).install();
-        assert.equals(setTimeoutFake.callCount, 1);
-        clock.setTimeout(NOOP, 0);
-        assert.equals(setTimeoutFake.callCount, 1);
         assert.exception(function () {
             clock = FakeTimers.withGlobal(context).install();
         });
         clock.uninstall();
+        assert.isUndefined(context.isFake, "`isFake` shouldn't be left over on the object.")
+
+        // After uninstaling we should be able to install without issue
+        clock = FakeTimers.withGlobal(context).install();
+        clock.uninstall();
     });
 
-    it("should allow a fake on a custom target if the global is faked", () => {
+    it("should allow a fake on a custom target if the global is faked", function () {
         const globalClock = FakeTimers.install();
         const setTimeoutFake = sinon.fake();
         const context = {
@@ -102,7 +104,7 @@ describe("issue #2449: perminent loss of native functions", () => {
         globalClock.uninstall();
     });
 
-    it("should allow a fake on the global if a fake on a customer target is already defined", () => {
+    it("should allow a fake on the global if a fake on a customer target is already defined", function () {
         const setTimeoutFake = sinon.fake();
         const context = {
             Date: Date,

@@ -1,7 +1,6 @@
 "use strict";
 
 const globalObject = require("@sinonjs/commons").global;
-const globalDate = globalObject.Date;
 
 /**
  * @typedef {object} IdleDeadline
@@ -134,7 +133,6 @@ const globalDate = globalObject.Date;
  * @returns {FakeTimers}
  */
 function withGlobal(_global) {
-    const stockDate = _global.Date;
     const userAgent = _global.navigator && _global.navigator.userAgent;
     const isRunningInIE = userAgent && userAgent.indexOf("MSIE ") > -1;
     const maxTimeout = Math.pow(2, 31) - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
@@ -897,6 +895,8 @@ function withGlobal(_global) {
         // Prevent multiple executions which will completely remove these props
         clock.methods = [];
 
+        delete _global.isFake;
+
         // return pending timers, to enable checking what timers remained on uninstall
         if (!clock.timers) {
             return [];
@@ -1637,14 +1637,14 @@ function withGlobal(_global) {
             );
         }
 
-        if (
-            typeof stockDate === "function" &&
-            Math.abs(new Date().getTime() - new stockDate().getTime()) > 100
-        ) {
-            // Allow 100 ms variance for determining already faked timers.
+        if (_global.isFake === true) {
             // Timers are already faked; this is a problem.
             // Make the user reset timers before continuing.
-            throw new TypeError("Can't fake timers twice.");
+            throw new TypeError(
+                "Can't install fake timers twice on the same global object."
+            );
+        } else {
+            _global.isFake = true;
         }
 
         // eslint-disable-next-line no-param-reassign
