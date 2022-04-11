@@ -83,7 +83,10 @@ describe("issue #2449: permanent loss of native functions", function () {
             clock = FakeTimers.withGlobal(context).install();
         });
         clock.uninstall();
-        assert.isUndefined(context.isFake, "`isFake` shouldn't be left over on the object.")
+        assert.isUndefined(
+            context.isFake,
+            "`isFake` shouldn't be left over on the object."
+        );
 
         // After uninstaling we should be able to install without issue
         clock = FakeTimers.withGlobal(context).install();
