@@ -83,28 +83,28 @@ describe("issue #2449: permanent loss of native functions", function () {
             clock = FakeTimers.withGlobal(context).install();
         });
         clock.uninstall();
-        assert.isUndefined(
-            context.isFake,
-            "`isFake` shouldn't be left over on the object."
-        );
 
         // After uninstaling we should be able to install without issue
         clock = FakeTimers.withGlobal(context).install();
         clock.uninstall();
     });
 
-    it("should allow a fake on a custom target if the global is faked", function () {
+    it("should not allow a fake on a custom target if the global is faked adn the context inherited from the global", function () {
         const globalClock = FakeTimers.install();
+        assert.equals(new Date().getTime(), 0);
         const setTimeoutFake = sinon.fake();
         const context = {
             Date: Date,
             setTimeout: setTimeoutFake,
             clearTimeout: sinon.fake(),
         };
-        const clock = FakeTimers.withGlobal(context).install();
+        assert.equals(new context.Date().getTime(), 0);
+        assert.exception(function () {
+            FakeTimers.withGlobal(context).install();
+        });
 
-        clock.uninstall();
         globalClock.uninstall();
+        refute.equals(new Date().getTime(), 0);
     });
 
     it("should allow a fake on the global if a fake on a customer target is already defined", function () {
@@ -115,10 +115,17 @@ describe("issue #2449: permanent loss of native functions", function () {
             clearTimeout: sinon.fake(),
         };
         const clock = FakeTimers.withGlobal(context).install();
+        assert.equals(new context.Date().getTime(), 0);
+        refute.equals(new Date().getTime(), 0);
         const globalClock = FakeTimers.install();
+        assert.equals(new Date().getTime(), 0);
 
         globalClock.uninstall();
+        refute.equals(new Date().getTime(), 0);
+        assert.equals(new context.Date().getTime(), 0);
         clock.uninstall();
+        refute.equals(new Date().getTime(), 0);
+        refute.equals(new context.Date().getTime(), 0);
     });
 });
 describe("issue #59", function () {

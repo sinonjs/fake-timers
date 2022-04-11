@@ -425,6 +425,7 @@ function withGlobal(_global) {
         target.parse = source.parse;
         target.UTC = source.UTC;
         target.prototype.toUTCString = source.prototype.toUTCString;
+        target.isFake = true;
 
         return target;
     }
@@ -894,8 +895,6 @@ function withGlobal(_global) {
 
         // Prevent multiple executions which will completely remove these props
         clock.methods = [];
-
-        delete _global.isFake;
 
         // return pending timers, to enable checking what timers remained on uninstall
         if (!clock.timers) {
@@ -1637,14 +1636,12 @@ function withGlobal(_global) {
             );
         }
 
-        if (_global.isFake === true) {
+        if (_global.Date.isFake === true) {
             // Timers are already faked; this is a problem.
             // Make the user reset timers before continuing.
             throw new TypeError(
                 "Can't install fake timers twice on the same global object."
             );
-        } else {
-            _global.isFake = true;
         }
 
         // eslint-disable-next-line no-param-reassign
