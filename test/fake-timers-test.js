@@ -5214,11 +5214,13 @@ describe("loop limit stack trace", function () {
     });
 
     describe("setImmediate", function () {
-        beforeEach(function () {
+        before(function () {
             if (!setImmediatePresent) {
                 this.skip();
             }
+        });
 
+        beforeEach(function () {
             function recursiveCreateTimer() {
                 setImmediate(function recursiveCreateTimerTimeout() {
                     recursiveCreateTimer();
