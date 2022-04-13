@@ -89,7 +89,7 @@ describe("issue #2449: permanent loss of native functions", function () {
         clock.uninstall();
     });
 
-    it("should not allow a fake on a custom target if the global is faked adn the context inherited from the global", function () {
+    it("should not allow a fake on a custom target if the global is faked and the context inherited from the global", function () {
         const globalClock = FakeTimers.install();
         assert.equals(new Date().getTime(), 0);
         const setTimeoutFake = sinon.fake();
