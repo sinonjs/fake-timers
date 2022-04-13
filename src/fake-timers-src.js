@@ -425,6 +425,7 @@ function withGlobal(_global) {
         target.parse = source.parse;
         target.UTC = source.UTC;
         target.prototype.toUTCString = source.prototype.toUTCString;
+        target.isFake = true;
 
         return target;
     }
@@ -1632,6 +1633,14 @@ function withGlobal(_global) {
                 `FakeTimers.install called with ${String(
                     config
                 )} install requires an object parameter`
+            );
+        }
+
+        if (_global.Date.isFake === true) {
+            // Timers are already faked; this is a problem.
+            // Make the user reset timers before continuing.
+            throw new TypeError(
+                "Can't install fake timers twice on the same global object."
             );
         }
 
