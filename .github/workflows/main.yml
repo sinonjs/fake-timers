@@ -1,12 +1,12 @@
 name: Node CI
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - '**'
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - "**"
 
 jobs:
     prettier:
@@ -109,7 +109,7 @@ jobs:
 
         strategy:
             matrix:
-                node-version: [12, 14, 16, 17]
+                node-version: [14, 16, 18]
 
         steps:
             - uses: actions/checkout@v2
