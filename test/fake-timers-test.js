@@ -1,8 +1,4 @@
-/* eslint-disable no-empty-function */
 "use strict";
-
-/* eslint-disable consistent-return */
-// This is because we need to do `return this.skip()` when feature detecting in tests
 
 /*
  * FIXME This is an interim hack to break a circular dependency between FakeTimers,
