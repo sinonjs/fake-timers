@@ -927,6 +927,21 @@ describe("FakeTimers", function () {
             assert(stubs[1].called);
         });
 
+        it("works with events", function () {
+            // only run this test in the browser
+            if (!globalObject.KeyboardEvent) {
+                this.skip();
+            }
+            const firstEvent = new KeyboardEvent("keypress", { key: "A" });
+            assert.equals(firstEvent.timeStamp, Date.now());
+
+            this.clock.tick(150);
+            const secondEvent = new KeyboardEvent("keypress", { key: "B" });
+
+            const eventDiff = secondEvent.timeStamp - firstEvent.timeStamp;
+            assert.equals(eventDiff, 150);
+        });
+
         it("triggers even when some throw", function () {
             const clock = this.clock;
             const stubs = [sinon.stub().throws(), sinon.stub()];
