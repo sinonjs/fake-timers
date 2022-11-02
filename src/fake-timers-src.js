@@ -440,7 +440,6 @@ function withGlobal(_global) {
          * @param {number} minute
          * @param {number} second
          * @param {number} ms
-         *
          * @returns {Date}
          */
         function ClockDate(year, month, date, hour, minute, second, ms) {
@@ -666,7 +665,6 @@ function withGlobal(_global) {
      * @param {Clock} clock
      * @param {number} from
      * @param {number} to
-     *
      * @returns {Timer}
      */
     function firstTimerInRange(clock, from, to) {
