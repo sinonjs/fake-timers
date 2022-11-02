@@ -40,7 +40,7 @@
     "@sinonjs/referee-sinon": "10.1.0",
     "husky": "^8.0.0",
     "jsdom": "20.0.2",
-    "lint-staged": "10.0.7",
+    "lint-staged": "13.0.3",
     "mocha": "10.1.0",
     "mochify": "9.2.0",
     "nyc": "15.1.0",
