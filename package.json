@@ -42,7 +42,7 @@
     "lint-staged": "10.0.7",
     "mocha": "10.1.0",
     "mochify": "9.2.0",
-    "nyc": "14.1.1",
+    "nyc": "15.1.0",
     "prettier": "2.2.1"
   },
   "main": "./src/fake-timers-src.js",
