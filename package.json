@@ -48,9 +48,6 @@
     "prettier": "2.2.1"
   },
   "main": "./src/fake-timers-src.js",
-  "dependencies": {
-    "@sinonjs/commons": "2.0.0"
-  },
   "husky": {
     "hooks": {
       "pre-commit": "npm run lint"
@@ -67,5 +64,8 @@
       "types/**",
       "fake-timers.js"
     ]
+  },
+  "dependencies": {
+    "@sinonjs/commons": "^2.0.0"
   }
 }
