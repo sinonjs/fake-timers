@@ -49,7 +49,7 @@
   },
   "main": "./src/fake-timers-src.js",
   "dependencies": {
-    "@sinonjs/commons": "^1.7.0"
+    "@sinonjs/commons": "2.0.0"
   },
   "husky": {
     "hooks": {
