@@ -1562,7 +1562,7 @@ function withGlobal(_global) {
                                 resolve(clock.now);
                             }
 
-                            resolve(clock.tickAsync(timer.callAt));
+                            resolve(clock.tickAsync(timer.callAt - clock.now));
                         } catch (e) {
                             reject(e);
                         }
