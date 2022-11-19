@@ -53,6 +53,25 @@ const utilPromisifyAvailable = promisePresent && utilPromisify;
 const timeoutResult = global.setTimeout(NOOP, 0);
 const addTimerReturnsObject = typeof timeoutResult === "object";
 
+describe("issue #450: `runToLastAsync` should not cause infinite loop", function () {
+    it("when now is set with createClock", function () {
+        this.clock = FakeTimers.createClock(GlobalDate.now());
+        const test = this;
+        const spy = sinon.spy();
+        const recursiveCallback = function () {
+            global.Promise.resolve().then(function () {
+                test.clock.setTimeout(recursiveCallback, 0);
+            });
+        };
+
+        this.clock.setTimeout(recursiveCallback, 0);
+        this.clock.setTimeout(spy, 100);
+
+        return this.clock.runToLastAsync().then(function () {
+            assert.isTrue(spy.called);
+        });
+    });
+});
 describe("issue #2449: permanent loss of native functions", function () {
     it("should not fake faked timers", function () {
         const currentTime = new Date().getTime();
