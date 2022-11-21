@@ -17,7 +17,7 @@ describe("issue #2449: permanent loss of native functions", function () {
         clock = FakeTimers.install({ now: date2 });
         assert.same(clock.now, date2.getTime());
         clock.uninstall();
-        assert.greater(new Date().getTime(), currentTime, true);
+        assert.near(new Date().getTime(), currentTime, 10);
     });
 
     it("should not fake faked timers on a custom target", function () {
