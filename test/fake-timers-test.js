@@ -3881,9 +3881,14 @@ describe("FakeTimers", function () {
                     return ["foo"];
                 }
 
-                Object.defineProperty(Performance.prototype, "getEntries", {
-                    writeable: true,
-                });
+                for (const propName of [
+                    "getEntries",
+                    "getEntriesByName",
+                    "getEntriesByType",
+                ])
+                    Object.defineProperty(Performance.prototype, propName, {
+                        writable: true,
+                    });
 
                 Performance.prototype.getEntries = noop;
                 Performance.prototype.getEntriesByName = noop;
