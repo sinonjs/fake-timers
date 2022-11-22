@@ -440,7 +440,6 @@ function withGlobal(_global) {
          * @param {number} minute
          * @param {number} second
          * @param {number} ms
-         *
          * @returns {Date}
          */
         function ClockDate(year, month, date, hour, minute, second, ms) {
@@ -666,7 +665,6 @@ function withGlobal(_global) {
      * @param {Clock} clock
      * @param {number} from
      * @param {number} to
-     *
      * @returns {Timer}
      */
     function firstTimerInRange(clock, from, to) {
@@ -1139,19 +1137,18 @@ function withGlobal(_global) {
             });
         };
         if (typeof _global.Promise !== "undefined" && utilPromisify) {
-            clock.setTimeout[
-                utilPromisify.custom
-            ] = function promisifiedSetTimeout(timeout, arg) {
-                return new _global.Promise(function setTimeoutExecutor(
-                    resolve
-                ) {
-                    addTimer(clock, {
-                        func: resolve,
-                        args: [arg],
-                        delay: timeout,
+            clock.setTimeout[utilPromisify.custom] =
+                function promisifiedSetTimeout(timeout, arg) {
+                    return new _global.Promise(function setTimeoutExecutor(
+                        resolve
+                    ) {
+                        addTimer(clock, {
+                            func: resolve,
+                            args: [arg],
+                            delay: timeout,
+                        });
                     });
-                });
-            };
+                };
         }
 
         clock.clearTimeout = function clearTimeout(timerId) {
@@ -1195,19 +1192,18 @@ function withGlobal(_global) {
             };
 
             if (typeof _global.Promise !== "undefined" && utilPromisify) {
-                clock.setImmediate[
-                    utilPromisify.custom
-                ] = function promisifiedSetImmediate(arg) {
-                    return new _global.Promise(function setImmediateExecutor(
-                        resolve
-                    ) {
-                        addTimer(clock, {
-                            func: resolve,
-                            args: [arg],
-                            immediate: true,
-                        });
-                    });
-                };
+                clock.setImmediate[utilPromisify.custom] =
+                    function promisifiedSetImmediate(arg) {
+                        return new _global.Promise(
+                            function setImmediateExecutor(resolve) {
+                                addTimer(clock, {
+                                    func: resolve,
+                                    args: [arg],
+                                    immediate: true,
+                                });
+                            }
+                        );
+                    };
             }
 
             clock.clearImmediate = function clearImmediate(timerId) {
@@ -1513,8 +1509,9 @@ function withGlobal(_global) {
                                         return;
                                     }
 
-                                    numTimers = Object.keys(clock.timers)
-                                        .length;
+                                    numTimers = Object.keys(
+                                        clock.timers
+                                    ).length;
                                     if (numTimers === 0) {
                                         resetIsNearInfiniteLimit();
                                         resolve(clock.now);

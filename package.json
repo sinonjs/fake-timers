@@ -25,7 +25,8 @@
     "prettier:write": "prettier --write '**/*.{js,css,md}'",
     "preversion": "./scripts/preversion.sh",
     "version": "./scripts/version.sh",
-    "postversion": "./scripts/postversion.sh"
+    "postversion": "./scripts/postversion.sh",
+    "prepare": "husky install"
   },
   "lint-staged": {
     "*.{js,css,md}": "prettier --check",
@@ -35,23 +36,22 @@
     "src/"
   ],
   "devDependencies": {
-    "@sinonjs/eslint-config": "4.0.2",
-    "@sinonjs/referee-sinon": "6.0.1",
-    "eslint-config-prettier": "8.3.0",
-    "eslint-plugin-prettier": "3.4.1",
-    "husky": "4.2.1",
-    "jsdom": "16.5.2",
-    "lint-staged": "10.0.7",
-    "mocha": "9.2.0",
-    "mochify": "^9.2.0",
-    "nyc": "14.1.1",
-    "prettier": "2.2.1"
+    "@sinonjs/eslint-config": "4.0.6",
+    "@sinonjs/referee-sinon": "10.1.0",
+    "husky": "^8.0.0",
+    "jsdom": "20.0.2",
+    "lint-staged": "13.0.3",
+    "mocha": "10.1.0",
+    "mochify": "9.2.0",
+    "nyc": "15.1.0",
+    "prettier": "2.7.1"
   },
   "main": "./src/fake-timers-src.js",
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run lint"
-    }
+  "dependencies": {
+    "@sinonjs/commons": "^2.0.0"
+  },
+  "optionalDependencies": {
+    "fsevents": "*"
   },
   "nyc": {
     "branches": 85,
@@ -64,8 +64,5 @@
       "types/**",
       "fake-timers.js"
     ]
-  },
-  "dependencies": {
-    "@sinonjs/commons": "^2.0.0"
   }
 }
