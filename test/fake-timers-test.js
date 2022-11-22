@@ -3580,10 +3580,11 @@ describe("FakeTimers", function () {
                     "getEntries",
                     "getEntriesByName",
                     "getEntriesByType",
-                ])
+                ]) {
                     Object.defineProperty(Performance.prototype, propName, {
                         writable: true,
                     });
+                }
 
                 Performance.prototype.getEntries = noop;
                 Performance.prototype.getEntriesByName = noop;
