@@ -50,6 +50,9 @@
   "dependencies": {
     "@sinonjs/commons": "^2.0.0"
   },
+  "optionalDependencies": {
+    "fsevents": "*"
+  },
   "nyc": {
     "branches": 85,
     "lines": 92,
