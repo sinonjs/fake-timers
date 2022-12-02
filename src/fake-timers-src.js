@@ -740,7 +740,13 @@ function withGlobal(_global) {
         }
 
         if (typeof timer.func === "function") {
-            timer.func.apply(null, timer.args);
+            if (timer.animation) {
+                timer.func.apply(null, [
+                    performancePresent ? clock.performance.now() : clock.now,
+                ]);
+            } else {
+                timer.func.apply(null, timer.args);
+            }
         } else {
             /* eslint no-eval: "off" */
             const eval2 = eval;
@@ -1222,7 +1228,6 @@ function withGlobal(_global) {
             const result = addTimer(clock, {
                 func: func,
                 delay: getTimeToNextFrame(),
-                args: [clock.now + getTimeToNextFrame()],
                 animation: true,
             });
 
