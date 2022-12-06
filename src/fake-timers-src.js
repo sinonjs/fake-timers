@@ -740,12 +740,7 @@ function withGlobal(_global) {
         }
 
         if (typeof timer.func === "function") {
-            if (timer.animation) {
-                // For requestAnimationFrame, the arg is a reference to performance.now
-                timer.func.apply(null, [timer.args[0]()]);
-            } else {
-                timer.func.apply(null, timer.args);
-            }
+            timer.func.apply(null, timer.args);
         } else {
             /* eslint no-eval: "off" */
             const eval2 = eval;
@@ -1100,7 +1095,7 @@ function withGlobal(_global) {
             return [secsSinceStart, remainderInNanos];
         }
 
-        function FakePerformanceNow() {
+        function fakePerformanceNow() {
             const hrt = hrtime();
             const millis = hrt[0] * 1000 + hrt[1] / 1e6;
             return millis;
@@ -1233,7 +1228,9 @@ function withGlobal(_global) {
             const result = addTimer(clock, {
                 func: func,
                 delay: getTimeToNextFrame(),
-                args: [FakePerformanceNow],
+                get args() {
+                    return [fakePerformanceNow()];
+                },
                 animation: true,
             });
 
@@ -1610,7 +1607,7 @@ function withGlobal(_global) {
 
         if (performancePresent) {
             clock.performance = Object.create(null);
-            clock.performance.now = FakePerformanceNow;
+            clock.performance.now = fakePerformanceNow;
         }
 
         if (hrtimePresent) {
