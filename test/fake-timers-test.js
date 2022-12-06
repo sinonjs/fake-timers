@@ -3943,7 +3943,7 @@ describe("FakeTimers", function () {
             }).createClock(123456789);
             const stub = sinon.stub();
             clock.requestAnimationFrame(stub);
-            clock.tick(100);
+            clock.tick(20);
 
             assert(stub.calledWith(16));
         });
@@ -3956,7 +3956,7 @@ describe("FakeTimers", function () {
             }).createClock(123456789);
             const stub = sinon.stub();
             clock.requestAnimationFrame(stub);
-            clock.tick(100);
+            clock.tick(20);
 
             assert(stub.calledWith(16));
         });
