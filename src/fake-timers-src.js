@@ -741,9 +741,8 @@ function withGlobal(_global) {
 
         if (typeof timer.func === "function") {
             if (timer.animation) {
-                timer.func.apply(null, [
-                    performancePresent ? clock.performance.now() : clock.now,
-                ]);
+                // For requestAnimationFrame, the arg is a reference to performance.now
+                timer.func.apply(null, [timer.args[0]()]);
             } else {
                 timer.func.apply(null, timer.args);
             }
@@ -1101,6 +1100,12 @@ function withGlobal(_global) {
             return [secsSinceStart, remainderInNanos];
         }
 
+        function FakePerformanceNow() {
+            const hrt = hrtime();
+            const millis = hrt[0] * 1000 + hrt[1] / 1e6;
+            return millis;
+        }
+
         if (hrtimeBigintPresent) {
             hrtime.bigint = function () {
                 const parts = hrtime();
@@ -1228,6 +1233,7 @@ function withGlobal(_global) {
             const result = addTimer(clock, {
                 func: func,
                 delay: getTimeToNextFrame(),
+                args: [FakePerformanceNow],
                 animation: true,
             });
 
@@ -1604,11 +1610,7 @@ function withGlobal(_global) {
 
         if (performancePresent) {
             clock.performance = Object.create(null);
-            clock.performance.now = function FakeTimersNow() {
-                const hrt = hrtime();
-                const millis = hrt[0] * 1000 + hrt[1] / 1e6;
-                return millis;
-            };
+            clock.performance.now = FakePerformanceNow;
         }
 
         if (hrtimePresent) {

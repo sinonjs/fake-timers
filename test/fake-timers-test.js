@@ -3948,7 +3948,7 @@ describe("FakeTimers", function () {
             assert(stub.calledWith(16));
         });
 
-        it("should be called with clock.now when performance unavailable", function () {
+        it("should be called with performance.now() even when performance unavailable", function () {
             const clock = FakeTimers.withGlobal({
                 Date: Date,
                 setTimeout: sinon.fake(),
@@ -3958,7 +3958,7 @@ describe("FakeTimers", function () {
             clock.requestAnimationFrame(stub);
             clock.tick(100);
 
-            assert(stub.calledWith(123456789 + 16));
+            assert(stub.calledWith(16));
         });
 
         it("should call callback once", function () {
