@@ -775,13 +775,16 @@ function withGlobal(_global) {
     }
 
     /**
-     * Creates an anonymous function to warn only once
+     * Creates an anonymous function to warn only once per message
      */
     function createWarnOnce() {
-        let calls = 0;
+        const calls = {};
         return function (msg) {
-            // eslint-disable-next-line
-            !calls++ && console.warn(msg);
+            if (!calls[msg]) {
+                calls[msg] = true;
+                // eslint-disable-next-line no-console
+                console.warn(msg);
+            }
         };
     }
     const warnOnce = createWarnOnce();
