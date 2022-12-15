@@ -1095,6 +1095,12 @@ function withGlobal(_global) {
             return [secsSinceStart, remainderInNanos];
         }
 
+        function fakePerformanceNow() {
+            const hrt = hrtime();
+            const millis = hrt[0] * 1000 + hrt[1] / 1e6;
+            return millis;
+        }
+
         if (hrtimeBigintPresent) {
             hrtime.bigint = function () {
                 const parts = hrtime();
@@ -1222,7 +1228,9 @@ function withGlobal(_global) {
             const result = addTimer(clock, {
                 func: func,
                 delay: getTimeToNextFrame(),
-                args: [clock.now + getTimeToNextFrame()],
+                get args() {
+                    return [fakePerformanceNow()];
+                },
                 animation: true,
             });
 
@@ -1599,11 +1607,7 @@ function withGlobal(_global) {
 
         if (performancePresent) {
             clock.performance = Object.create(null);
-            clock.performance.now = function FakeTimersNow() {
-                const hrt = hrtime();
-                const millis = hrt[0] * 1000 + hrt[1] / 1e6;
-                return millis;
-            };
+            clock.performance.now = fakePerformanceNow;
         }
 
         if (hrtimePresent) {

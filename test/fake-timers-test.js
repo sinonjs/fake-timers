@@ -3932,10 +3932,31 @@ describe("FakeTimers", function () {
             assert.equals(1, stub.callCount);
         });
 
-        it("should be called with current time", function () {
+        it("should be called with performance.now() when available", function () {
+            const clock = FakeTimers.withGlobal({
+                Date: Date,
+                setTimeout: sinon.fake(),
+                clearTimeout: sinon.fake(),
+                performance: {
+                    now: sinon.fake(),
+                },
+            }).createClock(123456789);
             const stub = sinon.stub();
-            this.clock.requestAnimationFrame(stub);
-            this.clock.tick(16);
+            clock.requestAnimationFrame(stub);
+            clock.tick(20);
+
+            assert(stub.calledWith(16));
+        });
+
+        it("should be called with performance.now() even when performance unavailable", function () {
+            const clock = FakeTimers.withGlobal({
+                Date: Date,
+                setTimeout: sinon.fake(),
+                clearTimeout: sinon.fake(),
+            }).createClock(123456789);
+            const stub = sinon.stub();
+            clock.requestAnimationFrame(stub);
+            clock.tick(20);
 
             assert(stub.calledWith(16));
         });
