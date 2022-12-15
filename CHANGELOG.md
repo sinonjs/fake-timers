@@ -1,4 +1,13 @@
 
+10.0.1 / 2022-12-15
+==================
+
+  * fix: requestAnimationFrame args (#458)
+  * chore: remove `fsevents` dependency (#455)
+  * Upgrade dependencies (#440)
+  * fix(runToLastAsync): tick the correct amount of time
+  * Fix #441: update spelling of prop descriptor prop (#453)
+
 10.0.0 / 2022-11-08
 ==================
 
