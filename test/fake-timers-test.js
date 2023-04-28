@@ -4103,6 +4103,62 @@ describe("FakeTimers", function () {
         });
     });
 
+    describe("jump", function () {
+        beforeEach(function () {
+            this.clock = FakeTimers.install({ now: 0 });
+        });
+
+        afterEach(function () {
+            this.clock.uninstall();
+        });
+
+        it("ignores timers which wouldn't be run", function () {
+            const stub = sinon.stub();
+            this.clock.setTimeout(stub, 1000);
+
+            this.clock.jump(500);
+
+            assert(stub.notCalled);
+        });
+
+        it("pushes back execution time for skipped timers", function () {
+            const stub = sinon.stub();
+            this.clock.setTimeout(stub, 1000);
+
+            this.clock.jump(2000);
+
+            assert(stub.calledOnce);
+        });
+
+        it("handles multiple pending timers and types", function () {
+            const longTimers = [sinon.stub(), sinon.stub()];
+            const shortTimers = [sinon.stub(), sinon.stub(), sinon.stub()];
+            this.clock.setTimeout(longTimers[0], 2000);
+            this.clock.setInterval(longTimers[1], 2500);
+            this.clock.setTimeout(shortTimers[0], 250);
+            this.clock.setInterval(shortTimers[1], 100);
+            this.clock.requestAnimationFrame(shortTimers[2]);
+
+            this.clock.jump(1500);
+
+            for (const stub of longTimers) {
+                assert(stub.notCalled);
+            }
+            for (const stub of shortTimers) {
+                assert(stub.calledOnce);
+            }
+        });
+
+        it("supports string time arguments", function () {
+            const stub = sinon.stub();
+            this.clock.setTimeout(stub, 100000); // 100000 = 1:40
+
+            this.clock.jump("01:50");
+
+            assert(stub.calledOnce);
+        });
+    });
+
     describe("performance.now()", function () {
         before(function () {
             if (!performanceNowPresent) {
