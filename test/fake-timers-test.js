@@ -4123,11 +4123,14 @@ describe("FakeTimers", function () {
 
         it("pushes back execution time for skipped timers", function () {
             const stub = sinon.stub();
-            this.clock.setTimeout(stub, 1000);
+            this.clock.setTimeout(() => {
+                stub(this.clock.Date.now());
+            }, 1000);
 
             this.clock.jump(2000);
 
             assert(stub.calledOnce);
+            assert(stub.calledWith(2000));
         });
 
         it("handles multiple pending timers and types", function () {
