@@ -1,15 +1,15 @@
 extends:
-  - "@sinonjs/eslint-config"
+    - "@sinonjs/eslint-config"
 
 overrides:
-  - files: "**/*-test.js"
-    plugins:
-      - mocha
-    env:
-      mocha: true
-    rules:
-      max-nested-callbacks: off
-      mocha/no-exclusive-tests: error
-      no-empty-function: off
-      # This is because we need to do `return this.skip()` when feature detecting in tests
-      consistent-return: off
+    - files: "**/*-test.js"
+      plugins:
+          - mocha
+      env:
+          mocha: true
+      rules:
+          max-nested-callbacks: off
+          mocha/no-exclusive-tests: error
+          no-empty-function: off
+          # This is because we need to do `return this.skip()` when feature detecting in tests
+          consistent-return: off
