@@ -67,13 +67,21 @@ describe("globally configured browser objects", function () {
         var dom = new jsdom.JSDOM("<!doctype html><html><body></body></html>");
         var window = dom.window;
 
+        function makeMutable(descriptor) {
+            descriptor.configurable = true;
+        }
+
         function copyProps(src, target) {
             originalDescriptors = Object.getOwnPropertyDescriptors(target);
-            Object.defineProperties(
-                target,
-                Object.getOwnPropertyDescriptors(src)
+            const srcDescriptors = Object.getOwnPropertyDescriptors(src);
+            Object.keys(srcDescriptors).forEach((key) =>
+                // This is required to make it possible to remove/delete them afterwards
+                makeMutable(srcDescriptors[key])
             );
-            Object.defineProperties(target, originalDescriptors);
+            Object.defineProperties(target, {
+                ...srcDescriptors,
+                ...originalDescriptors,
+            });
         }
 
         global.window = window;
