@@ -67,6 +67,7 @@ clock instance, not the browser's internals.
 
 Calling `install` with no arguments achieves this. You can call `uninstall`
 later to restore things as they were again.
+Note that in NodeJS also the [timers](https://nodejs.org/api/timers.html) module will receive fake timers when using global scope.
 
 ```js
 // In the browser distribution, a global `FakeTimers` is already available
@@ -146,7 +147,9 @@ The `loopLimit` argument sets the maximum number of timers that will be run when
 
 ### `var clock = FakeTimers.install([config])`
 
-Installs FakeTimers using the specified config (otherwise with epoch `0` on the global scope). The following configuration options are available
+Installs FakeTimers using the specified config (otherwise with epoch `0` on the global scope).
+Note that in NodeJS also the [timers](https://nodejs.org/api/timers.html) module will receive fake timers when using global scope.
+The following configuration options are available
 
 | Parameter                        | Type        | Default                                                                                                                                                                                                                        | Description                                                                                                                                                                                                                                                                                  |
 | -------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
