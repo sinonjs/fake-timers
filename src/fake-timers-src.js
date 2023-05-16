@@ -1,6 +1,14 @@
 "use strict";
 
 const globalObject = require("@sinonjs/commons").global;
+let timersModule;
+if (typeof require === "function" && typeof module === "object") {
+    try {
+        timersModule = require("timers");
+    } catch (e) {
+        // ignored
+    }
+}
 
 /**
  * @typedef {object} IdleDeadline
@@ -886,6 +894,14 @@ function withGlobal(_global) {
                     }
                 }
             }
+            if (clock.timersModuleMocks) {
+                for (const [
+                    methodName,
+                    originalMethod,
+                ] of clock.timersModuleMocks) {
+                    timersModule[methodName] = originalMethod;
+                }
+            }
         }
 
         if (config.shouldAdvanceTime === true) {
@@ -1733,7 +1749,9 @@ function withGlobal(_global) {
                 );
             }
         }
-
+        if (_global === globalObject && timersModule) {
+            clock.timersModuleMocks = [];
+        }
         for (i = 0, l = clock.methods.length; i < l; i++) {
             const nameOfMethodToReplace = clock.methods[i];
             if (nameOfMethodToReplace === "hrtime") {
@@ -1752,6 +1770,15 @@ function withGlobal(_global) {
                 }
             } else {
                 hijackMethod(_global, nameOfMethodToReplace, clock);
+            }
+            if (
+                clock.timersModuleMocks !== undefined &&
+                timersModule[nameOfMethodToReplace]
+            ) {
+                const original = timersModule[nameOfMethodToReplace];
+                clock.timersModuleMocks.push([nameOfMethodToReplace, original]);
+                timersModule[nameOfMethodToReplace] =
+                    _global[nameOfMethodToReplace];
             }
         }
 
