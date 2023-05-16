@@ -93,6 +93,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {function(): void} uninstall Uninstall the clock.
  * @property {Function[]} methods - the methods that are faked
  * @property {boolean} [shouldClearNativeTimers] inherited from config
+ * @property {{methodName:string, original:any}[] | undefined} timersModuleMethods
  */
 /* eslint-enable jsdoc/require-property-description */
 
@@ -894,12 +895,10 @@ function withGlobal(_global) {
                     }
                 }
             }
-            if (clock.timersModuleMocks) {
-                for (const [
-                    methodName,
-                    originalMethod,
-                ] of clock.timersModuleMocks) {
-                    timersModule[methodName] = originalMethod;
+            if (clock.timersModuleMethods !== undefined) {
+                for (let j = 0; j < clock.timersModuleMethods.length; j++) {
+                    const entry = clock.timersModuleMethods[j];
+                    timersModule[entry.methodName] = entry.original;
                 }
             }
         }
@@ -1750,7 +1749,7 @@ function withGlobal(_global) {
             }
         }
         if (_global === globalObject && timersModule) {
-            clock.timersModuleMocks = [];
+            clock.timersModuleMethods = [];
         }
         for (i = 0, l = clock.methods.length; i < l; i++) {
             const nameOfMethodToReplace = clock.methods[i];
@@ -1772,11 +1771,14 @@ function withGlobal(_global) {
                 hijackMethod(_global, nameOfMethodToReplace, clock);
             }
             if (
-                clock.timersModuleMocks !== undefined &&
+                clock.timersModuleMethods !== undefined &&
                 timersModule[nameOfMethodToReplace]
             ) {
                 const original = timersModule[nameOfMethodToReplace];
-                clock.timersModuleMocks.push([nameOfMethodToReplace, original]);
+                clock.timersModuleMethods.push({
+                    methodName: nameOfMethodToReplace,
+                    original: original,
+                });
                 timersModule[nameOfMethodToReplace] =
                     _global[nameOfMethodToReplace];
             }
