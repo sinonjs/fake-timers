@@ -17,6 +17,33 @@ if (!timersModule) {
     return;
 }
 
+/**
+ * Returns elements that are present in both lists.
+ *
+ * @function
+ * @template E
+ * @param {E[]} [list1]
+ * @param {E[]} [list2]
+ * @return {E[]}
+ */
+function getIntersection(list1, list2) {
+    return list1.filter((value) => list2.indexOf(value) !== -1);
+}
+
+/**
+ * Get property names and original values from timers module.
+ *
+ * @function
+ * @param {string[]} [toFake]
+ * @return {{propertyName: string, originalValue: any}[]}
+ */
+function getOriginals(toFake) {
+    return toFake.map((propertyName) => ({
+        propertyName,
+        originalValue: timersModule[propertyName],
+    }));
+}
+
 describe("issue #466", function () {
     afterEach(function () {
         if (this.clock) {
@@ -25,29 +52,32 @@ describe("issue #466", function () {
         }
     });
 
-    it("should install and uninstall all timers from on timers module", function () {
-        const timersModulePropertyNames =
-            Object.getOwnPropertyNames(timersModule);
-        const fakeTimersPropertyNames = Object.getOwnPropertyNames(
-            FakeTimers.timers
+    it("should install all timers on timers module", function () {
+        const toFake = getIntersection(
+            Object.getOwnPropertyNames(timersModule),
+            Object.getOwnPropertyNames(FakeTimers.timers)
         );
+        const originals = getOriginals(toFake);
+
         this.clock = FakeTimers.install();
 
-        for (const fakeProperty of fakeTimersPropertyNames) {
-            refute.same(
-                timersModule[fakeProperty],
-                FakeTimers.timers[fakeProperty]
-            );
+        for (const { propertyName, originalValue } of originals) {
+            refute.same(timersModule[propertyName], originalValue);
         }
+    });
 
+    it("should uninstall all timers on timers module", function () {
+        const toFake = getIntersection(
+            Object.getOwnPropertyNames(timersModule),
+            Object.getOwnPropertyNames(FakeTimers.timers)
+        );
+        const originals = getOriginals(toFake);
+
+        this.clock = FakeTimers.install();
         this.clock.uninstall();
-        for (const fakeProperty of fakeTimersPropertyNames) {
-            assert.same(
-                timersModule[fakeProperty],
-                timersModulePropertyNames.indexOf(fakeProperty) === -1
-                    ? undefined
-                    : FakeTimers.timers[fakeProperty]
-            );
+
+        for (const { propertyName, originalValue } of originals) {
+            assert.same(timersModule[propertyName], originalValue);
         }
     });
 
@@ -64,43 +94,51 @@ describe("issue #466", function () {
         assert(timersStub.calledOnce);
     });
 
-    it("fakes provided methods on timers module", function () {
-        this.clock = FakeTimers.install({
-            now: 0,
-            toFake: ["setTimeout", "Date"],
-        });
+    it("fakes and resets provided methods on timers module", function () {
+        const toFake = ["setTimeout", "Date"];
+        const originals = getOriginals(toFake);
+        this.clock = FakeTimers.install({ toFake });
 
-        refute.same(timersModule.setTimeout, FakeTimers.timers.setTimeout);
-        refute.same(timersModule.Date, FakeTimers.timers.Date);
+        for (const { propertyName, originalValue } of originals) {
+            if (originalValue === undefined) {
+                assert.same(timersModule[propertyName], originalValue);
+            } else {
+                refute.same(timersModule[propertyName], originalValue);
+            }
+        }
     });
 
     it("resets faked methods on timers module", function () {
-        this.clock = FakeTimers.install({
-            now: 0,
-            toFake: ["setTimeout", "Date"],
-        });
+        const toFake = ["setTimeout", "Date"];
+        const originals = getOriginals(toFake);
+
+        this.clock = FakeTimers.install({ toFake });
         this.clock.uninstall();
 
-        assert.same(timersModule.setTimeout, FakeTimers.timers.setTimeout);
-        assert.same(timersModule.Date, undefined);
+        for (const { propertyName, originalValue } of originals) {
+            assert.same(timersModule[propertyName], originalValue);
+        }
     });
 
     it("does not fake methods not provided on timers module", function () {
-        this.clock = FakeTimers.install({
-            now: 0,
-            toFake: ["setTimeout", "Date"],
-        });
+        const toFake = ["setTimeout", "Date"];
+        const notToFake = ["clearTimeout", "setInterval", "clearInterval"];
+        const originals = getOriginals(notToFake);
 
-        assert.same(timersModule.clearTimeout, FakeTimers.timers.clearTimeout);
-        assert.same(timersModule.setInterval, FakeTimers.timers.setInterval);
-        assert.same(
-            timersModule.clearInterval,
-            FakeTimers.timers.clearInterval
-        );
+        this.clock = FakeTimers.install({ toFake });
+
+        for (const { propertyName, originalValue } of originals) {
+            assert.same(timersModule[propertyName], originalValue);
+        }
     });
 
     it("does not fake timers module on custom global object", function () {
-        this.clock = FakeTimers.withGlobal({}).install();
-        assert.same(timersModule.setTimeout, FakeTimers.timers.setTimeout);
+        const original = timersModule.setTimeout;
+        this.clock = FakeTimers.withGlobal({
+            Date: Date,
+            setTimeout: sinon.fake(),
+            clearTimeout: sinon.fake(),
+        }).install();
+        assert.same(timersModule.setTimeout, original);
     });
 });
