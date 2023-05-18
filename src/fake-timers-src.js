@@ -1,6 +1,14 @@
 "use strict";
 
 const globalObject = require("@sinonjs/commons").global;
+let timersModule;
+if (typeof require === "function" && typeof module === "object") {
+    try {
+        timersModule = require("timers");
+    } catch (e) {
+        // ignored
+    }
+}
 
 /**
  * @typedef {object} IdleDeadline
@@ -85,6 +93,7 @@ const globalObject = require("@sinonjs/commons").global;
  * @property {function(): void} uninstall Uninstall the clock.
  * @property {Function[]} methods - the methods that are faked
  * @property {boolean} [shouldClearNativeTimers] inherited from config
+ * @property {{methodName:string, original:any}[] | undefined} timersModuleMethods
  */
 /* eslint-enable jsdoc/require-property-description */
 
@@ -884,6 +893,12 @@ function withGlobal(_global) {
                     } catch (ignore) {
                         /* eslint no-empty: "off" */
                     }
+                }
+            }
+            if (clock.timersModuleMethods !== undefined) {
+                for (let j = 0; j < clock.timersModuleMethods.length; j++) {
+                    const entry = clock.timersModuleMethods[j];
+                    timersModule[entry.methodName] = entry.original;
                 }
             }
         }
@@ -1733,7 +1748,9 @@ function withGlobal(_global) {
                 );
             }
         }
-
+        if (_global === globalObject && timersModule) {
+            clock.timersModuleMethods = [];
+        }
         for (i = 0, l = clock.methods.length; i < l; i++) {
             const nameOfMethodToReplace = clock.methods[i];
             if (nameOfMethodToReplace === "hrtime") {
@@ -1752,6 +1769,18 @@ function withGlobal(_global) {
                 }
             } else {
                 hijackMethod(_global, nameOfMethodToReplace, clock);
+            }
+            if (
+                clock.timersModuleMethods !== undefined &&
+                timersModule[nameOfMethodToReplace]
+            ) {
+                const original = timersModule[nameOfMethodToReplace];
+                clock.timersModuleMethods.push({
+                    methodName: nameOfMethodToReplace,
+                    original: original,
+                });
+                timersModule[nameOfMethodToReplace] =
+                    _global[nameOfMethodToReplace];
             }
         }
 
