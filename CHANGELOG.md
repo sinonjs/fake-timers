@@ -1,4 +1,8 @@
 
+11.1.0 / 2023-07-17
+==================
+  * Add a mock for the global Intl object
+
 11.0.0 / 2023-06-12
 ==================
   * Re-release 10.2.0 as a new major version as mocking Node "timers" module broke some setups
