@@ -206,10 +206,6 @@ function withGlobal(_global) {
         _global.clearImmediate = _global.clearImmediate;
     }
 
-    if (intlPresent) {
-        _global.Intl = _global.Intl;
-    }
-
     /* eslint-enable no-self-assign */
 
     _global.clearTimeout(timeoutResult);
@@ -534,8 +530,7 @@ function withGlobal(_global) {
         ClockIntl.DateTimeFormat.prototype = Object.create(
             NativeIntl.DateTimeFormat.prototype
         );
-        ClockIntl.DateTimeFormat.prototype.constructor =
-            ClockIntl.DateTimeFormat;
+
         ClockIntl.DateTimeFormat.supportedLocalesOf =
             NativeIntl.DateTimeFormat.supportedLocalesOf;
 

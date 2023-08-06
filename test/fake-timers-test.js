@@ -5292,4 +5292,12 @@ describe("Intl API", function () {
         clock.now = Date.UTC(2022, 5, 1);
         assert.isFalse(isFirstOfMonth("America/Toronto"));
     });
+
+    it("Executes supportedLocalesOf like normal", function () {
+        assert.equals(
+            Intl.DateTimeFormat.supportedLocalesOf(),
+            //eslint-disable-next-line no-underscore-dangle
+            clock._Intl.DateTimeFormat.supportedLocalesOf()
+        );
+    });
 });
