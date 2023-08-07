@@ -5179,3 +5179,125 @@ describe("Node Timer: ref(), unref(),hasRef()", function () {
         clock.uninstall();
     });
 });
+
+describe("Intl API", function () {
+    /**
+     * Tester function to check if the globally hijacked Intl object is plugging into the faked Clock
+     *
+     * @param {string} ianaTimeZone - IANA time zone name
+     * @param {number} timestamp - UNIX timestamp
+     * @returns {boolean}
+     */
+    function isFirstOfMonth(ianaTimeZone, timestamp) {
+        return (
+            new Intl.DateTimeFormat(undefined, { timeZone: ianaTimeZone })
+                .formatToParts(timestamp)
+                .find((part) => part.type === "day").value === "1"
+        );
+    }
+
+    let clock;
+
+    before(function () {
+        clock = FakeTimers.install();
+    });
+
+    after(function () {
+        clock.uninstall();
+    });
+
+    it("Executes formatRange like normal", function () {
+        const start = new Date(Date.UTC(2020, 0, 1, 0, 0));
+        const end = new Date(Date.UTC(2020, 0, 1, 0, 1));
+        const options = {
+            timeZone: "UTC",
+            hour12: false,
+            hour: "numeric",
+            minute: "numeric",
+        };
+        assert.equals(
+            new Intl.DateTimeFormat("en-GB", options).formatRange(start, end),
+            "00:00–00:01"
+        );
+    });
+
+    it("Executes formatRangeToParts like normal", function () {
+        const start = new Date(Date.UTC(2020, 0, 1, 0, 0));
+        const end = new Date(Date.UTC(2020, 0, 1, 0, 1));
+        const options = {
+            timeZone: "UTC",
+            hour12: false,
+            hour: "numeric",
+            minute: "numeric",
+        };
+        assert.equals(
+            new Intl.DateTimeFormat("en-GB", options).formatRangeToParts(
+                start,
+                end
+            ),
+            [
+                { type: "hour", value: "00", source: "startRange" },
+                { type: "literal", value: ":", source: "startRange" },
+                { type: "minute", value: "00", source: "startRange" },
+                { type: "literal", value: "–", source: "shared" },
+                { type: "hour", value: "00", source: "endRange" },
+                { type: "literal", value: ":", source: "endRange" },
+                { type: "minute", value: "01", source: "endRange" },
+            ]
+        );
+    });
+
+    it("Executes resolvedOptions like normal", function () {
+        const options = {
+            timeZone: "UTC",
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+        };
+        assert.equals(
+            new Intl.DateTimeFormat("en-GB", options).resolvedOptions(),
+            {
+                locale: "en-GB",
+                calendar: "gregory",
+                numberingSystem: "latn",
+                timeZone: "UTC",
+                hour12: false,
+                hourCycle: "h23",
+                hour: "2-digit",
+                minute: "2-digit",
+            }
+        );
+    });
+
+    it("formatToParts via isFirstOfMonth -> Returns true when passed a timestamp argument that is first of the month", function () {
+        // June 1 04:00 UTC - Toronto is June 1 00:00
+        assert.isTrue(
+            isFirstOfMonth("America/Toronto", Date.UTC(2022, 5, 1, 4))
+        );
+    });
+
+    it("formatToParts via isFirstOfMonth -> Returns false when passed a timestamp argument that is not first of the month", function () {
+        // June 1 00:00 UTC - Toronto is May 31 20:00
+        assert.isFalse(isFirstOfMonth("America/Toronto", Date.UTC(2022, 5, 1)));
+    });
+
+    it("formatToParts via isFirstOfMonth -> Returns true when passed no timestamp and system time is first of the month", function () {
+        // June 1 04:00 UTC - Toronto is June 1 00:00
+        clock.now = Date.UTC(2022, 5, 1, 4);
+        assert.isTrue(isFirstOfMonth("America/Toronto"));
+    });
+
+    it("formatToParts via isFirstOfMonth -> Returns false when passed no timestamp and system time is not first of the month", function () {
+        // June 1 00:00 UTC - Toronto is May 31 20:00
+        clock.now = Date.UTC(2022, 5, 1);
+        assert.isFalse(isFirstOfMonth("America/Toronto"));
+    });
+
+    it("Executes supportedLocalesOf like normal", function () {
+        assert.equals(
+            Intl.DateTimeFormat.supportedLocalesOf(),
+            //eslint-disable-next-line no-underscore-dangle
+            clock._Intl.DateTimeFormat.supportedLocalesOf()
+        );
+    });
+});

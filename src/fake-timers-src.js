@@ -186,6 +186,7 @@ function withGlobal(_global) {
         typeof _global.cancelIdleCallback === "function";
     const setImmediatePresent =
         _global.setImmediate && typeof _global.setImmediate === "function";
+    const intlPresent = _global.Intl && typeof _global.Intl === "object";
 
     // Make properties writable in IE, as per
     // https://www.adequatelygood.com/Replacing-setTimeout-Globally.html
@@ -204,11 +205,13 @@ function withGlobal(_global) {
         _global.setImmediate = _global.setImmediate;
         _global.clearImmediate = _global.clearImmediate;
     }
+
     /* eslint-enable no-self-assign */
 
     _global.clearTimeout(timeoutResult);
 
     const NativeDate = _global.Date;
+    const NativeIntl = _global.Intl;
     let uniqueTimerId = idCounterStart;
 
     /**
@@ -498,6 +501,40 @@ function withGlobal(_global) {
         }
 
         return mirrorDateProperties(ClockDate, NativeDate);
+    }
+
+    //eslint-disable-next-line jsdoc/require-jsdoc
+    function createIntl() {
+        const ClockIntl = { ...NativeIntl };
+
+        ClockIntl.DateTimeFormat = function (...args) {
+            const realFormatter = new NativeIntl.DateTimeFormat(...args);
+            const formatter = {};
+
+            ["formatRange", "formatRangeToParts", "resolvedOptions"].forEach(
+                (method) => {
+                    formatter[method] =
+                        realFormatter[method].bind(realFormatter);
+                }
+            );
+
+            ["format", "formatToParts"].forEach((method) => {
+                formatter[method] = function (date) {
+                    return realFormatter[method](date || ClockIntl.clock.now);
+                };
+            });
+
+            return formatter;
+        };
+
+        ClockIntl.DateTimeFormat.prototype = Object.create(
+            NativeIntl.DateTimeFormat.prototype
+        );
+
+        ClockIntl.DateTimeFormat.supportedLocalesOf =
+            NativeIntl.DateTimeFormat.supportedLocalesOf;
+
+        return ClockIntl;
     }
 
     //eslint-disable-next-line jsdoc/require-jsdoc
@@ -934,6 +971,8 @@ function withGlobal(_global) {
         if (method === "Date") {
             const date = mirrorDateProperties(clock[method], target[method]);
             target[method] = date;
+        } else if (method === "Intl") {
+            target[method] = clock[method];
         } else if (method === "performance") {
             const originalPerfDescriptor = Object.getOwnPropertyDescriptor(
                 target,
@@ -988,6 +1027,7 @@ function withGlobal(_global) {
      * @property {setInterval} setInterval
      * @property {clearInterval} clearInterval
      * @property {Date} Date
+     * @property {Intl} Intl
      * @property {SetImmediate=} setImmediate
      * @property {function(NodeImmediate): void=} clearImmediate
      * @property {function(number[]):number[]=} hrtime
@@ -1044,6 +1084,10 @@ function withGlobal(_global) {
 
     if (cancelIdleCallbackPresent) {
         timers.cancelIdleCallback = _global.cancelIdleCallback;
+    }
+
+    if (intlPresent) {
+        timers.Intl = _global.Intl;
     }
 
     const originalSetTimeout = _global.setImmediate || _global.setTimeout;
@@ -1122,6 +1166,11 @@ function withGlobal(_global) {
                 const parts = hrtime();
                 return BigInt(parts[0]) * BigInt(1e9) + BigInt(parts[1]); // eslint-disable-line
             };
+        }
+
+        if (intlPresent) {
+            clock.Intl = createIntl();
+            clock.Intl.clock = clock;
         }
 
         clock.requestIdleCallback = function requestIdleCallback(
