@@ -143,8 +143,6 @@ if (typeof require === "function" && typeof module === "object") {
  * @returns {FakeTimers}
  */
 function withGlobal(_global) {
-    const userAgent = _global.navigator && _global.navigator.userAgent;
-    const isRunningInIE = userAgent && userAgent.indexOf("MSIE ") > -1;
     const maxTimeout = Math.pow(2, 31) - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
     const idCounterStart = 1e12; // arbitrarily large number to avoid collisions with native timer IDs
     const NOOP = function () {
@@ -187,26 +185,6 @@ function withGlobal(_global) {
     const setImmediatePresent =
         _global.setImmediate && typeof _global.setImmediate === "function";
     const intlPresent = _global.Intl && typeof _global.Intl === "object";
-
-    // Make properties writable in IE, as per
-    // https://www.adequatelygood.com/Replacing-setTimeout-Globally.html
-    /* eslint-disable no-self-assign */
-    if (isRunningInIE) {
-        _global.setTimeout = _global.setTimeout;
-        _global.clearTimeout = _global.clearTimeout;
-        _global.setInterval = _global.setInterval;
-        _global.clearInterval = _global.clearInterval;
-        _global.Date = _global.Date;
-    }
-
-    // setImmediate is not a standard function
-    // avoid adding the prop to the window object if not present
-    if (setImmediatePresent) {
-        _global.setImmediate = _global.setImmediate;
-        _global.clearImmediate = _global.clearImmediate;
-    }
-
-    /* eslint-enable no-self-assign */
 
     _global.clearTimeout(timeoutResult);
 
