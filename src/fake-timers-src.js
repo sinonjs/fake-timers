@@ -1752,11 +1752,11 @@ function withGlobal(_global) {
 
         if (clock.methods.includes("performance")) {
             const proto = (() => {
-                if (hasPerformancePrototype) {
-                    return _global.Performance.prototype;
-                }
                 if (hasPerformanceConstructorPrototype) {
                     return _global.performance.constructor.prototype;
+                }
+                if (hasPerformancePrototype) {
+                    return _global.Performance.prototype;
                 }
             })();
             if (proto) {
