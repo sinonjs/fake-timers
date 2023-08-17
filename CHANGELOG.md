@@ -1,6 +1,20 @@
+
+11.1.0 / 2023-08-17
+==================
+
+  * favor the constructor of the performance instance if it exists (#478)
+  * Bump tough-cookie from 4.1.2 to 4.1.3 (#473)
+  * Remove IE specific hacks (#477)
+  * feat: mock intl api (#474)
+  * upgrade node (#476) and EOL Node 14
+  * Bump word-wrap from 1.2.3 to 1.2.4 (#475)
+  * Updated release files for 11.0.0
+  * Updated release files for 10.2.0
+  * Add mocks to NodeJS "timers" module (#467)
+
 11.0.0 / 2023-06-12
 ==================
-  * Re-release 10.2.0 as a new major version as mocking Node "timers" module broke some setups
+  * 11.0.0: Re-release 10.2.0 as a new major version as mocking Node "timers" module broke some setups
 
 10.2.0 / 2023-05-18
 ==================
