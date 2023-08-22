@@ -5300,4 +5300,11 @@ describe("Intl API", function () {
             clock._Intl.DateTimeFormat.supportedLocalesOf()
         );
     });
+
+    it("Creates a RelativeTimeFormat like normal", function () {
+        const rtf = new Intl.RelativeTimeFormat("en-GB", {
+            numeric: "auto",
+        });
+        assert.equals(rtf.format(2, "day"), "in 2 days");
+    });
 });

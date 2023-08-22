@@ -505,6 +505,8 @@ function withGlobal(_global) {
             return formatter;
         };
 
+        ClockIntl.RelativeTimeFormat = NativeIntl.RelativeTimeFormat;
+
         ClockIntl.DateTimeFormat.prototype = Object.create(
             NativeIntl.DateTimeFormat.prototype
         );
