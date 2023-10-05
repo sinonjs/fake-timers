@@ -24,11 +24,11 @@ describe("bug", function () {
         clock = FakeTimers.install();
     });
 
-    timers.forEach((asyncFastForward) => {
-        it(`should advance past queued microtasks using ${asyncFastForward}`, async function () {
+    timers.forEach((fastForward) => {
+        it(`should advance past queued microtasks using ${fastForward}`, async function () {
             const cb = sinon.fake();
             myFn(cb);
-            await clock[asyncFastForward]();
+            await clock[fastForward]();
             assert.equal(cb.callCount, 1);
         });
     });
