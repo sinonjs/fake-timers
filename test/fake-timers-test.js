@@ -21,7 +21,13 @@ const {
     utilPromisifyAvailable,
 } = require("./helpers/setup-tests");
 
-var timersModule;
+let timersModule;
+
+/* eslint-disable no-underscore-dangle */
+globalObject.__runs = globalObject.__runs || 0;
+
+const isRunningInWatchMode = ++globalObject.__runs > 1;
+/* eslint-enable no-underscore-dangle */
 
 if (typeof require === "function" && typeof module === "object") {
     try {
@@ -3582,6 +3588,9 @@ describe("FakeTimers", function () {
                     return this.skip();
                 }
 
+                const backupDescriptors =
+                    Object.getOwnPropertyDescriptors(Performance);
+
                 function noop() {
                     return ["foo"];
                 }
@@ -3612,9 +3621,13 @@ describe("FakeTimers", function () {
                 assert.equals(performance.getEntriesByName(), ["foo"]);
                 assert.equals(performance.getEntriesByType(), ["foo"]);
 
-                delete Performance.prototype.getEntries;
-                delete Performance.prototype.getEntriesByName;
-                delete Performance.prototype.getEntriesByTime;
+                Object.keys(backupDescriptors).forEach((key) => {
+                    Object.defineProperty(
+                        Performance.prototype,
+                        key,
+                        backupDescriptors[key]
+                    );
+                });
             });
         }
 
@@ -3803,7 +3816,7 @@ describe("FakeTimers", function () {
             const origSetInterval = globalObject.setInterval;
             const origClearInterval = globalObject.clearInterval;
 
-            var clock = FakeTimers.install({
+            const clock = FakeTimers.install({
                 shouldAdvanceTime: true,
                 toFake: ["setTimeout"],
             });
@@ -3830,16 +3843,23 @@ describe("FakeTimers", function () {
         }
 
         afterEach(function () {
-            if (this.clock) {
+            if (this.clock?.uninstall) {
                 this.clock.uninstall();
             }
+            sinon.restore();
         });
 
         it("outputs a warning once if not enabled", function (done) {
+            // This test does not work well in watch mode, as Chokidar sets up timers
+            // that trips up this test
+            if (isRunningInWatchMode) {
+                this.skip();
+            }
+
             const timer = globalObject.setTimeout(createCallback(done, true));
             const stub = sinon.stub(globalObject.console, "warn");
-
             this.clock = FakeTimers.install();
+
             globalObject.clearTimeout(timer);
             globalObject.clearTimeout(timer);
             assert.equals(stub.callCount, 1);
@@ -4826,6 +4846,7 @@ describe("loop limit stack trace", function () {
             function recursiveQueueMicroTask() {
                 test.clock.queueMicrotask(recursiveQueueMicroTask);
             }
+
             recursiveQueueMicroTask();
         });
 
@@ -4853,6 +4874,7 @@ describe("loop limit stack trace", function () {
             function recursiveQueueMicroTask() {
                 test.clock.nextTick(recursiveQueueMicroTask);
             }
+
             recursiveQueueMicroTask();
         });
 
@@ -4882,6 +4904,7 @@ describe("loop limit stack trace", function () {
                     recursiveCreateTimer();
                 }, 10);
             }
+
             recursiveCreateTimer();
         });
 
@@ -4933,6 +4956,7 @@ describe("loop limit stack trace", function () {
                     10
                 );
             }
+
             recursiveCreateTimer();
         });
 
@@ -4981,6 +5005,7 @@ describe("loop limit stack trace", function () {
                     recursiveCreateTimer();
                 }, 10);
             }
+
             recursiveCreateTimer();
         });
 
@@ -5035,6 +5060,7 @@ describe("loop limit stack trace", function () {
                     recursiveCreateTimer();
                 });
             }
+
             recursiveCreateTimer();
         });
 
@@ -5085,6 +5111,7 @@ describe("loop limit stack trace", function () {
                     }
                 );
             }
+
             recursiveCreateTimer();
         });
 
