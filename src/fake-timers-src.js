@@ -92,6 +92,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {function(number[]): number[]} hrtime - process.hrtime (legacy)
  * @property {function(): void} uninstall Uninstall the clock.
  * @property {Function[]} methods - the methods that are faked
+ * @property {boolean} isNearInfiniteLimit - if next timer will throw
  * @property {boolean} [shouldClearNativeTimers] inherited from config
  * @property {{methodName:string, original:any}[] | undefined} timersModuleMethods
  */
@@ -204,23 +205,21 @@ function withGlobal(_global) {
         return isFinite(num);
     }
 
-    let isNearInfiniteLimit = false;
-
     /**
      * @param {Clock} clock
      * @param {number} i
      */
     function checkIsNearInfiniteLimit(clock, i) {
         if (clock.loopLimit && i === clock.loopLimit - 1) {
-            isNearInfiniteLimit = true;
+            clock.isNearInfiniteLimit = true;
         }
     }
 
     /**
-     *
+     * @param {Clock} clock
      */
-    function resetIsNearInfiniteLimit() {
-        isNearInfiniteLimit = false;
+    function resetIsNearInfiniteLimit(clock) {
+        clock.isNearInfiniteLimit = false;
     }
 
     /**
@@ -554,7 +553,7 @@ function withGlobal(_global) {
                 throw getInfiniteLoopError(clock, job);
             }
         }
-        resetIsNearInfiniteLimit();
+        resetIsNearInfiniteLimit(clock);
         clock.jobs = [];
     }
 
@@ -579,7 +578,7 @@ function withGlobal(_global) {
             }
         }
 
-        if (isNearInfiniteLimit) {
+        if (clock.isNearInfiniteLimit) {
             timer.error = new Error();
         }
 
@@ -940,10 +939,13 @@ function withGlobal(_global) {
         // Prevent multiple executions which will completely remove these props
         clock.methods = [];
 
+        resetIsNearInfiniteLimit(clock);
+
         // return pending timers, to enable checking what timers remained on uninstall
         if (!clock.timers) {
             return [];
         }
+
         return Object.keys(clock.timers).map(function mapper(key) {
             return clock.timers[key];
         });
@@ -1109,6 +1111,7 @@ function withGlobal(_global) {
             now: start,
             Date: createDate(),
             loopLimit: loopLimit,
+            isNearInfiniteLimit: false,
         };
 
         clock.Date.clock = clock;
@@ -1234,7 +1237,7 @@ function withGlobal(_global) {
             return enqueueJob(clock, {
                 func: func,
                 args: Array.prototype.slice.call(arguments, 1),
-                error: isNearInfiniteLimit ? new Error() : null,
+                error: clock.isNearInfiniteLimit ? new Error() : null,
             });
         };
 
@@ -1546,18 +1549,18 @@ function withGlobal(_global) {
             runJobs(clock);
             for (i = 0; i < clock.loopLimit; i++) {
                 if (!clock.timers) {
-                    resetIsNearInfiniteLimit();
+                    resetIsNearInfiniteLimit(clock);
                     return clock.now;
                 }
 
                 numTimers = Object.keys(clock.timers).length;
                 if (numTimers === 0) {
-                    resetIsNearInfiniteLimit();
+                    resetIsNearInfiniteLimit(clock);
                     return clock.now;
                 }
 
-                clock.next();
                 checkIsNearInfiniteLimit(clock, i);
+                clock.next();
             }
 
             const excessJob = firstTimer(clock);
@@ -1581,7 +1584,7 @@ function withGlobal(_global) {
                                 let numTimers;
                                 if (i < clock.loopLimit) {
                                     if (!clock.timers) {
-                                        resetIsNearInfiniteLimit();
+                                        resetIsNearInfiniteLimit(clock);
                                         resolve(clock.now);
                                         return;
                                     }
@@ -1590,7 +1593,7 @@ function withGlobal(_global) {
                                         clock.timers
                                     ).length;
                                     if (numTimers === 0) {
-                                        resetIsNearInfiniteLimit();
+                                        resetIsNearInfiniteLimit(clock);
                                         resolve(clock.now);
                                         return;
                                     }
@@ -1867,3 +1870,4 @@ exports.timers = defaultImplementation.timers;
 exports.createClock = defaultImplementation.createClock;
 exports.install = defaultImplementation.install;
 exports.withGlobal = withGlobal;
+
