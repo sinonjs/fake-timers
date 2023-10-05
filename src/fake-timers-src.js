@@ -481,9 +481,24 @@ function withGlobal(_global) {
         return mirrorDateProperties(ClockDate, NativeDate);
     }
 
-    //eslint-disable-next-line jsdoc/require-jsdoc
+    /**
+     * Mirror Intl by default on our fake implementation
+     *
+     * Most of the properties are the original native ones,
+     * but we need to take control of those that have a
+     * dependency on the current clock.
+     *
+     * @returns {object} the partly fake Intl implementation
+     */
     function createIntl() {
-        const ClockIntl = { ...NativeIntl };
+        const ClockIntl = {};
+        /*
+         * All properties of Intl are non-enumerable, so we need
+         * to do a bit of work to get them out.
+         */
+        Object.getOwnPropertyNames(NativeIntl).forEach(
+            (property) => (ClockIntl[property] = NativeIntl[property])
+        );
 
         ClockIntl.DateTimeFormat = function (...args) {
             const realFormatter = new NativeIntl.DateTimeFormat(...args);
@@ -504,8 +519,6 @@ function withGlobal(_global) {
 
             return formatter;
         };
-
-        ClockIntl.RelativeTimeFormat = NativeIntl.RelativeTimeFormat;
 
         ClockIntl.DateTimeFormat.prototype = Object.create(
             NativeIntl.DateTimeFormat.prototype
@@ -1135,6 +1148,17 @@ function withGlobal(_global) {
             return [secsSinceStart, remainderInNanos];
         }
 
+        /**
+         * A high resolution timestamp in milliseconds.
+         *
+         * @typedef {number} DOMHighResTimeStamp
+         */
+
+        /**
+         * performance.now()
+         *
+         * @returns {DOMHighResTimeStamp}
+         */
         function fakePerformanceNow() {
             const hrt = hrtime();
             const millis = hrt[0] * 1000 + hrt[1] / 1e6;
