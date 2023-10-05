@@ -39,12 +39,12 @@
     "@sinonjs/eslint-config": "^4.1.0",
     "@sinonjs/referee-sinon": "11.0.0",
     "husky": "^8.0.3",
-    "jsdom": "22.0.0",
-    "lint-staged": "13.2.2",
+    "jsdom": "22.1.0",
+    "lint-staged": "14.0.1",
     "mocha": "10.2.0",
     "mochify": "9.2.0",
     "nyc": "15.1.0",
-    "prettier": "2.8.8"
+    "prettier": "3.0.3"
   },
   "main": "./src/fake-timers-src.js",
   "dependencies": {
