@@ -4688,7 +4688,7 @@ describe("FakeTimers", function () {
          * @template E
          * @param {E[]} [list1]
          * @param {E[]} [list2]
-         * @return {E[]}
+         * @returns {E[]}
          */
         function getIntersection(list1, list2) {
             return list1.filter((value) => list2.indexOf(value) !== -1);
@@ -4699,7 +4699,7 @@ describe("FakeTimers", function () {
          *
          * @function
          * @param {string[]} [toFake]
-         * @return {{propertyName: string, originalValue: any}[]}
+         * @returns {{propertyName: string, originalValue: any}[]}
          */
         function getOriginals(toFake) {
             return toFake.map((propertyName) => ({
@@ -5299,5 +5299,16 @@ describe("Intl API", function () {
             //eslint-disable-next-line no-underscore-dangle
             clock._Intl.DateTimeFormat.supportedLocalesOf()
         );
+    });
+
+    it("Creates a RelativeTimeFormat like normal", function () {
+        if (typeof Intl?.RelativeTimeFormat === "undefined") {
+            this.skip();
+        }
+
+        const rtf = new Intl.RelativeTimeFormat("en-GB", {
+            numeric: "auto",
+        });
+        assert.equals(rtf.format(2, "day"), "in 2 days");
     });
 });
