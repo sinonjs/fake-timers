@@ -21,7 +21,7 @@ describe("bug", function () {
     });
 
     beforeEach(function setup() {
-        clock = FakeTimers.install();
+        clock = FakeTimers.install({ toFake: ["queueMicrotask"] });
     });
 
     timers.forEach((fastForward) => {
