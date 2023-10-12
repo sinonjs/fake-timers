@@ -244,7 +244,7 @@ function withGlobal(_global) {
 
         if (l > 3 || !/^(\d\d:){0,2}\d\d?$/.test(str)) {
             throw new Error(
-                "tick only understands numbers, 'm:s' and 'h:m:s'. Each part must be two digits"
+                "tick only understands numbers, 'm:s' and 'h:m:s'. Each part must be two digits",
             );
         }
 
@@ -313,7 +313,7 @@ function withGlobal(_global) {
      */
     function getInfiniteLoopError(clock, job) {
         const infiniteLoopError = new Error(
-            `Aborting after running ${clock.loopLimit} timers, assuming an infinite loop!`
+            `Aborting after running ${clock.loopLimit} timers, assuming an infinite loop!`,
         );
 
         if (!job.error) {
@@ -323,13 +323,13 @@ function withGlobal(_global) {
         // pattern never matched in Node
         const computedTargetPattern = /target\.*[<|(|[].*?[>|\]|)]\s*/;
         let clockMethodPattern = new RegExp(
-            String(Object.keys(clock).join("|"))
+            String(Object.keys(clock).join("|")),
         );
 
         if (addTimerReturnsObject) {
             // node.js environment
             clockMethodPattern = new RegExp(
-                `\\s+at (Object\\.)?(?:${Object.keys(clock).join("|")})\\s+`
+                `\\s+at (Object\\.)?(?:${Object.keys(clock).join("|")})\\s+`,
             );
         }
 
@@ -463,7 +463,7 @@ function withGlobal(_global) {
                         date,
                         hour,
                         minute,
-                        second
+                        second,
                     );
                 default:
                     return new NativeDate(
@@ -473,7 +473,7 @@ function withGlobal(_global) {
                         hour,
                         minute,
                         second,
-                        ms
+                        ms,
                     );
             }
         }
@@ -497,7 +497,7 @@ function withGlobal(_global) {
          * to do a bit of work to get them out.
          */
         Object.getOwnPropertyNames(NativeIntl).forEach(
-            (property) => (ClockIntl[property] = NativeIntl[property])
+            (property) => (ClockIntl[property] = NativeIntl[property]),
         );
 
         ClockIntl.DateTimeFormat = function (...args) {
@@ -508,7 +508,7 @@ function withGlobal(_global) {
                 (method) => {
                     formatter[method] =
                         realFormatter[method].bind(realFormatter);
-                }
+                },
             );
 
             ["format", "formatToParts"].forEach((method) => {
@@ -521,7 +521,7 @@ function withGlobal(_global) {
         };
 
         ClockIntl.DateTimeFormat.prototype = Object.create(
-            NativeIntl.DateTimeFormat.prototype
+            NativeIntl.DateTimeFormat.prototype,
         );
 
         ClockIntl.DateTimeFormat.supportedLocalesOf =
@@ -574,7 +574,7 @@ function withGlobal(_global) {
                 throw new TypeError(
                     `[ERR_INVALID_CALLBACK]: Callback must be a function. Received ${
                         timer.func
-                    } of type ${typeof timer.func}`
+                    } of type ${typeof timer.func}`,
                 );
             }
         }
@@ -857,7 +857,7 @@ function withGlobal(_global) {
             }
             warnOnce(
                 `FakeTimers: ${handlerName} was invoked to clear a native timer instead of one created by this library.` +
-                    "\nTo automatically clean-up native timers, use `shouldClearNativeTimers`."
+                    "\nTo automatically clean-up native timers, use `shouldClearNativeTimers`.",
             );
         }
 
@@ -874,7 +874,7 @@ function withGlobal(_global) {
                 const clear = getClearHandler(ttype);
                 const schedule = getScheduleHandler(timer.type);
                 throw new Error(
-                    `Cannot clear timer: timer created with ${schedule}() but cleared with ${clear}()`
+                    `Cannot clear timer: timer created with ${schedule}() but cleared with ${clear}()`,
                 );
             }
         }
@@ -899,7 +899,7 @@ function withGlobal(_global) {
             } else if (method === "performance") {
                 const originalPerfDescriptor = Object.getOwnPropertyDescriptor(
                     clock,
-                    `_${method}`
+                    `_${method}`,
                 );
                 if (
                     originalPerfDescriptor &&
@@ -909,7 +909,7 @@ function withGlobal(_global) {
                     Object.defineProperty(
                         _global,
                         method,
-                        originalPerfDescriptor
+                        originalPerfDescriptor,
                     );
                 } else if (originalPerfDescriptor.configurable) {
                     _global[method] = clock[`_${method}`];
@@ -957,7 +957,7 @@ function withGlobal(_global) {
     function hijackMethod(target, method, clock) {
         clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(
             target,
-            method
+            method,
         );
         clock[`_${method}`] = target[method];
 
@@ -969,7 +969,7 @@ function withGlobal(_global) {
         } else if (method === "performance") {
             const originalPerfDescriptor = Object.getOwnPropertyDescriptor(
                 target,
-                method
+                method,
             );
             // JSDOM has a read only performance field so we have to save/copy it differently
             if (
@@ -980,12 +980,12 @@ function withGlobal(_global) {
                 Object.defineProperty(
                     clock,
                     `_${method}`,
-                    originalPerfDescriptor
+                    originalPerfDescriptor,
                 );
 
                 const perfDescriptor = Object.getOwnPropertyDescriptor(
                     clock,
-                    method
+                    method,
                 );
                 Object.defineProperty(target, method, perfDescriptor);
             } else {
@@ -998,7 +998,7 @@ function withGlobal(_global) {
 
             Object.defineProperties(
                 target[method],
-                Object.getOwnPropertyDescriptors(clock[method])
+                Object.getOwnPropertyDescriptors(clock[method]),
             );
         }
 
@@ -1101,7 +1101,7 @@ function withGlobal(_global) {
         if (NativeDate === undefined) {
             throw new Error(
                 "The global scope doesn't have a `Date` object" +
-                    " (see https://github.com/sinonjs/sinon/issues/1852#issuecomment-419622780)"
+                    " (see https://github.com/sinonjs/sinon/issues/1852#issuecomment-419622780)",
             );
         }
 
@@ -1130,7 +1130,7 @@ function withGlobal(_global) {
             if (Array.isArray(prev)) {
                 if (prev[1] > 1e9) {
                     throw new TypeError(
-                        "Number of nanoseconds can't exceed a billion"
+                        "Number of nanoseconds can't exceed a billion",
                     );
                 }
 
@@ -1179,7 +1179,7 @@ function withGlobal(_global) {
 
         clock.requestIdleCallback = function requestIdleCallback(
             func,
-            timeout
+            timeout,
         ) {
             let timeToNextIdlePeriod = 0;
 
@@ -1215,7 +1215,7 @@ function withGlobal(_global) {
             clock.setTimeout[utilPromisify.custom] =
                 function promisifiedSetTimeout(timeout, arg) {
                     return new _global.Promise(function setTimeoutExecutor(
-                        resolve
+                        resolve,
                     ) {
                         addTimer(clock, {
                             func: resolve,
@@ -1276,7 +1276,7 @@ function withGlobal(_global) {
                                     args: [arg],
                                     immediate: true,
                                 });
-                            }
+                            },
                         );
                     };
             }
@@ -1587,7 +1587,7 @@ function withGlobal(_global) {
                                     }
 
                                     numTimers = Object.keys(
-                                        clock.timers
+                                        clock.timers,
                                     ).length;
                                     if (numTimers === 0) {
                                         resetIsNearInfiniteLimit();
@@ -1720,8 +1720,8 @@ function withGlobal(_global) {
         ) {
             throw new TypeError(
                 `FakeTimers.install called with ${String(
-                    config
-                )} install requires an object parameter`
+                    config,
+                )} install requires an object parameter`,
             );
         }
 
@@ -1729,7 +1729,7 @@ function withGlobal(_global) {
             // Timers are already faked; this is a problem.
             // Make the user reset timers before continuing.
             throw new TypeError(
-                "Can't install fake timers twice on the same global object."
+                "Can't install fake timers twice on the same global object.",
             );
         }
 
@@ -1742,7 +1742,7 @@ function withGlobal(_global) {
 
         if (config.target) {
             throw new TypeError(
-                "config.target is no longer supported. Use `withGlobal(target)` instead."
+                "config.target is no longer supported. Use `withGlobal(target)` instead.",
             );
         }
 
@@ -1767,11 +1767,11 @@ function withGlobal(_global) {
             const intervalTick = doIntervalTick.bind(
                 null,
                 clock,
-                config.advanceTimeDelta
+                config.advanceTimeDelta,
             );
             const intervalId = _global.setInterval(
                 intervalTick,
-                config.advanceTimeDelta
+                config.advanceTimeDelta,
             );
             clock.attachedInterval = intervalId;
         }
@@ -1797,7 +1797,7 @@ function withGlobal(_global) {
             } else if ((config.toFake || []).includes("performance")) {
                 // user explicitly tried to fake performance when not present
                 throw new ReferenceError(
-                    "non-existent performance object cannot be faked"
+                    "non-existent performance object cannot be faked",
                 );
             }
         }

@@ -76,7 +76,7 @@ describe("globally configured browser objects", function () {
             const srcDescriptors = Object.getOwnPropertyDescriptors(src);
             Object.keys(srcDescriptors).forEach((key) =>
                 // This is required to make it possible to remove/delete them afterwards
-                makeMutable(srcDescriptors[key])
+                makeMutable(srcDescriptors[key]),
             );
             Object.defineProperties(target, {
                 ...srcDescriptors,

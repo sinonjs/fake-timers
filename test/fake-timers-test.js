@@ -293,7 +293,7 @@ describe("FakeTimers", function () {
                     }.bind(this),
                     {
                         message: `[ERR_INVALID_CALLBACK]: Callback must be a function. Received ${notTypeofFunction} of type ${typeof notTypeofFunction}`,
-                    }
+                    },
                 );
             });
         });
@@ -321,7 +321,7 @@ describe("FakeTimers", function () {
                 utilPromisify(this.clock.setTimeout)(
                     100,
                     "the first",
-                    "the second"
+                    "the second",
                 ).then(function (value) {
                     resolvedValue = value;
                 });
@@ -435,7 +435,7 @@ describe("FakeTimers", function () {
                 let resolvedValue;
                 utilPromisify(this.clock.setImmediate)(
                     "the first",
-                    "the second"
+                    "the second",
                 ).then(function (value) {
                     resolvedValue = value;
                 });
@@ -477,7 +477,7 @@ describe("FakeTimers", function () {
                 {
                     message:
                         "Cannot clear timer: timer created with setTimeout() but cleared with clearImmediate()",
-                }
+                },
             );
             this.clock.tick(55);
 
@@ -495,7 +495,7 @@ describe("FakeTimers", function () {
                 {
                     message:
                         "Cannot clear timer: timer created with setInterval() but cleared with clearImmediate()",
-                }
+                },
             );
             this.clock.tick(55);
 
@@ -941,7 +941,7 @@ describe("FakeTimers", function () {
                 function () {
                     clock.tick(-500);
                 },
-                { message: "Negative ticks are not supported" }
+                { message: "Negative ticks are not supported" },
             );
         });
     });
@@ -2691,7 +2691,7 @@ describe("FakeTimers", function () {
                     assert.isTrue(spies[0].called);
                     assert.isFalse(spies[1].called);
                 });
-            }
+            },
         );
 
         it("new timers added with a call time ealier than the last existing timer are run", function () {
@@ -2741,7 +2741,7 @@ describe("FakeTimers", function () {
                     assert.isTrue(spies[1].called);
                     assert.isTrue(spies[2].called);
                 });
-            }
+            },
         );
 
         it("new timers cannot cause an infinite loop", function () {
@@ -2883,7 +2883,7 @@ describe("FakeTimers", function () {
                 {
                     message:
                         "Cannot clear timer: timer created with setImmediate() but cleared with clearTimeout()",
-                }
+                },
             );
             this.clock.tick(50);
 
@@ -3069,7 +3069,7 @@ describe("FakeTimers", function () {
                 {
                     message:
                         "Cannot clear timer: timer created with setImmediate() but cleared with clearInterval()",
-                }
+                },
             );
             this.clock.tick(50);
 
@@ -3118,7 +3118,7 @@ describe("FakeTimers", function () {
 
             assert.same(
                 date.constructor.prototype,
-                realDate.constructor.prototype
+                realDate.constructor.prototype,
             );
         });
 
@@ -3167,7 +3167,7 @@ describe("FakeTimers", function () {
         it("creates regular date when passing a date as RFC 2822 string", function () {
             const date = new Date("Sat Apr 12 2014 12:22:00 GMT+1000");
             const fakeDate = new this.clock.Date(
-                "Sat Apr 12 2014 12:22:00 GMT+1000"
+                "Sat Apr 12 2014 12:22:00 GMT+1000",
             );
 
             assert.equals(fakeDate.getTime(), date.getTime());
@@ -3268,7 +3268,7 @@ describe("FakeTimers", function () {
         it("mirrors toUTCString method", function () {
             assert.same(
                 this.clock.Date.prototype.toUTCString,
-                Date.prototype.toUTCString
+                Date.prototype.toUTCString,
             );
         });
 
@@ -3513,7 +3513,7 @@ describe("FakeTimers", function () {
                 {
                     name: "ReferenceError",
                     message: "non-existent performance object cannot be faked",
-                }
+                },
             );
         });
 
@@ -3625,7 +3625,7 @@ describe("FakeTimers", function () {
                     Object.defineProperty(
                         Performance.prototype,
                         key,
-                        backupDescriptors[key]
+                        backupDescriptors[key],
                     );
                 });
             });
@@ -3890,7 +3890,7 @@ describe("FakeTimers", function () {
             }
 
             const timer = globalObject.setImmediate(
-                createCallback(done, false)
+                createCallback(done, false),
             );
             globalObject.setImmediate(createCallback(done, true));
             this.clock = FakeTimers.install({ shouldClearNativeTimers: true });
@@ -3903,7 +3903,7 @@ describe("FakeTimers", function () {
             }
 
             const timer = globalObject.requestAnimationFrame(
-                createCallback(done, false)
+                createCallback(done, false),
             );
             globalObject.requestAnimationFrame(createCallback(done, true));
             this.clock = FakeTimers.install({ shouldClearNativeTimers: true });
@@ -3916,7 +3916,7 @@ describe("FakeTimers", function () {
             }
 
             const timer = globalObject.requestIdleCallback(
-                createCallback(done, false)
+                createCallback(done, false),
             );
             globalObject.requestIdleCallback(createCallback(done, true));
             this.clock = FakeTimers.install({ shouldClearNativeTimers: true });
@@ -4065,7 +4065,7 @@ describe("FakeTimers", function () {
                 {
                     message:
                         "Cannot clear timer: timer created with setTimeout() but cleared with cancelAnimationFrame()",
-                }
+                },
             );
             this.clock.tick(50);
 
@@ -4082,7 +4082,7 @@ describe("FakeTimers", function () {
                 {
                     message:
                         "Cannot clear timer: timer created with setInterval() but cleared with cancelAnimationFrame()",
-                }
+                },
             );
             this.clock.tick(50);
 
@@ -4103,7 +4103,7 @@ describe("FakeTimers", function () {
                 {
                     message:
                         "Cannot clear timer: timer created with setImmediate() but cleared with cancelAnimationFrame()",
-                }
+                },
             );
             this.clock.tick(50);
 
@@ -4738,7 +4738,7 @@ describe("FakeTimers", function () {
         it("should install all timers", function () {
             const toFake = getIntersection(
                 Object.getOwnPropertyNames(timersModule),
-                Object.getOwnPropertyNames(FakeTimers.timers)
+                Object.getOwnPropertyNames(FakeTimers.timers),
             );
             const originals = getOriginals(toFake);
 
@@ -4752,7 +4752,7 @@ describe("FakeTimers", function () {
         it("should uninstall all timers", function () {
             const toFake = getIntersection(
                 Object.getOwnPropertyNames(timersModule),
-                Object.getOwnPropertyNames(FakeTimers.timers)
+                Object.getOwnPropertyNames(FakeTimers.timers),
             );
             const originals = getOriginals(toFake);
 
@@ -4860,9 +4860,9 @@ describe("loop limit stack trace", function () {
                 assert.equals(err.message, expectedMessage);
                 assert.equals(
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+Microtask - recursiveQueueMicroTask\\s+(at )*recursiveQueueMicroTask`
+                        `Error: ${expectedMessage}\\s+Microtask - recursiveQueueMicroTask\\s+(at )*recursiveQueueMicroTask`,
                     ).test(err.stack),
-                    true
+                    true,
                 );
             }
             assert.equals(caughtError, true);
@@ -4888,9 +4888,9 @@ describe("loop limit stack trace", function () {
                 assert.equals(err.message, expectedMessage);
                 assert.equals(
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+Microtask - recursiveQueueMicroTask\\s+(at )*recursiveQueueMicroTask`
+                        `Error: ${expectedMessage}\\s+Microtask - recursiveQueueMicroTask\\s+(at )*recursiveQueueMicroTask`,
                     ).test(err.stack),
-                    true
+                    true,
                 );
             }
             assert.equals(caughtError, true);
@@ -4920,9 +4920,9 @@ describe("loop limit stack trace", function () {
                     assert.equals(err.message, expectedMessage);
                     assert.equals(
                         new RegExp(
-                            `Error: ${expectedMessage}\\s+Timeout - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
+                            `Error: ${expectedMessage}\\s+Timeout - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
                         ).test(err.stack),
-                        true
+                        true,
                     );
                 });
         });
@@ -4937,9 +4937,9 @@ describe("loop limit stack trace", function () {
                 assert.equals(err.message, expectedMessage);
                 assert.equals(
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+Timeout - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
+                        `Error: ${expectedMessage}\\s+Timeout - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
                     ).test(err.stack),
-                    true
+                    true,
                 );
             }
             assert.equals(caughtError, true);
@@ -4953,7 +4953,7 @@ describe("loop limit stack trace", function () {
                     function recursiveCreateTimerTimeout() {
                         recursiveCreateTimer();
                     },
-                    10
+                    10,
                 );
             }
 
@@ -4972,9 +4972,9 @@ describe("loop limit stack trace", function () {
                     assert.equals(err.message, expectedMessage);
                     assert.equals(
                         new RegExp(
-                            `Error: ${expectedMessage}\\s+IdleCallback - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
+                            `Error: ${expectedMessage}\\s+IdleCallback - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
                         ).test(err.stack),
-                        true
+                        true,
                     );
                 });
         });
@@ -4989,9 +4989,9 @@ describe("loop limit stack trace", function () {
                 assert.equals(err.message, expectedMessage);
                 assert.equals(
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+IdleCallback - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
+                        `Error: ${expectedMessage}\\s+IdleCallback - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
                     ).test(err.stack),
-                    true
+                    true,
                 );
             }
             assert.equals(caughtError, true);
@@ -5021,9 +5021,9 @@ describe("loop limit stack trace", function () {
                     assert.equals(err.message, expectedMessage);
                     assert.equals(
                         new RegExp(
-                            `Error: ${expectedMessage}\\s+Interval - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
+                            `Error: ${expectedMessage}\\s+Interval - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
                         ).test(err.stack),
-                        true
+                        true,
                     );
                 });
         });
@@ -5038,9 +5038,9 @@ describe("loop limit stack trace", function () {
                 assert.equals(err.message, expectedMessage);
                 assert.equals(
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+Interval - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
+                        `Error: ${expectedMessage}\\s+Interval - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
                     ).test(err.stack),
-                    true
+                    true,
                 );
             }
             assert.equals(caughtError, true);
@@ -5076,9 +5076,9 @@ describe("loop limit stack trace", function () {
                     assert.equals(err.message, expectedMessage);
                     assert.equals(
                         new RegExp(
-                            `Error: ${expectedMessage}\\s+Immediate - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
+                            `Error: ${expectedMessage}\\s+Immediate - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
                         ).test(err.stack),
-                        true
+                        true,
                     );
                 });
         });
@@ -5093,9 +5093,9 @@ describe("loop limit stack trace", function () {
                 assert.equals(err.message, expectedMessage);
                 assert.equals(
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+Immediate - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
+                        `Error: ${expectedMessage}\\s+Immediate - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
                     ).test(err.stack),
-                    true
+                    true,
                 );
             }
             assert.equals(caughtError, true);
@@ -5108,7 +5108,7 @@ describe("loop limit stack trace", function () {
                 test.clock.requestAnimationFrame(
                     function recursiveCreateTimerTimeout() {
                         recursiveCreateTimer();
-                    }
+                    },
                 );
             }
 
@@ -5127,9 +5127,9 @@ describe("loop limit stack trace", function () {
                     assert.equals(err.message, expectedMessage);
                     assert.equals(
                         new RegExp(
-                            `Error: ${expectedMessage}\\s+AnimationFrame - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
+                            `Error: ${expectedMessage}\\s+AnimationFrame - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
                         ).test(err.stack),
-                        true
+                        true,
                     );
                 });
         });
@@ -5144,9 +5144,9 @@ describe("loop limit stack trace", function () {
                 assert.equals(err.message, expectedMessage);
                 assert.equals(
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+AnimationFrame - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`
+                        `Error: ${expectedMessage}\\s+AnimationFrame - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
                     ).test(err.stack),
-                    true
+                    true,
                 );
             }
             assert.equals(caughtError, true);
@@ -5244,7 +5244,7 @@ describe("Intl API", function () {
         };
         assert.equals(
             new Intl.DateTimeFormat("en-GB", options).formatRange(start, end),
-            "00:00–00:01"
+            "00:00–00:01",
         );
     });
 
@@ -5260,7 +5260,7 @@ describe("Intl API", function () {
         assert.equals(
             new Intl.DateTimeFormat("en-GB", options).formatRangeToParts(
                 start,
-                end
+                end,
             ),
             [
                 { type: "hour", value: "00", source: "startRange" },
@@ -5270,7 +5270,7 @@ describe("Intl API", function () {
                 { type: "hour", value: "00", source: "endRange" },
                 { type: "literal", value: ":", source: "endRange" },
                 { type: "minute", value: "01", source: "endRange" },
-            ]
+            ],
         );
     });
 
@@ -5292,14 +5292,14 @@ describe("Intl API", function () {
                 hourCycle: "h23",
                 hour: "2-digit",
                 minute: "2-digit",
-            }
+            },
         );
     });
 
     it("formatToParts via isFirstOfMonth -> Returns true when passed a timestamp argument that is first of the month", function () {
         // June 1 04:00 UTC - Toronto is June 1 00:00
         assert.isTrue(
-            isFirstOfMonth("America/Toronto", Date.UTC(2022, 5, 1, 4))
+            isFirstOfMonth("America/Toronto", Date.UTC(2022, 5, 1, 4)),
         );
     });
 
@@ -5324,7 +5324,7 @@ describe("Intl API", function () {
         assert.equals(
             Intl.DateTimeFormat.supportedLocalesOf(),
             //eslint-disable-next-line no-underscore-dangle
-            clock._Intl.DateTimeFormat.supportedLocalesOf()
+            clock._Intl.DateTimeFormat.supportedLocalesOf(),
         );
     });
 

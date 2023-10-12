@@ -43,7 +43,7 @@ var clock = FakeTimers.createClock();
 
 clock.setTimeout(function () {
     console.log(
-        "The poblano is a mild chili pepper originating in the state of Puebla, Mexico."
+        "The poblano is a mild chili pepper originating in the state of Puebla, Mexico.",
     );
 }, 15);
 
