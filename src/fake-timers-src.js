@@ -28,14 +28,14 @@ if (typeof require === "function" && typeof module === "object") {
 /**
  * @callback NextTick
  * @param {VoidVarArgsFunc} callback - the callback to run
- * @param {...*} arguments - optional arguments to call the callback with
+ * @param {...*} args - optional arguments to call the callback with
  * @returns {void}
  */
 
 /**
  * @callback SetImmediate
  * @param {VoidVarArgsFunc} callback - the callback to run
- * @param {...*} arguments - optional arguments to call the callback with
+ * @param {...*} args - optional arguments to call the callback with
  * @returns {NodeImmediate}
  */
 
