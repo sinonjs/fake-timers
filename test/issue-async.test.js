@@ -28,8 +28,10 @@ describe("bug", function () {
         it(`should advance past queued microtasks using ${fastForward}`, async function () {
             const cb = sinon.fake();
             myFn(cb);
+            myFn(cb);
+            myFn(cb);
             await clock[fastForward]();
-            assert.equal(cb.callCount, 1);
+            assert.equal(cb.callCount, 3);
         });
     });
 });

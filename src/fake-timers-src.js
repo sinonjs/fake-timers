@@ -1578,6 +1578,8 @@ function withGlobal(_global) {
                     function doRun() {
                         originalSetTimeout(function () {
                             try {
+                                runJobs(clock);
+
                                 let numTimers;
                                 if (i < clock.loopLimit) {
                                     if (!clock.timers) {
@@ -1633,6 +1635,7 @@ function withGlobal(_global) {
                         try {
                             const timer = lastTimer(clock);
                             if (!timer) {
+                                runJobs(clock);
                                 resolve(clock.now);
                             }
 
