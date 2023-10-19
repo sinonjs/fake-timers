@@ -1,4 +1,10 @@
 
+11.2.0 / 2023-10-19
+==================
+
+  * Upgrade packages
+  * feat: add RelativeTimeFormat to Intl API (#479)
+
 11.1.0 / 2023-08-17
 ==================
 
