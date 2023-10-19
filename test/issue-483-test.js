@@ -4,17 +4,13 @@ const FakeTimers = require("../src/fake-timers-src");
 const sinon = require("sinon");
 const assert = require("assert");
 
-/**
- *
- * @param cb
- */
 function myFn(cb) {
     queueMicrotask(() => cb());
 }
 
-describe("bug", function () {
+describe("async time skippers should run microtasks", function () {
     let clock;
-    const timers = ["runAll", "runToLast", "runAllAsync", "runToLastAsync"];
+    const timers = ["runAllAsync", "runToLastAsync"];
 
     afterEach(function () {
         clock.uninstall();
@@ -24,6 +20,7 @@ describe("bug", function () {
         clock = FakeTimers.install({ toFake: ["queueMicrotask"] });
     });
 
+    // eslint-disable-next-line mocha/no-setup-in-describe
     timers.forEach((fastForward) => {
         it(`should advance past queued microtasks using ${fastForward}`, async function () {
             const cb = sinon.fake();
@@ -35,17 +32,3 @@ describe("bug", function () {
         });
     });
 });
-
-//it.each([
-//() => jest.advanceTimersToNextTimer(),
-//() => jest.advanceTimersByTime(1),
-//() => jest.runAllTimers(),
-//() => jest.runAllTicks(),
-//() => jest.runOnlyPendingTimers(),
-//])("should advance past queued microtasks using %s", (syncFastForward) => {
-//jest.useFakeTimers();
-//const cb = jest.fn();
-//myFn(cb);
-//syncFastForward();
-//expect(cb).toHaveBeenCalled();
-//});
