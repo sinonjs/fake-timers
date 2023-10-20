@@ -1,4 +1,9 @@
 
+11.2.2 / 2023-10-20
+==================
+
+  * Fix for #483 and jestjs/jest#14549 (#485): micro-tasks are run even when timers are empty
+
 11.2.1 / 2023-10-19
 ==================
   * no-op to fix a broken release process
