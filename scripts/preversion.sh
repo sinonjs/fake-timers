@@ -13,4 +13,5 @@ fi
 npm run lint
 npm test # lints and tests
 
-npm run test-cloud # should not take more than approx 25 seconds
+echo "We have issues running the test-cloud script successfully due to networking issues"
+echo DISABLED: npm run test-cloud # should not take more than approx 25 seconds
