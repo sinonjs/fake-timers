@@ -2482,6 +2482,38 @@ describe("FakeTimers", function () {
                 assert(spies[0].calledBefore(spies[1]));
             });
         });
+
+        it("should run micro-tasks scheduled between timers", async function () {
+            const clock = FakeTimers.createClock();
+            const fake = sinon.fake();
+
+            clock.setTimeout(() => {
+                fake(2);
+                clock.queueMicrotask(() => fake(3));
+            }, 0);
+            clock.setTimeout(() => {
+                fake(4);
+                clock.queueMicrotask(() => fake(5));
+            }, 0);
+            clock.queueMicrotask(() => fake(1));
+
+            await clock.runAllAsync();
+            assert.equals(fake.args[0][0], 1);
+            assert.equals(fake.args[1][0], 2);
+            assert.equals(fake.args[2][0], 3);
+            assert.equals(fake.args[3][0], 4);
+            assert.equals(fake.args[4][0], 5);
+        });
+
+        it("should run micro-tasks also when no timers have been scheduled", async function () {
+            const clock = FakeTimers.createClock();
+            const fake = sinon.fake();
+
+            clock.queueMicrotask(() => fake(1));
+
+            await clock.runAllAsync();
+            assert.equals(fake.args[0][0], 1);
+        });
     });
 
     describe("runToLast", function () {
@@ -2694,7 +2726,7 @@ describe("FakeTimers", function () {
             },
         );
 
-        it("new timers added with a call time ealier than the last existing timer are run", function () {
+        it("new timers added with a call time earlier than the last existing timer are run", function () {
             this.clock = FakeTimers.createClock();
             const test = this;
             const spies = [
@@ -2717,7 +2749,7 @@ describe("FakeTimers", function () {
         });
 
         it(
-            "new timers added from a promise with a call time ealier than the last existing timer" +
+            "new timers added from a promise with a call time earlier than the last existing timer" +
                 "are run",
             function () {
                 this.clock = FakeTimers.createClock();
@@ -2834,6 +2866,36 @@ describe("FakeTimers", function () {
             return this.clock.runToLastAsync().then(function () {
                 assert(spies[0].calledBefore(spies[1]));
             });
+        });
+
+        it("should run micro-tasks scheduled between timers", async function () {
+            const clock = FakeTimers.createClock();
+            const fake = sinon.fake();
+
+            clock.setTimeout(() => {
+                fake(1);
+                clock.queueMicrotask(() => fake(2));
+                clock.queueMicrotask(() => fake(3));
+            }, 0);
+            clock.setTimeout(() => {
+                fake(4);
+            }, 0);
+
+            await clock.runToLastAsync();
+            assert.equals(fake.args[0][0], 1);
+            assert.equals(fake.args[1][0], 2);
+            assert.equals(fake.args[2][0], 3);
+            assert.equals(fake.args[3][0], 4);
+        });
+
+        it("should run micro-tasks also when no timers have been scheduled", async function () {
+            const clock = FakeTimers.createClock();
+            const fake = sinon.fake();
+
+            clock.queueMicrotask(() => fake(1));
+
+            await clock.runToLastAsync();
+            assert.equals(fake.args[0][0], 1);
         });
     });
 

@@ -1,6 +1,6 @@
 "use strict";
 
-var jsdom;
+let jsdom;
 
 if (typeof require === "function" && typeof module === "object") {
     try {
@@ -17,15 +17,15 @@ if (!jsdom) {
     return;
 }
 
-var assert = require("@sinonjs/referee-sinon").assert;
-var FakeTimers = require("../src/fake-timers-src");
-var sinon = require("@sinonjs/referee-sinon").sinon;
+const assert = require("@sinonjs/referee-sinon").assert;
+const FakeTimers = require("../src/fake-timers-src");
+const sinon = require("@sinonjs/referee-sinon").sinon;
 
 describe("withGlobal", function () {
-    var jsdomGlobal, withGlobal, timers;
+    let jsdomGlobal, withGlobal, timers;
 
     beforeEach(function () {
-        var dom = new jsdom.JSDOM("", { runScripts: "dangerously" });
+        const dom = new jsdom.JSDOM("", { runScripts: "dangerously" });
         jsdomGlobal = dom.window;
 
         withGlobal = FakeTimers.withGlobal(jsdomGlobal);
@@ -37,8 +37,8 @@ describe("withGlobal", function () {
     });
 
     it("should support basic setTimeout", function () {
-        var clock = withGlobal.install({ toFake: timers });
-        var stub = sinon.stub();
+        const clock = withGlobal.install({ toFake: timers });
+        const stub = sinon.stub();
 
         jsdomGlobal.setTimeout(stub, 5);
         clock.tick(5);
@@ -50,7 +50,7 @@ describe("withGlobal", function () {
     it("Date is instanceof itself", function () {
         assert(new jsdomGlobal.Date() instanceof jsdomGlobal.Date);
 
-        var clock = withGlobal.install({ toFake: timers });
+        const clock = withGlobal.install({ toFake: timers });
 
         assert(new jsdomGlobal.Date() instanceof jsdomGlobal.Date);
 
@@ -59,13 +59,15 @@ describe("withGlobal", function () {
 });
 
 describe("globally configured browser objects", function () {
-    var withGlobal, originalDescriptors;
+    let withGlobal, originalDescriptors;
 
     // We use a set up function instead of beforeEach to avoid Mocha's check leaks detector
     function setUpGlobal() {
         // Configuration taken from from here https://github.com/airbnb/enzyme/blob/master/docs/guides/jsdom.md
-        var dom = new jsdom.JSDOM("<!doctype html><html><body></body></html>");
-        var window = dom.window;
+        const dom = new jsdom.JSDOM(
+            "<!doctype html><html><body></body></html>",
+        );
+        const window = dom.window;
 
         function makeMutable(descriptor) {
             descriptor.configurable = true;
@@ -99,8 +101,8 @@ describe("globally configured browser objects", function () {
     }
 
     function tearDownGlobal() {
-        var originalDescriptorNames = Object.keys(originalDescriptors);
-        var windowDescriptorNames = Object.getOwnPropertyNames(global.window);
+        const originalDescriptorNames = Object.keys(originalDescriptors);
+        const windowDescriptorNames = Object.getOwnPropertyNames(global.window);
         windowDescriptorNames.forEach(function (descriptorName) {
             if (!originalDescriptorNames.includes(descriptorName)) {
                 delete global[descriptorName];
@@ -118,8 +120,8 @@ describe("globally configured browser objects", function () {
         setUpGlobal();
 
         try {
-            var mockNow = new Date("1990-1-1");
-            var clock = withGlobal.install({
+            const mockNow = new Date("1990-1-1");
+            const clock = withGlobal.install({
                 now: mockNow,
             });
 
