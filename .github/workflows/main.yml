@@ -79,10 +79,10 @@ jobs:
                   PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1
             - name: Integration
               run: |
-                  export SINON_CHROME_BIN=$(which google-chrome-stable)
+                  export PUPPETEER_EXECUTABLE_PATH=$(which google-chrome-stable)
 
                   # test-coverage runs test-headless in Chrome
-                  npm run test-headless -- --chrome $SINON_CHROME_BIN --allow-chrome-as-root
+                  npm run test-headless
 
     saucelabs-test:
         if: ${{ github.ref == 'refs/heads/main' }}
