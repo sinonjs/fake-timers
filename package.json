@@ -22,7 +22,7 @@
     "test-edge": "BROWSER_NAME=MicrosoftEdge mochify --config mochify.webdriver.js",
     "test-firefox": "BROWSER_NAME=firefox mochify --config mochify.webdriver.js",
     "test-safari": "BROWSER_NAME=safari mochify --config mochify.webdriver.js",
-    "test-coverage": "nyc --all --reporter text --reporter html --reporter lcovonly npm run test-node",
+    "test-coverage": "nyc -x mochify.webdriver.js -x coverage --all --reporter text --reporter html --reporter lcovonly npm run test-node",
     "test": "npm run test-node && npm run test-headless",
     "prettier:check": "prettier --check '**/*.{js,css,md}'",
     "prettier:write": "prettier --write '**/*.{js,css,md}'",
