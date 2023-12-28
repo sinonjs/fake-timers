@@ -4920,11 +4920,11 @@ describe("loop limit stack trace", function () {
             } catch (err) {
                 caughtError = true;
                 assert.equals(err.message, expectedMessage);
-                assert.equals(
+                assert.match(
+                    err.stack,
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+Microtask - recursiveQueueMicroTask\\s+(at )*recursiveQueueMicroTask`,
-                    ).test(err.stack),
-                    true,
+                        `Error: ${expectedMessage}\\s+Microtask - recursiveQueueMicroTask`,
+                    ),
                 );
             }
             assert.equals(caughtError, true);
@@ -4948,11 +4948,11 @@ describe("loop limit stack trace", function () {
             } catch (err) {
                 caughtError = true;
                 assert.equals(err.message, expectedMessage);
-                assert.equals(
+                assert.match(
+                    err.stack,
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+Microtask - recursiveQueueMicroTask\\s+(at )*recursiveQueueMicroTask`,
-                    ).test(err.stack),
-                    true,
+                        `Error: ${expectedMessage}\\s+Microtask - recursiveQueueMicroTask`,
+                    ),
                 );
             }
             assert.equals(caughtError, true);
@@ -4980,11 +4980,11 @@ describe("loop limit stack trace", function () {
                     assert(catchSpy.calledOnce);
                     const err = catchSpy.firstCall.args[0];
                     assert.equals(err.message, expectedMessage);
-                    assert.equals(
+                    assert.match(
+                        err.stack,
                         new RegExp(
-                            `Error: ${expectedMessage}\\s+Timeout - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
-                        ).test(err.stack),
-                        true,
+                            `Error: ${expectedMessage}\\s+Timeout - recursiveCreateTimerTimeout`,
+                        ),
                     );
                 });
         });
@@ -4997,11 +4997,11 @@ describe("loop limit stack trace", function () {
             } catch (err) {
                 caughtError = true;
                 assert.equals(err.message, expectedMessage);
-                assert.equals(
+                assert.match(
+                    err.stack,
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+Timeout - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
-                    ).test(err.stack),
-                    true,
+                        `Error: ${expectedMessage}\\s+Timeout - recursiveCreateTimerTimeout`,
+                    ),
                 );
             }
             assert.equals(caughtError, true);
@@ -5032,11 +5032,11 @@ describe("loop limit stack trace", function () {
                     assert(catchSpy.calledOnce);
                     const err = catchSpy.firstCall.args[0];
                     assert.equals(err.message, expectedMessage);
-                    assert.equals(
+                    assert.match(
+                        err.stack,
                         new RegExp(
-                            `Error: ${expectedMessage}\\s+IdleCallback - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
-                        ).test(err.stack),
-                        true,
+                            `Error: ${expectedMessage}\\s+IdleCallback - recursiveCreateTimerTimeout`,
+                        ),
                     );
                 });
         });
@@ -5049,11 +5049,11 @@ describe("loop limit stack trace", function () {
             } catch (err) {
                 caughtError = true;
                 assert.equals(err.message, expectedMessage);
-                assert.equals(
+                assert.match(
+                    err.stack,
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+IdleCallback - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
-                    ).test(err.stack),
-                    true,
+                        `Error: ${expectedMessage}\\s+IdleCallback - recursiveCreateTimerTimeout`,
+                    ),
                 );
             }
             assert.equals(caughtError, true);
@@ -5081,11 +5081,11 @@ describe("loop limit stack trace", function () {
                     assert(catchSpy.calledOnce);
                     const err = catchSpy.firstCall.args[0];
                     assert.equals(err.message, expectedMessage);
-                    assert.equals(
+                    assert.match(
+                        err.stack,
                         new RegExp(
-                            `Error: ${expectedMessage}\\s+Interval - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
-                        ).test(err.stack),
-                        true,
+                            `Error: ${expectedMessage}\\s+Interval - recursiveCreateTimerTimeout`,
+                        ),
                     );
                 });
         });
@@ -5098,11 +5098,11 @@ describe("loop limit stack trace", function () {
             } catch (err) {
                 caughtError = true;
                 assert.equals(err.message, expectedMessage);
-                assert.equals(
+                assert.match(
+                    err.stack,
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+Interval - recursiveCreateTimerTimeout\\s+(at )*recursiveCreateTimer`,
-                    ).test(err.stack),
-                    true,
+                        `Error: ${expectedMessage}\\s+Interval - recursiveCreateTimerTimeout`,
+                    ),
                 );
             }
             assert.equals(caughtError, true);
