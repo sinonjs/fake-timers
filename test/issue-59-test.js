@@ -10,7 +10,9 @@ describe("issue #59", function () {
             setTimeout: setTimeoutFake,
             clearTimeout: sinon.fake(),
         };
-        const clock = FakeTimers.withGlobal(context).install();
+        const clock = FakeTimers.withGlobal(context).install({
+            ignoreMissingTimers: true,
+        });
         assert.equals(setTimeoutFake.callCount, 1);
         clock.setTimeout(NOOP, 0);
         assert.equals(setTimeoutFake.callCount, 1);

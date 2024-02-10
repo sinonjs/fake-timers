@@ -3558,27 +3558,6 @@ describe("FakeTimers", function () {
             });
         }
 
-        it("throws when adding performance to tofake array when performance not present", function () {
-            assert.exception(
-                function () {
-                    const setTimeoutFake = sinon.fake();
-                    const context = {
-                        Date: Date,
-                        setTimeout: setTimeoutFake,
-                        clearTimeout: sinon.fake(),
-                        performance: undefined,
-                    };
-                    FakeTimers.withGlobal(context).install({
-                        toFake: ["performance"],
-                    });
-                },
-                {
-                    name: "ReferenceError",
-                    message: "non-existent performance object cannot be faked",
-                },
-            );
-        });
-
         if (performanceNowPresent) {
             it("replaces global performance.now", function () {
                 this.clock = FakeTimers.install();
@@ -3694,42 +3673,33 @@ describe("FakeTimers", function () {
         }
 
         /* eslint-disable mocha/no-setup-in-describe */
-        if (Object.getPrototypeOf(global)) {
-            delete global.hasOwnPropertyTest;
-            Object.getPrototypeOf(global).hasOwnPropertyTest = function () {};
+        it("deletes global property on uninstall if it was inherited onto the global object", function () {
+            // Give the global object an inherited 'setTimeout' method
+            const proto = { Date, setTimeout: NOOP };
+            const myGlobal = Object.create(proto);
 
-            if (!global.hasOwnProperty("hasOwnPropertyTest")) {
-                it("deletes global property on uninstall if it was inherited onto the global object", function () {
-                    // Give the global object an inherited 'tick' method
-                    delete global.tick;
-                    Object.getPrototypeOf(global).tick = function () {};
-
-                    this.clock = FakeTimers.install({
-                        now: 0,
-                        toFake: ["tick"],
-                    });
-                    assert.isTrue(global.hasOwnProperty("tick"));
-                    this.clock.uninstall();
-
-                    assert.isFalse(global.hasOwnProperty("tick"));
-                    delete Object.getPrototypeOf(global).tick;
-                });
-            }
-
-            delete Object.getPrototypeOf(global).hasOwnPropertyTest;
-        }
-        /* eslint-enable mocha/no-setup-in-describe */
-
-        it("uninstalls global property on uninstall if it is present on the global object itself", function () {
-            // Directly give the global object a tick method
-            global.tick = NOOP;
-
-            this.clock = FakeTimers.install({ now: 0, toFake: ["tick"] });
-            assert.isTrue(global.hasOwnProperty("tick"));
+            this.clock = FakeTimers.withGlobal(myGlobal).install({
+                now: 0,
+                toFake: ["setTimeout"],
+            });
+            assert.isTrue(myGlobal.hasOwnProperty("setTimeout"));
             this.clock.uninstall();
 
-            assert.isTrue(global.hasOwnProperty("tick"));
-            delete global.tick;
+            assert.isFalse(myGlobal.hasOwnProperty("setTimeout"));
+        });
+
+        it("uninstalls global property on uninstall if it is present on the global object itself", function () {
+            // Directly give the global object a setTimeout method
+            const myGlobal = { Date, setTimeout: NOOP };
+
+            this.clock = FakeTimers.withGlobal(myGlobal).install({
+                now: 0,
+                toFake: ["setTimeout"],
+            });
+            assert.isTrue(myGlobal.hasOwnProperty("setTimeout"));
+            this.clock.uninstall();
+
+            assert.isTrue(myGlobal.hasOwnProperty("setTimeout"));
         });
 
         it("fakes Date constructor", function () {
@@ -4883,7 +4853,9 @@ describe("FakeTimers", function () {
                 Date: Date,
                 setTimeout: sinon.fake(),
                 clearTimeout: sinon.fake(),
-            }).install();
+            }).install({
+                ignoreMissingTimers: true,
+            });
             assert.same(timersModule.setTimeout, original);
         });
     });
@@ -5399,5 +5371,40 @@ describe("Intl API", function () {
             numeric: "auto",
         });
         assert.equals(rtf.format(2, "day"), "in 2 days");
+    });
+});
+
+describe("missing timers", function () {
+    const timers = [
+        "performance",
+        "setTimeout",
+        "setImmediate",
+        "someWeirdlyNamedFutureTimer",
+    ];
+
+    // eslint-disable-next-line mocha/no-setup-in-describe
+    timers.forEach((timer) => {
+        it(`should throw on encountering timers in toFake not present in "global": [${timer}]`, function () {
+            assert.exception(
+                function () {
+                    FakeTimers.withGlobal({ Date }).install({
+                        toFake: [timer],
+                    });
+                },
+                {
+                    name: "ReferenceError",
+                    message: `non-existent timers and/or objects cannot be faked: '${timer}'`,
+                },
+            );
+        });
+
+        it(`should ignore timers in toFake that are not present in "global" when passed the ignore flag: [${timer}]`, function () {
+            //refute.exception(function () {
+            FakeTimers.withGlobal({ Date }).install({
+                ignoreMissingTimers: true,
+                toFake: [timer],
+            });
+            //});
+        });
     });
 });
