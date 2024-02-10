@@ -3,7 +3,7 @@
 const { FakeTimers, assert } = require("./helpers/setup-tests");
 
 describe("issue #437", function () {
-    it("should save methods of children instance", function () {
+    it("should save methods of subclass instance", function () {
         const clock = FakeTimers.install();
 
         class DateTime extends Date {
