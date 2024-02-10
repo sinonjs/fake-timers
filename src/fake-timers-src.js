@@ -110,18 +110,6 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {boolean} [ignoreMissingTimers] default is false, meaning asking to fake timers that are not present will throw an error
  */
 
-/**
- * Map of the potential timers/objects to fake and their presence in the passed in global
- *
- * @typedef {object} TimerPresenceMap
- * @property {boolean} performance whether or not global.performance is there
- * @property {boolean} setTimeout  is setTimeout present
- * @property {boolean} setImmediate is setImmediate present
- * @property {boolean} hrtime is 'hrtime' present
- * @property {boolean} hrtimeBigint is 'hrtimeBigint' present
- * @property {boolean} queueMicrotask  is 'queueMicrotask' present
- */
-
 /* eslint-disable jsdoc/require-property-description */
 /**
  * The internal structure to describe a scheduled fake timer
@@ -164,7 +152,6 @@ function withGlobal(_global) {
     const NOOP_ARRAY = function () {
         return [];
     };
-    /** @type {TimerPresenceMap} */
     const isPresent = {};
     let timeoutResult,
         addTimerReturnsObject = false;
