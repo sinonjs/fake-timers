@@ -21,20 +21,25 @@ describe("issue #2449: permanent loss of native functions", function () {
     });
 
     it("should not fake faked timers on a custom target", function () {
-        const setTimeoutFake = sinon.fake();
         const context = {
             Date: Date,
-            setTimeout: setTimeoutFake,
+            setTimeout: sinon.fake(),
             clearTimeout: sinon.fake(),
         };
-        let clock = FakeTimers.withGlobal(context).install();
+        let clock = FakeTimers.withGlobal(context).install({
+            ignoreMissingTimers: true,
+        });
         assert.exception(function () {
-            clock = FakeTimers.withGlobal(context).install();
+            clock = FakeTimers.withGlobal(context).install({
+                ignoreMissingTimers: true,
+            });
         });
         clock.uninstall();
 
         // After uninstaling we should be able to install without issue
-        clock = FakeTimers.withGlobal(context).install();
+        clock = FakeTimers.withGlobal(context).install({
+            ignoreMissingTimers: true,
+        });
         clock.uninstall();
     });
 
@@ -49,7 +54,9 @@ describe("issue #2449: permanent loss of native functions", function () {
         };
         assert.equals(new context.Date().getTime(), 0);
         assert.exception(function () {
-            FakeTimers.withGlobal(context).install();
+            FakeTimers.withGlobal(context).install({
+                ignoreMissingTimers: true,
+            });
         });
 
         globalClock.uninstall();
@@ -63,7 +70,9 @@ describe("issue #2449: permanent loss of native functions", function () {
             setTimeout: setTimeoutFake,
             clearTimeout: sinon.fake(),
         };
-        const clock = FakeTimers.withGlobal(context).install();
+        const clock = FakeTimers.withGlobal(context).install({
+            ignoreMissingTimers: true,
+        });
         assert.equals(new context.Date().getTime(), 0);
         refute.equals(new Date().getTime(), 0);
         const globalClock = FakeTimers.install();

@@ -107,6 +107,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {boolean} [shouldAdvanceTime] tells FakeTimers to increment mocked time automatically (default false)
  * @property {number} [advanceTimeDelta] increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
  * @property {boolean} [shouldClearNativeTimers] forwards clear timer calls to native functions if they are not fakes (default: false)
+ * @property {boolean} [ignoreMissingTimers] default is false, meaning asking to fake timers that are not present will throw an error
  */
 
 /* eslint-disable jsdoc/require-property-description */
@@ -151,16 +152,26 @@ function withGlobal(_global) {
     const NOOP_ARRAY = function () {
         return [];
     };
-    const timeoutResult = _global.setTimeout(NOOP, 0);
-    const addTimerReturnsObject = typeof timeoutResult === "object";
-    const hrtimePresent =
+    const isPresent = {};
+    let timeoutResult,
+        addTimerReturnsObject = false;
+
+    if (_global.setTimeout) {
+        isPresent.setTimeout = true;
+        timeoutResult = _global.setTimeout(NOOP, 0);
+        addTimerReturnsObject = typeof timeoutResult === "object";
+    }
+    isPresent.clearTimeout = Boolean(_global.clearTimeout);
+    isPresent.setInterval = Boolean(_global.setInterval);
+    isPresent.clearInterval = Boolean(_global.clearInterval);
+    isPresent.hrtime =
         _global.process && typeof _global.process.hrtime === "function";
-    const hrtimeBigintPresent =
-        hrtimePresent && typeof _global.process.hrtime.bigint === "function";
-    const nextTickPresent =
+    isPresent.hrtimeBigint =
+        isPresent.hrtime && typeof _global.process.hrtime.bigint === "function";
+    isPresent.nextTick =
         _global.process && typeof _global.process.nextTick === "function";
     const utilPromisify = _global.process && require("util").promisify;
-    const performancePresent =
+    isPresent.performance =
         _global.performance && typeof _global.performance.now === "function";
     const hasPerformancePrototype =
         _global.Performance &&
@@ -169,28 +180,40 @@ function withGlobal(_global) {
         _global.performance &&
         _global.performance.constructor &&
         _global.performance.constructor.prototype;
-    const queueMicrotaskPresent = _global.hasOwnProperty("queueMicrotask");
-    const requestAnimationFramePresent =
+    isPresent.queueMicrotask = _global.hasOwnProperty("queueMicrotask");
+    isPresent.requestAnimationFrame =
         _global.requestAnimationFrame &&
         typeof _global.requestAnimationFrame === "function";
-    const cancelAnimationFramePresent =
+    isPresent.cancelAnimationFrame =
         _global.cancelAnimationFrame &&
         typeof _global.cancelAnimationFrame === "function";
-    const requestIdleCallbackPresent =
+    isPresent.requestIdleCallback =
         _global.requestIdleCallback &&
         typeof _global.requestIdleCallback === "function";
-    const cancelIdleCallbackPresent =
+    isPresent.cancelIdleCallbackPresent =
         _global.cancelIdleCallback &&
         typeof _global.cancelIdleCallback === "function";
-    const setImmediatePresent =
+    isPresent.setImmediate =
         _global.setImmediate && typeof _global.setImmediate === "function";
-    const intlPresent = _global.Intl && typeof _global.Intl === "object";
+    isPresent.clearImmediate =
+        _global.clearImmediate && typeof _global.clearImmediate === "function";
+    isPresent.Intl = _global.Intl && typeof _global.Intl === "object";
 
-    _global.clearTimeout(timeoutResult);
+    if (_global.clearTimeout) {
+        _global.clearTimeout(timeoutResult);
+    }
 
     const NativeDate = _global.Date;
     const NativeIntl = _global.Intl;
     let uniqueTimerId = idCounterStart;
+
+    if (NativeDate === undefined) {
+        throw new Error(
+            "The global scope doesn't have a `Date` object" +
+                " (see https://github.com/sinonjs/sinon/issues/1852#issuecomment-419622780)",
+        );
+    }
+    isPresent.Date = true;
 
     /**
      * @param {number} num
@@ -1042,44 +1065,44 @@ function withGlobal(_global) {
         Date: _global.Date,
     };
 
-    if (setImmediatePresent) {
+    if (isPresent.setImmediate) {
         timers.setImmediate = _global.setImmediate;
         timers.clearImmediate = _global.clearImmediate;
     }
 
-    if (hrtimePresent) {
+    if (isPresent.hrtime) {
         timers.hrtime = _global.process.hrtime;
     }
 
-    if (nextTickPresent) {
+    if (isPresent.nextTick) {
         timers.nextTick = _global.process.nextTick;
     }
 
-    if (performancePresent) {
+    if (isPresent.performance) {
         timers.performance = _global.performance;
     }
 
-    if (requestAnimationFramePresent) {
+    if (isPresent.requestAnimationFrame) {
         timers.requestAnimationFrame = _global.requestAnimationFrame;
     }
 
-    if (queueMicrotaskPresent) {
+    if (isPresent.queueMicrotask) {
         timers.queueMicrotask = true;
     }
 
-    if (cancelAnimationFramePresent) {
+    if (isPresent.cancelAnimationFrame) {
         timers.cancelAnimationFrame = _global.cancelAnimationFrame;
     }
 
-    if (requestIdleCallbackPresent) {
+    if (isPresent.requestIdleCallback) {
         timers.requestIdleCallback = _global.requestIdleCallback;
     }
 
-    if (cancelIdleCallbackPresent) {
+    if (isPresent.cancelIdleCallback) {
         timers.cancelIdleCallback = _global.cancelIdleCallback;
     }
 
-    if (intlPresent) {
+    if (isPresent.Intl) {
         timers.Intl = _global.Intl;
     }
 
@@ -1097,13 +1120,6 @@ function withGlobal(_global) {
         loopLimit = loopLimit || 1000;
         let nanos = 0;
         const adjustedSystemTime = [0, 0]; // [millis, nanoremainder]
-
-        if (NativeDate === undefined) {
-            throw new Error(
-                "The global scope doesn't have a `Date` object" +
-                    " (see https://github.com/sinonjs/sinon/issues/1852#issuecomment-419622780)",
-            );
-        }
 
         const clock = {
             now: start,
@@ -1165,14 +1181,14 @@ function withGlobal(_global) {
             return millis;
         }
 
-        if (hrtimeBigintPresent) {
+        if (isPresent.hrtimeBigint) {
             hrtime.bigint = function () {
                 const parts = hrtime();
                 return BigInt(parts[0]) * BigInt(1e9) + BigInt(parts[1]); // eslint-disable-line
             };
         }
 
-        if (intlPresent) {
+        if (isPresent.Intl) {
             clock.Intl = createIntl();
             clock.Intl.clock = clock;
         }
@@ -1257,7 +1273,7 @@ function withGlobal(_global) {
             return clearTimer(clock, timerId, "Interval");
         };
 
-        if (setImmediatePresent) {
+        if (isPresent.setImmediate) {
             clock.setImmediate = function setImmediate(func) {
                 return addTimer(clock, {
                     func: func,
@@ -1696,12 +1712,12 @@ function withGlobal(_global) {
             clock.tick(ms);
         };
 
-        if (performancePresent) {
+        if (isPresent.performance) {
             clock.performance = Object.create(null);
             clock.performance.now = fakePerformanceNow;
         }
 
-        if (hrtimePresent) {
+        if (isPresent.hrtime) {
             clock.hrtime = hrtime;
         }
 
@@ -1746,6 +1762,20 @@ function withGlobal(_global) {
         if (config.target) {
             throw new TypeError(
                 "config.target is no longer supported. Use `withGlobal(target)` instead.",
+            );
+        }
+
+        /**
+         * @param {string} timer/object the name of the thing that is not present
+         * @param timer
+         */
+        function handleMissingTimer(timer) {
+            if (config.ignoreMissingTimers) {
+                return;
+            }
+
+            throw new ReferenceError(
+                `non-existent timers and/or objects cannot be faked: '${timer}'`,
             );
         }
 
@@ -1798,10 +1828,7 @@ function withGlobal(_global) {
                     }
                 });
             } else if ((config.toFake || []).includes("performance")) {
-                // user explicitly tried to fake performance when not present
-                throw new ReferenceError(
-                    "non-existent performance object cannot be faked",
-                );
+                return handleMissingTimer("performance");
             }
         }
         if (_global === globalObject && timersModule) {
@@ -1809,6 +1836,13 @@ function withGlobal(_global) {
         }
         for (i = 0, l = clock.methods.length; i < l; i++) {
             const nameOfMethodToReplace = clock.methods[i];
+
+            if (!isPresent[nameOfMethodToReplace]) {
+                handleMissingTimer(nameOfMethodToReplace);
+                // eslint-disable-next-line
+                continue;
+            }
+
             if (nameOfMethodToReplace === "hrtime") {
                 if (
                     _global.process &&
