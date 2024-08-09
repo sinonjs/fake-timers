@@ -21,7 +21,7 @@ const {
     utilPromisifyAvailable,
 } = require("./helpers/setup-tests");
 
-let timersModule;
+let timersModule, timersPromisesModule;
 
 /* eslint-disable no-underscore-dangle */
 globalObject.__runs = globalObject.__runs || 0;
@@ -32,6 +32,11 @@ const isRunningInWatchMode = ++globalObject.__runs > 1;
 if (typeof require === "function" && typeof module === "object") {
     try {
         timersModule = require("timers");
+    } catch (e) {
+        // ignored
+    }
+    try {
+        timersPromisesModule = require("timers/promises");
     } catch (e) {
         // ignored
     }
@@ -4857,6 +4862,495 @@ describe("FakeTimers", function () {
                 ignoreMissingTimers: true,
             });
             assert.same(timersModule.setTimeout, original);
+        });
+    });
+    describe("Node timers/promises module", function () {
+        let clock;
+
+        before(function () {
+            if (!timersPromisesModule) {
+                this.skip();
+            }
+        });
+
+        afterEach(function () {
+            if (clock) {
+                clock.uninstall();
+                clock = undefined;
+            }
+        });
+
+        it("should install all methods", function () {
+            const methodNames = ["setTimeout", "setImmediate", "setInterval"];
+            const originals = Object.fromEntries(
+                methodNames.map((it) => [it, timersPromisesModule[it]]),
+            );
+
+            clock = FakeTimers.install();
+
+            for (const methodName of methodNames) {
+                refute.equals(
+                    timersPromisesModule[methodName],
+                    originals[methodName],
+                );
+            }
+        });
+        it("should uninstall all methods", function () {
+            const methodNames = ["setTimeout", "setImmediate", "setInterval"];
+            const originals = Object.fromEntries(
+                methodNames.map((it) => [it, timersPromisesModule[it]]),
+            );
+
+            clock = FakeTimers.install();
+            clock.uninstall();
+
+            for (const methodName of methodNames) {
+                assert.equals(
+                    timersPromisesModule[methodName],
+                    originals[methodName],
+                );
+            }
+        });
+        it("should only install & uninstall provided methods", function () {
+            const methodNames = ["setTimeout", "setImmediate"];
+            const originals = Object.fromEntries(
+                methodNames.map((it) => [it, timersPromisesModule[it]]),
+            );
+
+            clock = FakeTimers.install({
+                toFake: methodNames,
+            });
+
+            for (const methodName of methodNames) {
+                refute.equals(
+                    timersPromisesModule[methodName],
+                    originals[methodName],
+                );
+            }
+
+            clock.uninstall();
+
+            for (const methodName of methodNames) {
+                assert.equals(
+                    timersPromisesModule[methodName],
+                    originals[methodName],
+                );
+            }
+        });
+        it("should not install methods not provided", function () {
+            const original = timersPromisesModule.setInterval;
+            clock = FakeTimers.install({
+                toFake: ["setTimeout", "setImmediate"],
+            });
+
+            assert.equals(timersPromisesModule.setInterval, original);
+        });
+        it("should not install when using custom global object", function () {
+            const methodNames = ["setTimeout", "setImmediate", "setInterval"];
+            const originals = Object.fromEntries(
+                methodNames.map((it) => [it, timersPromisesModule[it]]),
+            );
+
+            clock = FakeTimers.withGlobal({
+                Date: Date,
+                setTimeout: sinon.fake(),
+                clearTimeout: sinon.fake(),
+            }).install({
+                ignoreMissingTimers: true,
+            });
+
+            for (const methodName of methodNames) {
+                assert.equals(
+                    timersPromisesModule[methodName],
+                    originals[methodName],
+                );
+            }
+        });
+
+        describe("The setTimeout function", function () {
+            it("should resolve after specified time", async function () {
+                clock = FakeTimers.install();
+                const promise = timersPromisesModule.setTimeout(100);
+
+                let resolved = false;
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                await clock.tickAsync(100);
+
+                assert.equals(resolved, true);
+            });
+            it("should not resolve before specified time", async function () {
+                clock = FakeTimers.install();
+                const promise = timersPromisesModule.setTimeout(100);
+
+                let resolved = false;
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                await clock.tickAsync(50);
+
+                assert.equals(resolved, false);
+            });
+            it("should resolve with specified value", async function () {
+                clock = FakeTimers.install();
+                const promise = timersPromisesModule.setTimeout(
+                    100,
+                    "example value",
+                );
+
+                clock.tick(100);
+                const result = await promise;
+                assert.equals(result, "example value");
+            });
+            it("should reject early when aborting", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                const promise = timersPromisesModule.setTimeout(100, null, {
+                    signal: abortController.signal,
+                });
+
+                abortController.abort();
+
+                await assert.rejects(promise);
+            });
+            it("should remove abort listener when resolving", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                abortController.signal.removeEventListener = sinon.stub();
+                const promise = timersPromisesModule.setTimeout(100, null, {
+                    signal: abortController.signal,
+                });
+
+                clock.tick(100);
+                await promise;
+
+                assert.equals(
+                    abortController.signal.removeEventListener.called,
+                    true,
+                );
+            });
+            it("should remove abort listener when aborting", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                abortController.signal.removeEventListener = sinon.stub();
+                const promise = timersPromisesModule.setTimeout(100, null, {
+                    signal: abortController.signal,
+                });
+
+                abortController.abort();
+                await promise.catch(() => {});
+
+                assert.equals(
+                    abortController.signal.removeEventListener.called,
+                    true,
+                );
+            });
+        });
+        describe("The setImmediate function", function () {
+            it("should resolve immediately after tick", async function () {
+                clock = FakeTimers.install();
+                const promise = timersPromisesModule.setImmediate();
+
+                let resolved = false;
+                promise.then(() => {
+                    resolved = true;
+                });
+
+                await clock.tickAsync(0);
+
+                assert.equals(resolved, true);
+            });
+            it("should resolve with specified value", async function () {
+                clock = FakeTimers.install();
+                const promise =
+                    timersPromisesModule.setImmediate("example value");
+
+                clock.tick(0);
+                const result = await promise;
+                assert.equals(result, "example value");
+            });
+            it("should reject early when aborting", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                const promise = timersPromisesModule.setImmediate(null, {
+                    signal: abortController.signal,
+                });
+
+                abortController.abort();
+
+                await assert.rejects(promise);
+            });
+            it("should remove abort listener when resolving", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                abortController.signal.removeEventListener = sinon.stub();
+                const promise = timersPromisesModule.setImmediate(null, {
+                    signal: abortController.signal,
+                });
+
+                clock.tick(0);
+                await promise;
+
+                assert.equals(
+                    abortController.signal.removeEventListener.called,
+                    true,
+                );
+            });
+            it("should remove abort listener when aborting", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                abortController.signal.removeEventListener = sinon.stub();
+                const promise = timersPromisesModule.setImmediate(null, {
+                    signal: abortController.signal,
+                });
+
+                abortController.abort();
+                await promise.catch(() => {});
+
+                assert.equals(
+                    abortController.signal.removeEventListener.called,
+                    true,
+                );
+            });
+        });
+        describe("The setInterval function", function () {
+            it("should resolve after specified time", async function () {
+                clock = FakeTimers.install();
+                const iterable = timersPromisesModule.setInterval(100);
+                const iter = iterable[Symbol.asyncIterator]();
+
+                let resolved = false;
+                iter.next().then(() => {
+                    resolved = true;
+                });
+
+                await clock.tickAsync(100);
+
+                assert.equals(resolved, true);
+            });
+            it("should not resolve before specified time", async function () {
+                clock = FakeTimers.install();
+                const iterable = timersPromisesModule.setInterval(100);
+                const iter = iterable[Symbol.asyncIterator]();
+
+                let resolved = false;
+                iter.next().then(() => {
+                    resolved = true;
+                });
+
+                await clock.tickAsync(50);
+
+                assert.equals(resolved, false);
+            });
+            it("should resolve at specified interval", async function () {
+                clock = FakeTimers.install();
+                const iterable = timersPromisesModule.setInterval(100);
+                const iter = iterable[Symbol.asyncIterator]();
+
+                let first = false;
+                iter.next().then(() => {
+                    first = true;
+                });
+                await clock.tickAsync(100);
+
+                assert.equals(first, true);
+
+                let second = false;
+                iter.next().then(() => {
+                    second = true;
+                });
+                await clock.tickAsync(100);
+
+                assert.equals(second, true);
+
+                let third = false;
+                iter.next().then(() => {
+                    third = true;
+                });
+                await clock.tickAsync(100);
+
+                assert.equals(third, true);
+            });
+            it("should resolve as not done", async function () {
+                clock = FakeTimers.install();
+                const iterable = timersPromisesModule.setInterval(100);
+                const iter = iterable[Symbol.asyncIterator]();
+
+                clock.tick(100);
+                const result = await iter.next();
+
+                assert.equals(result.done, false);
+            });
+            it("should resolve with specified value", async function () {
+                clock = FakeTimers.install();
+                const iterable = timersPromisesModule.setInterval(
+                    100,
+                    "example value",
+                );
+                const iter = iterable[Symbol.asyncIterator]();
+
+                clock.tick(100);
+                const result = await iter.next();
+
+                assert.equals(result.value, "example value");
+            });
+            it("should immediately resolve when behind", async function () {
+                clock = FakeTimers.install();
+                const iterable = timersPromisesModule.setInterval(100);
+                const iter = iterable[Symbol.asyncIterator]();
+
+                clock.tick(300);
+
+                await assert.resolves(iter.next());
+                await assert.resolves(iter.next());
+                await assert.resolves(iter.next());
+            });
+            it("should handle concurrent next calls as if sequential", async function () {
+                clock = FakeTimers.install();
+                const iterable = timersPromisesModule.setInterval(100);
+                const iter = iterable[Symbol.asyncIterator]();
+
+                let first = false;
+                let second = false;
+                let third = false;
+                iter.next().then(() => {
+                    first = true;
+                });
+                iter.next().then(() => {
+                    second = true;
+                });
+                iter.next().then(() => {
+                    third = true;
+                });
+
+                await clock.tickAsync(100);
+
+                assert.equals(first, true);
+                assert.equals(second, false);
+                assert.equals(third, false);
+
+                await clock.tickAsync(100);
+
+                assert.equals(second, true);
+                assert.equals(third, false);
+
+                await clock.tickAsync(100);
+
+                assert.equals(third, true);
+            });
+            it("should resolve as done after return has been called", async function () {
+                clock = FakeTimers.install();
+                const iterable = timersPromisesModule.setInterval(100);
+                const iter = iterable[Symbol.asyncIterator]();
+
+                const returnResult = await iter.return();
+                const nextResult = await iter.next();
+
+                assert.equals(returnResult.done, true);
+                assert.equals(nextResult.done, true);
+            });
+            it("should wait to resolve return until all outstanding next calls have resolved", async function () {
+                clock = FakeTimers.install();
+                const iterable = timersPromisesModule.setInterval(100);
+                const iter = iterable[Symbol.asyncIterator]();
+
+                let first, second, third;
+                iter.next().then((it) => {
+                    first = it;
+                });
+                iter.next().then((it) => {
+                    second = it;
+                });
+                iter.next().then((it) => {
+                    third = it;
+                });
+
+                let returned;
+                iter.return().then((it) => {
+                    returned = it;
+                });
+
+                await clock.tickAsync(100);
+                assert.equals(first.done, false);
+                assert.isUndefined(returned);
+
+                await clock.tickAsync(100);
+                assert.equals(second.done, false);
+                assert.isUndefined(returned);
+
+                await clock.tickAsync(100);
+                assert.equals(third.done, false);
+                assert.equals(returned.done, true);
+            });
+            it("should reject early when aborting", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                const iterable = timersPromisesModule.setInterval(100, null, {
+                    signal: abortController.signal,
+                });
+                const iter = iterable[Symbol.asyncIterator]();
+
+                const promise = iter.next();
+                abortController.abort();
+
+                await assert.rejects(promise);
+            });
+            it("should resolve as done after initial reject when aborting", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                const iterable = timersPromisesModule.setInterval(100, null, {
+                    signal: abortController.signal,
+                });
+                const iter = iterable[Symbol.asyncIterator]();
+
+                const first = iter.next();
+                const second = iter.next();
+                const third = iter.next();
+
+                abortController.abort();
+
+                await assert.rejects(first);
+
+                const secondResult = await second;
+                const thirdResult = await third;
+                assert.equals(secondResult.done, true);
+                assert.equals(thirdResult.done, true);
+            });
+            it("should remove abort listener when returning", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                abortController.signal.removeEventListener = sinon.stub();
+                const iterable = timersPromisesModule.setInterval(100, null, {
+                    signal: abortController.signal,
+                });
+                const iter = iterable[Symbol.asyncIterator]();
+
+                await iter.return();
+
+                assert.equals(
+                    abortController.signal.removeEventListener.called,
+                    true,
+                );
+            });
+            it("should remove abort listener when aborting", function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                abortController.signal.removeEventListener = sinon.stub();
+                const iterable = timersPromisesModule.setInterval(100, null, {
+                    signal: abortController.signal,
+                });
+                iterable[Symbol.asyncIterator]();
+
+                abortController.abort();
+
+                assert.equals(
+                    abortController.signal.removeEventListener.called,
+                    true,
+                );
+            });
         });
     });
 });
