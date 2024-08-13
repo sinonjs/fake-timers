@@ -1917,25 +1917,21 @@ function withGlobal(_global) {
                             };
 
                             const handle = clock.setTimeout(() => {
-                                if (options.signal) {
-                                    options.signal.removeEventListener(
-                                        "abort",
-                                        abort,
-                                    );
-                                }
+                                options.signal?.removeEventListener(
+                                    "abort",
+                                    abort,
+                                );
 
                                 resolve(value);
                             }, delay);
 
-                            if (options.signal) {
-                                if (options.signal.aborted) {
-                                    abort();
-                                } else {
-                                    options.signal.addEventListener(
-                                        "abort",
-                                        abort,
-                                    );
-                                }
+                            if (options.signal?.aborted) {
+                                abort();
+                            } else {
+                                options.signal?.addEventListener(
+                                    "abort",
+                                    abort,
+                                );
                             }
                         });
                 } else if (nameOfMethodToReplace === "setImmediate") {
@@ -1959,25 +1955,21 @@ function withGlobal(_global) {
                             };
 
                             const handle = clock.setImmediate(() => {
-                                if (options.signal) {
-                                    options.signal.removeEventListener(
-                                        "abort",
-                                        abort,
-                                    );
-                                }
+                                options.signal?.removeEventListener(
+                                    "abort",
+                                    abort,
+                                );
 
                                 resolve(value);
                             });
 
-                            if (options.signal) {
-                                if (options.signal.aborted) {
-                                    abort();
-                                } else {
-                                    options.signal.addEventListener(
-                                        "abort",
-                                        abort,
-                                    );
-                                }
+                            if (options.signal?.aborted) {
+                                abort();
+                            } else {
+                                options.signal?.addEventListener(
+                                    "abort",
+                                    abort,
+                                );
                             }
                         });
                 } else if (nameOfMethodToReplace === "setInterval") {
@@ -2029,27 +2021,20 @@ function withGlobal(_global) {
                                 }
                             };
 
-                            if (options.signal) {
-                                if (options.signal.aborted) {
-                                    done = true;
-                                } else {
-                                    options.signal.addEventListener(
-                                        "abort",
-                                        abort,
-                                    );
-                                }
+                            if (options.signal?.aborted) {
+                                done = true;
+                            } else {
+                                options.signal?.addEventListener(
+                                    "abort",
+                                    abort,
+                                );
                             }
 
                             return {
                                 next: async () => {
-                                    if (options.signal) {
-                                        if (
-                                            options.signal.aborted &&
-                                            !hasThrown
-                                        ) {
-                                            hasThrown = true;
-                                            throw options.signal.reason;
-                                        }
+                                    if (options.signal?.aborted && !hasThrown) {
+                                        hasThrown = true;
+                                        throw options.signal.reason;
                                     }
 
                                     if (done) {
@@ -2070,14 +2055,9 @@ function withGlobal(_global) {
                                         returnCall.resolve();
                                     }
 
-                                    if (options.signal) {
-                                        if (
-                                            options.signal.aborted &&
-                                            !hasThrown
-                                        ) {
-                                            hasThrown = true;
-                                            throw options.signal.reason;
-                                        }
+                                    if (options.signal?.aborted && !hasThrown) {
+                                        hasThrown = true;
+                                        throw options.signal.reason;
                                     }
 
                                     if (done) {
@@ -2099,12 +2079,10 @@ function withGlobal(_global) {
                                     clock.clearInterval(handle);
                                     done = true;
 
-                                    if (options.signal) {
-                                        options.signal.removeEventListener(
-                                            "abort",
-                                            abort,
-                                        );
-                                    }
+                                    options.signal?.removeEventListener(
+                                        "abort",
+                                        abort,
+                                    );
 
                                     return { done: true, value: undefined };
                                 },
