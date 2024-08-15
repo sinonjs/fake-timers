@@ -1,10 +1,15 @@
 "use strict";
 
 const globalObject = require("@sinonjs/commons").global;
-let timersModule;
+let timersModule, timersPromisesModule;
 if (typeof require === "function" && typeof module === "object") {
     try {
         timersModule = require("timers");
+    } catch (e) {
+        // ignored
+    }
+    try {
+        timersPromisesModule = require("timers/promises");
     } catch (e) {
         // ignored
     }
@@ -94,6 +99,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {Function[]} methods - the methods that are faked
  * @property {boolean} [shouldClearNativeTimers] inherited from config
  * @property {{methodName:string, original:any}[] | undefined} timersModuleMethods
+ * @property {{methodName:string, original:any}[] | undefined} timersPromisesModuleMethods
  */
 /* eslint-enable jsdoc/require-property-description */
 
@@ -952,6 +958,16 @@ function withGlobal(_global) {
                 for (let j = 0; j < clock.timersModuleMethods.length; j++) {
                     const entry = clock.timersModuleMethods[j];
                     timersModule[entry.methodName] = entry.original;
+                }
+            }
+            if (clock.timersPromisesModuleMethods !== undefined) {
+                for (
+                    let j = 0;
+                    j < clock.timersPromisesModuleMethods.length;
+                    j++
+                ) {
+                    const entry = clock.timersPromisesModuleMethods[j];
+                    timersPromisesModule[entry.methodName] = entry.original;
                 }
             }
         }
@@ -1834,6 +1850,9 @@ function withGlobal(_global) {
         if (_global === globalObject && timersModule) {
             clock.timersModuleMethods = [];
         }
+        if (_global === globalObject && timersPromisesModule) {
+            clock.timersPromisesModuleMethods = [];
+        }
         for (i = 0, l = clock.methods.length; i < l; i++) {
             const nameOfMethodToReplace = clock.methods[i];
 
@@ -1871,6 +1890,206 @@ function withGlobal(_global) {
                 });
                 timersModule[nameOfMethodToReplace] =
                     _global[nameOfMethodToReplace];
+            }
+            if (clock.timersPromisesModuleMethods !== undefined) {
+                if (nameOfMethodToReplace === "setTimeout") {
+                    clock.timersPromisesModuleMethods.push({
+                        methodName: "setTimeout",
+                        original: timersPromisesModule.setTimeout,
+                    });
+
+                    timersPromisesModule.setTimeout = (
+                        delay,
+                        value,
+                        options = {},
+                    ) =>
+                        new Promise((resolve, reject) => {
+                            const abort = () => {
+                                options.signal.removeEventListener(
+                                    "abort",
+                                    abort,
+                                );
+                                // This is safe, there is no code path that leads to this function
+                                // being invoked before handle has been assigned.
+                                // eslint-disable-next-line no-use-before-define
+                                clock.clearTimeout(handle);
+                                reject(options.signal.reason);
+                            };
+
+                            const handle = clock.setTimeout(() => {
+                                options.signal?.removeEventListener(
+                                    "abort",
+                                    abort,
+                                );
+
+                                resolve(value);
+                            }, delay);
+
+                            if (options.signal?.aborted) {
+                                abort();
+                            } else {
+                                options.signal?.addEventListener(
+                                    "abort",
+                                    abort,
+                                );
+                            }
+                        });
+                } else if (nameOfMethodToReplace === "setImmediate") {
+                    clock.timersPromisesModuleMethods.push({
+                        methodName: "setImmediate",
+                        original: timersPromisesModule.setImmediate,
+                    });
+
+                    timersPromisesModule.setImmediate = (value, options = {}) =>
+                        new Promise((resolve, reject) => {
+                            const abort = () => {
+                                options.signal.removeEventListener(
+                                    "abort",
+                                    abort,
+                                );
+                                // This is safe, there is no code path that leads to this function
+                                // being invoked before handle has been assigned.
+                                // eslint-disable-next-line no-use-before-define
+                                clock.clearImmediate(handle);
+                                reject(options.signal.reason);
+                            };
+
+                            const handle = clock.setImmediate(() => {
+                                options.signal?.removeEventListener(
+                                    "abort",
+                                    abort,
+                                );
+
+                                resolve(value);
+                            });
+
+                            if (options.signal?.aborted) {
+                                abort();
+                            } else {
+                                options.signal?.addEventListener(
+                                    "abort",
+                                    abort,
+                                );
+                            }
+                        });
+                } else if (nameOfMethodToReplace === "setInterval") {
+                    clock.timersPromisesModuleMethods.push({
+                        methodName: "setInterval",
+                        original: timersPromisesModule.setInterval,
+                    });
+
+                    timersPromisesModule.setInterval = (
+                        delay,
+                        value,
+                        options = {},
+                    ) => ({
+                        [Symbol.asyncIterator]: () => {
+                            const createResolvable = () => {
+                                let resolve, reject;
+                                const promise = new Promise((res, rej) => {
+                                    resolve = res;
+                                    reject = rej;
+                                });
+                                promise.resolve = resolve;
+                                promise.reject = reject;
+                                return promise;
+                            };
+
+                            let done = false;
+                            let hasThrown = false;
+                            let returnCall;
+                            let nextAvailable = 0;
+                            const nextQueue = [];
+
+                            const handle = clock.setInterval(() => {
+                                if (nextQueue.length > 0) {
+                                    nextQueue.shift().resolve();
+                                } else {
+                                    nextAvailable++;
+                                }
+                            }, delay);
+
+                            const abort = () => {
+                                options.signal.removeEventListener(
+                                    "abort",
+                                    abort,
+                                );
+                                clock.clearInterval(handle);
+                                done = true;
+                                for (const resolvable of nextQueue) {
+                                    resolvable.resolve();
+                                }
+                            };
+
+                            if (options.signal?.aborted) {
+                                done = true;
+                            } else {
+                                options.signal?.addEventListener(
+                                    "abort",
+                                    abort,
+                                );
+                            }
+
+                            return {
+                                next: async () => {
+                                    if (options.signal?.aborted && !hasThrown) {
+                                        hasThrown = true;
+                                        throw options.signal.reason;
+                                    }
+
+                                    if (done) {
+                                        return { done: true, value: undefined };
+                                    }
+
+                                    if (nextAvailable > 0) {
+                                        nextAvailable--;
+                                        return { done: false, value: value };
+                                    }
+
+                                    const resolvable = createResolvable();
+                                    nextQueue.push(resolvable);
+
+                                    await resolvable;
+
+                                    if (returnCall && nextQueue.length === 0) {
+                                        returnCall.resolve();
+                                    }
+
+                                    if (options.signal?.aborted && !hasThrown) {
+                                        hasThrown = true;
+                                        throw options.signal.reason;
+                                    }
+
+                                    if (done) {
+                                        return { done: true, value: undefined };
+                                    }
+
+                                    return { done: false, value: value };
+                                },
+                                return: async () => {
+                                    if (done) {
+                                        return { done: true, value: undefined };
+                                    }
+
+                                    if (nextQueue.length > 0) {
+                                        returnCall = createResolvable();
+                                        await returnCall;
+                                    }
+
+                                    clock.clearInterval(handle);
+                                    done = true;
+
+                                    options.signal?.removeEventListener(
+                                        "abort",
+                                        abort,
+                                    );
+
+                                    return { done: true, value: undefined };
+                                },
+                            };
+                        },
+                    });
+                }
             }
         }
 
