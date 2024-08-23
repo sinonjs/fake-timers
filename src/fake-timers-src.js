@@ -99,6 +99,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {boolean} [shouldClearNativeTimers] inherited from config
  * @property {{methodName:string, original:any}[] | undefined} timersModuleMethods
  * @property {{methodName:string, original:any}[] | undefined} timersPromisesModuleMethods
+ * @property {Map<function(): void, AbortSignal>} abortListenerMap
  */
 /* eslint-enable jsdoc/require-property-description */
 
@@ -967,6 +968,11 @@ function withGlobal(_global) {
         // Prevent multiple executions which will completely remove these props
         clock.methods = [];
 
+        for (const [listener, signal] of clock.abortListenerMap.entries()) {
+            signal.removeEventListener("abort", listener);
+            clock.abortListenerMap.delete(listener);
+        }
+
         // return pending timers, to enable checking what timers remained on uninstall
         if (!clock.timers) {
             return [];
@@ -1789,6 +1795,8 @@ function withGlobal(_global) {
             return uninstall(clock, config);
         };
 
+        clock.abortListenerMap = new Map();
+
         clock.methods = config.toFake || [];
 
         if (clock.methods.length === 0) {
@@ -1895,6 +1903,8 @@ function withGlobal(_global) {
                                     "abort",
                                     abort,
                                 );
+                                clock.abortListenerMap.delete(abort);
+
                                 // This is safe, there is no code path that leads to this function
                                 // being invoked before handle has been assigned.
                                 // eslint-disable-next-line no-use-before-define
@@ -1903,21 +1913,30 @@ function withGlobal(_global) {
                             };
 
                             const handle = clock.setTimeout(() => {
-                                options.signal?.removeEventListener(
-                                    "abort",
-                                    abort,
-                                );
+                                if (options.signal) {
+                                    options.signal.removeEventListener(
+                                        "abort",
+                                        abort,
+                                    );
+                                    clock.abortListenerMap.delete(abort);
+                                }
 
                                 resolve(value);
                             }, delay);
 
-                            if (options.signal?.aborted) {
-                                abort();
-                            } else {
-                                options.signal?.addEventListener(
-                                    "abort",
-                                    abort,
-                                );
+                            if (options.signal) {
+                                if (options.signal.aborted) {
+                                    abort();
+                                } else {
+                                    options.signal.addEventListener(
+                                        "abort",
+                                        abort,
+                                    );
+                                    clock.abortListenerMap.set(
+                                        abort,
+                                        options.signal,
+                                    );
+                                }
                             }
                         });
                 } else if (nameOfMethodToReplace === "setImmediate") {
@@ -1933,6 +1952,8 @@ function withGlobal(_global) {
                                     "abort",
                                     abort,
                                 );
+                                clock.abortListenerMap.delete(abort);
+
                                 // This is safe, there is no code path that leads to this function
                                 // being invoked before handle has been assigned.
                                 // eslint-disable-next-line no-use-before-define
@@ -1941,21 +1962,30 @@ function withGlobal(_global) {
                             };
 
                             const handle = clock.setImmediate(() => {
-                                options.signal?.removeEventListener(
-                                    "abort",
-                                    abort,
-                                );
+                                if (options.signal) {
+                                    options.signal.removeEventListener(
+                                        "abort",
+                                        abort,
+                                    );
+                                    clock.abortListenerMap.delete(abort);
+                                }
 
                                 resolve(value);
                             });
 
-                            if (options.signal?.aborted) {
-                                abort();
-                            } else {
-                                options.signal?.addEventListener(
-                                    "abort",
-                                    abort,
-                                );
+                            if (options.signal) {
+                                if (options.signal.aborted) {
+                                    abort();
+                                } else {
+                                    options.signal.addEventListener(
+                                        "abort",
+                                        abort,
+                                    );
+                                    clock.abortListenerMap.set(
+                                        abort,
+                                        options.signal,
+                                    );
+                                }
                             }
                         });
                 } else if (nameOfMethodToReplace === "setInterval") {
@@ -2000,6 +2030,8 @@ function withGlobal(_global) {
                                     "abort",
                                     abort,
                                 );
+                                clock.abortListenerMap.delete(abort);
+
                                 clock.clearInterval(handle);
                                 done = true;
                                 for (const resolvable of nextQueue) {
@@ -2007,13 +2039,19 @@ function withGlobal(_global) {
                                 }
                             };
 
-                            if (options.signal?.aborted) {
-                                done = true;
-                            } else {
-                                options.signal?.addEventListener(
-                                    "abort",
-                                    abort,
-                                );
+                            if (options.signal) {
+                                if (options.signal.aborted) {
+                                    done = true;
+                                } else {
+                                    options.signal.addEventListener(
+                                        "abort",
+                                        abort,
+                                    );
+                                    clock.abortListenerMap.set(
+                                        abort,
+                                        options.signal,
+                                    );
+                                }
                             }
 
                             return {
@@ -2065,10 +2103,13 @@ function withGlobal(_global) {
                                     clock.clearInterval(handle);
                                     done = true;
 
-                                    options.signal?.removeEventListener(
-                                        "abort",
-                                        abort,
-                                    );
+                                    if (options.signal) {
+                                        options.signal.removeEventListener(
+                                            "abort",
+                                            abort,
+                                        );
+                                        clock.abortListenerMap.delete(abort);
+                                    }
 
                                     return { done: true, value: undefined };
                                 },
