@@ -198,6 +198,7 @@ describe("FakeTimers", function () {
             this.clock.tick(60);
             assert.equals(callbackCalled, true);
         });
+
         it("should work when called from a process.nextTick() (across the tick())", function () {
             const me = this;
             let callbackCalled = false;
@@ -211,6 +212,7 @@ describe("FakeTimers", function () {
             this.clock.tick(41);
             assert.equals(callbackCalled, true);
         });
+
         it("should work when called from setTimeout(() => process.nextTick())", function () {
             const me = this;
             let callbackCalled = false;
@@ -224,6 +226,7 @@ describe("FakeTimers", function () {
             this.clock.tick(61);
             assert.equals(callbackCalled, true);
         });
+
         it("handles Infinity and negative Infinity correctly", function () {
             const calls = [];
             this.clock.setTimeout(function () {
@@ -273,6 +276,7 @@ describe("FakeTimers", function () {
                 }
             });
         });
+
         describe("use of eval in node", function () {
             before(function () {
                 if (!addTimerReturnsObject) {
@@ -425,6 +429,7 @@ describe("FakeTimers", function () {
                     this.skip();
                 }
             });
+
             it("calls the given callback immediately", function () {
                 let resolved = false;
                 utilPromisify(this.clock.setImmediate)().then(function () {
@@ -2644,6 +2649,7 @@ describe("FakeTimers", function () {
                 this.skip();
             }
         });
+
         it("returns current time when there are no timers", function () {
             this.clock = FakeTimers.createClock();
 
@@ -4396,15 +4402,18 @@ describe("FakeTimers", function () {
     describe("queueMicrotask semantics", function () {
         // adapted from Node's tests
         let clock, called;
+
         before(function () {
             if (!queueMicrotaskPresent) {
                 this.skip();
             }
         });
+
         beforeEach(function () {
             clock = FakeTimers.createClock();
             called = false;
         });
+
         it("runs without timers", function () {
             clock.queueMicrotask(function () {
                 called = true;
@@ -4412,6 +4421,7 @@ describe("FakeTimers", function () {
             clock.runAll();
             assert(called);
         });
+
         it("runs when runMicrotasks is called on the clock", function () {
             clock.queueMicrotask(function () {
                 called = true;
@@ -4419,6 +4429,7 @@ describe("FakeTimers", function () {
             clock.runMicrotasks();
             assert(called);
         });
+
         it("runs with timers and before them", function () {
             let last = "";
             clock.queueMicrotask(function () {
@@ -4731,6 +4742,7 @@ describe("FakeTimers", function () {
             assert.isFalse(stub.called);
         });
     });
+
     describe("Node timers module", function () {
         before(function () {
             if (!timersModule) {
@@ -4740,7 +4752,6 @@ describe("FakeTimers", function () {
 
         /**
          * Returns elements that are present in both lists.
-         *
          * @function
          * @template E
          * @param {E[]} [list1]
@@ -4753,7 +4764,6 @@ describe("FakeTimers", function () {
 
         /**
          * Get property names and original values from timers module.
-         *
          * @function
          * @param {string[]} [toFake]
          * @returns {{propertyName: string, originalValue: any}[]}
@@ -4864,6 +4874,7 @@ describe("FakeTimers", function () {
             assert.same(timersModule.setTimeout, original);
         });
     });
+
     describe("Node timers/promises module", function () {
         let clock;
 
@@ -4895,6 +4906,7 @@ describe("FakeTimers", function () {
                 );
             }
         });
+
         it("should uninstall all methods", function () {
             const methodNames = ["setTimeout", "setImmediate", "setInterval"];
             const originals = Object.fromEntries(
@@ -4911,6 +4923,7 @@ describe("FakeTimers", function () {
                 );
             }
         });
+
         it("should only install & uninstall provided methods", function () {
             const methodNames = ["setTimeout", "setImmediate"];
             const originals = Object.fromEntries(
@@ -4937,6 +4950,7 @@ describe("FakeTimers", function () {
                 );
             }
         });
+
         it("should not install methods not provided", function () {
             const original = timersPromisesModule.setInterval;
             clock = FakeTimers.install({
@@ -4945,6 +4959,7 @@ describe("FakeTimers", function () {
 
             assert.equals(timersPromisesModule.setInterval, original);
         });
+
         it("should not install when using custom global object", function () {
             const methodNames = ["setTimeout", "setImmediate", "setInterval"];
             const originals = Object.fromEntries(
@@ -4981,6 +4996,7 @@ describe("FakeTimers", function () {
 
                 assert.equals(resolved, true);
             });
+
             it("should not resolve before specified time", async function () {
                 clock = FakeTimers.install();
                 const promise = timersPromisesModule.setTimeout(100);
@@ -4994,6 +5010,7 @@ describe("FakeTimers", function () {
 
                 assert.equals(resolved, false);
             });
+
             it("should resolve with specified value", async function () {
                 clock = FakeTimers.install();
                 const promise = timersPromisesModule.setTimeout(
@@ -5005,6 +5022,7 @@ describe("FakeTimers", function () {
                 const result = await promise;
                 assert.equals(result, "example value");
             });
+
             it("should reject early when aborting", async function () {
                 clock = FakeTimers.install();
                 const abortController = new AbortController();
@@ -5016,6 +5034,7 @@ describe("FakeTimers", function () {
 
                 await assert.rejects(promise);
             });
+
             it("should remove abort listener when resolving", async function () {
                 clock = FakeTimers.install();
                 const abortController = new AbortController();
@@ -5032,6 +5051,7 @@ describe("FakeTimers", function () {
                     true,
                 );
             });
+
             it("should remove abort listener when aborting", async function () {
                 clock = FakeTimers.install();
                 const abortController = new AbortController();
@@ -5049,6 +5069,7 @@ describe("FakeTimers", function () {
                 );
             });
         });
+
         describe("The setImmediate function", function () {
             it("should resolve immediately after tick", async function () {
                 clock = FakeTimers.install();
@@ -5063,6 +5084,7 @@ describe("FakeTimers", function () {
 
                 assert.equals(resolved, true);
             });
+
             it("should resolve with specified value", async function () {
                 clock = FakeTimers.install();
                 const promise =
@@ -5072,6 +5094,7 @@ describe("FakeTimers", function () {
                 const result = await promise;
                 assert.equals(result, "example value");
             });
+
             it("should reject early when aborting", async function () {
                 clock = FakeTimers.install();
                 const abortController = new AbortController();
@@ -5083,6 +5106,7 @@ describe("FakeTimers", function () {
 
                 await assert.rejects(promise);
             });
+
             it("should remove abort listener when resolving", async function () {
                 clock = FakeTimers.install();
                 const abortController = new AbortController();
@@ -5099,6 +5123,7 @@ describe("FakeTimers", function () {
                     true,
                 );
             });
+
             it("should remove abort listener when aborting", async function () {
                 clock = FakeTimers.install();
                 const abortController = new AbortController();
@@ -5116,6 +5141,7 @@ describe("FakeTimers", function () {
                 );
             });
         });
+
         describe("The setInterval function", function () {
             it("should resolve after specified time", async function () {
                 clock = FakeTimers.install();
@@ -5131,6 +5157,7 @@ describe("FakeTimers", function () {
 
                 assert.equals(resolved, true);
             });
+
             it("should not resolve before specified time", async function () {
                 clock = FakeTimers.install();
                 const iterable = timersPromisesModule.setInterval(100);
@@ -5145,6 +5172,7 @@ describe("FakeTimers", function () {
 
                 assert.equals(resolved, false);
             });
+
             it("should resolve at specified interval", async function () {
                 clock = FakeTimers.install();
                 const iterable = timersPromisesModule.setInterval(100);
@@ -5174,6 +5202,7 @@ describe("FakeTimers", function () {
 
                 assert.equals(third, true);
             });
+
             it("should resolve as not done", async function () {
                 clock = FakeTimers.install();
                 const iterable = timersPromisesModule.setInterval(100);
@@ -5184,6 +5213,7 @@ describe("FakeTimers", function () {
 
                 assert.equals(result.done, false);
             });
+
             it("should resolve with specified value", async function () {
                 clock = FakeTimers.install();
                 const iterable = timersPromisesModule.setInterval(
@@ -5197,6 +5227,7 @@ describe("FakeTimers", function () {
 
                 assert.equals(result.value, "example value");
             });
+
             it("should immediately resolve when behind", async function () {
                 clock = FakeTimers.install();
                 const iterable = timersPromisesModule.setInterval(100);
@@ -5208,6 +5239,7 @@ describe("FakeTimers", function () {
                 await assert.resolves(iter.next());
                 await assert.resolves(iter.next());
             });
+
             it("should handle concurrent next calls as if sequential", async function () {
                 clock = FakeTimers.install();
                 const iterable = timersPromisesModule.setInterval(100);
@@ -5241,6 +5273,7 @@ describe("FakeTimers", function () {
 
                 assert.equals(third, true);
             });
+
             it("should resolve as done after return has been called", async function () {
                 clock = FakeTimers.install();
                 const iterable = timersPromisesModule.setInterval(100);
@@ -5252,6 +5285,7 @@ describe("FakeTimers", function () {
                 assert.equals(returnResult.done, true);
                 assert.equals(nextResult.done, true);
             });
+
             it("should wait to resolve return until all outstanding next calls have resolved", async function () {
                 clock = FakeTimers.install();
                 const iterable = timersPromisesModule.setInterval(100);
@@ -5285,6 +5319,7 @@ describe("FakeTimers", function () {
                 assert.equals(third.done, false);
                 assert.equals(returned.done, true);
             });
+
             it("should reject early when aborting", async function () {
                 clock = FakeTimers.install();
                 const abortController = new AbortController();
@@ -5298,6 +5333,7 @@ describe("FakeTimers", function () {
 
                 await assert.rejects(promise);
             });
+
             it("should resolve as done after initial reject when aborting", async function () {
                 clock = FakeTimers.install();
                 const abortController = new AbortController();
@@ -5319,6 +5355,7 @@ describe("FakeTimers", function () {
                 assert.equals(secondResult.done, true);
                 assert.equals(thirdResult.done, true);
             });
+
             it("should remove abort listener when returning", async function () {
                 clock = FakeTimers.install();
                 const abortController = new AbortController();
@@ -5335,6 +5372,7 @@ describe("FakeTimers", function () {
                     true,
                 );
             });
+
             it("should remove abort listener when aborting", function () {
                 clock = FakeTimers.install();
                 const abortController = new AbortController();
@@ -5738,7 +5776,6 @@ describe("Node Timer: ref(), unref(),hasRef()", function () {
 describe("Intl API", function () {
     /**
      * Tester function to check if the globally hijacked Intl object is plugging into the faked Clock
-     *
      * @param {string} ianaTimeZone - IANA time zone name
      * @param {number} timestamp - UNIX timestamp
      * @returns {boolean}
