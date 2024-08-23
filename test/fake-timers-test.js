@@ -5068,6 +5068,49 @@ describe("FakeTimers", function () {
                     true,
                 );
             });
+
+            it("should remove abort listener when uninstalling", function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                abortController.signal.removeEventListener = sinon.stub();
+                timersPromisesModule.setTimeout(100, null, {
+                    signal: abortController.signal,
+                });
+
+                clock.uninstall();
+                clock = undefined;
+
+                assert.equals(
+                    abortController.signal.removeEventListener.called,
+                    true,
+                );
+            });
+
+            it("should remove listener from abort listener map when aborting", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                const promise = timersPromisesModule.setTimeout(100, null, {
+                    signal: abortController.signal,
+                });
+
+                abortController.abort();
+                await promise.catch(() => {});
+
+                assert.equals(clock.abortListenerMap.size, 0);
+            });
+
+            it("should remove listener from abort listener map when resolving", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                const promise = timersPromisesModule.setTimeout(100, null, {
+                    signal: abortController.signal,
+                });
+
+                clock.tick(100);
+                await promise;
+
+                assert.equals(clock.abortListenerMap.size, 0);
+            });
         });
 
         describe("The setImmediate function", function () {
@@ -5139,6 +5182,51 @@ describe("FakeTimers", function () {
                     abortController.signal.removeEventListener.called,
                     true,
                 );
+            });
+
+            it("should remove abort listener when uninstalling", function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                abortController.signal.removeEventListener = sinon.stub();
+                timersPromisesModule.setImmediate(null, {
+                    signal: abortController.signal,
+                });
+
+                clock.uninstall();
+                clock = undefined;
+
+                assert.equals(
+                    abortController.signal.removeEventListener.called,
+                    true,
+                );
+            });
+
+            it("should remove listener from abort listener map when aborting", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                abortController.signal.removeEventListener = sinon.stub();
+                const promise = timersPromisesModule.setImmediate(null, {
+                    signal: abortController.signal,
+                });
+
+                abortController.abort();
+                await promise.catch(() => {});
+
+                assert.equals(clock.abortListenerMap.size, 0);
+            });
+
+            it("should remove listener from abort listener map when resolving", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                abortController.signal.removeEventListener = sinon.stub();
+                const promise = timersPromisesModule.setImmediate(null, {
+                    signal: abortController.signal,
+                });
+
+                clock.tick(0);
+                await promise;
+
+                assert.equals(clock.abortListenerMap.size, 0);
             });
         });
 
@@ -5388,6 +5476,52 @@ describe("FakeTimers", function () {
                     abortController.signal.removeEventListener.called,
                     true,
                 );
+            });
+
+            it("should remove abort listener when uninstalling", function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                abortController.signal.removeEventListener = sinon.stub();
+                const iterable = timersPromisesModule.setInterval(100, null, {
+                    signal: abortController.signal,
+                });
+                iterable[Symbol.asyncIterator]();
+
+                clock.uninstall();
+                clock = undefined;
+
+                assert.equals(
+                    abortController.signal.removeEventListener.called,
+                    true,
+                );
+            });
+
+            it("should remove listener from abort listener map when aborting", function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                abortController.signal.removeEventListener = sinon.stub();
+                const iterable = timersPromisesModule.setInterval(100, null, {
+                    signal: abortController.signal,
+                });
+                iterable[Symbol.asyncIterator]();
+
+                abortController.abort();
+
+                assert.equals(clock.abortListenerMap.size, 0);
+            });
+
+            it("should remove listener from abort listener map when returning", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                abortController.signal.removeEventListener = sinon.stub();
+                const iterable = timersPromisesModule.setInterval(100, null, {
+                    signal: abortController.signal,
+                });
+                const iter = iterable[Symbol.asyncIterator]();
+
+                await iter.return();
+
+                assert.equals(clock.abortListenerMap.size, 0);
             });
         });
     });
