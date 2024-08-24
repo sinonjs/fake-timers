@@ -29,7 +29,7 @@
     "preversion": "./scripts/preversion.sh",
     "version": "./scripts/version.sh",
     "postversion": "./scripts/postversion.sh",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "lint-staged": {
     "*.{js,css,md}": "prettier --check",
