@@ -6,7 +6,7 @@
   "author": "Christian Johansen",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sinonjs/fake-timers.git"
+    "url": "git+https://github.com/sinonjs/fake-timers.git"
   },
   "bugs": {
     "mail": "christian@cjohansen.no",
