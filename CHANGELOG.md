@@ -1,4 +1,10 @@
 
+12.0.0 / 2024-08-24
+==================
+
+  * Support performance.measure+mark (#499)
+  * fix: save methods of children Date instance (#437) (#480) (potentially BREAKING)
+
 11.3.1 / 2024-08-24
 ==================
 
