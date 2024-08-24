@@ -3632,6 +3632,27 @@ describe("FakeTimers", function () {
                 this.clock.uninstall();
             });
 
+            it("should create fake versions of `mark` and `measure` that return PerformanceEntry objects", function () {
+                if (typeof Performance === "undefined") {
+                    return this.skip();
+                }
+
+                function testEntry(performanceEntry) {
+                    assert.keys(performanceEntry, [
+                        "startTime",
+                        "duration",
+                        "name",
+                        "entryType",
+                    ]);
+
+                    assert(typeof performanceEntry.toJSON() === "string");
+                }
+
+                this.clock = FakeTimers.install();
+                testEntry(performance.mark("foo"));
+                testEntry(performance.measure("bar", "s", "t"));
+            });
+
             it("should replace the getEntries, getEntriesByX methods with noops that return []", function () {
                 if (typeof Performance === "undefined") {
                     return this.skip();
