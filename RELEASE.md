@@ -8,13 +8,7 @@ You'll need a working installation of [git-extras](https://github.com/tj/git-ext
 $ npm version x.y.z # or npm version [patch|minor|major]
 ```
 
-Runs the tests, builds a changelog and the authors file, updates package.json, creates a new tag and pushes the tag and its commits to the sinon repo.
-
-## Publish to NPM
-
-```
-$ npm publish
-```
+Runs the tests, builds a changelog and the authors file, updates package.json, creates a new tag and pushes the tag and its commits to the sinon repo, as well as publishing.
 
 ## Create a GitHub release
 
