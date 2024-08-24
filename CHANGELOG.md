@@ -1,4 +1,26 @@
 
+11.3.1 / 2024-08-24
+==================
+
+  * Prevent releasing on branches other than 'main'
+  * Enable saucelabs tests
+  * chore: security audit fix
+  * Remove Husky deprecation messsage that came in v9
+
+11.3.0 / 2024-08-24
+==================
+
+  * chore: security audit fix
+  * Remove Husky deprecation messsage that came in v9
+  * Fix listener leak for timers/promises
+  * upgrade deps (#496)
+  * Add support for timers/promises module from nodejs (#495)
+  * chore: update deps (#494)
+  * Fail when a timer is not available in the context (#491)
+  * Fix link to Mochify and adjust description (#488)
+  * New mochify (#395)
+  * Bump browserify-sign from 4.2.1 to 4.2.2 (#486)
+
 11.2.2 / 2023-10-20
 ==================
 
