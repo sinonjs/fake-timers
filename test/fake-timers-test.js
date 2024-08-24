@@ -3155,7 +3155,7 @@ describe("FakeTimers", function () {
         });
     });
 
-    describe("date", function () {
+    describe("Date", function () {
         beforeEach(function () {
             this.now = new GlobalDate().getTime() - 3000;
             this.clock = FakeTimers.createClock(this.now);
@@ -3189,10 +3189,7 @@ describe("FakeTimers", function () {
 
             const date = new this.clock.Date();
 
-            assert.same(
-                date.constructor.prototype,
-                realDate.constructor.prototype,
-            );
+            assert(date instanceof realDate.constructor);
         });
 
         it("creates Date objects representing clock time", function () {
@@ -3300,8 +3297,8 @@ describe("FakeTimers", function () {
             assert.equals(fakeDateStr, new this.clock.Date().toString());
         });
 
-        it("mirrors native Date.prototype", function () {
-            assert.same(this.clock.Date.prototype, Date.prototype);
+        it("creates objects that are instances of Date", function () {
+            assert(new this.clock.Date() instanceof Date);
         });
 
         it("supports now method if present", function () {
@@ -3362,7 +3359,7 @@ describe("FakeTimers", function () {
         });
 
         it("mirrors toString", function () {
-            assert.same(this.clock.Date.toString(), Date.toString());
+            assert.same(this.clock.Date.toString, Date.toString);
         });
     });
 

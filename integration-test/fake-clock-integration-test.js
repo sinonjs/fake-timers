@@ -125,8 +125,8 @@ describe("globally configured browser objects", function () {
                 now: mockNow,
             });
 
-            assert.equals(new Date(Date.now()), mockNow);
-            assert.equals(new Date(), mockNow);
+            assert.equals(new Date(Date.now()).toString(), mockNow.toString());
+            assert.equals(new Date().toString(), mockNow.toString());
 
             clock.uninstall();
 

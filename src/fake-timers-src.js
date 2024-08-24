@@ -398,109 +398,67 @@ function withGlobal(_global) {
         return infiniteLoopError;
     }
 
-    /**
-     * @param {Date} target
-     * @param {Date} source
-     * @returns {Date} the target after modifications
-     */
-    function mirrorDateProperties(target, source) {
-        let prop;
-        for (prop in source) {
-            if (source.hasOwnProperty(prop)) {
-                target[prop] = source[prop];
-            }
-        }
-
-        // set special now implementation
-        if (source.now) {
-            target.now = function now() {
-                return target.clock.now;
-            };
-        } else {
-            delete target.now;
-        }
-
-        // set special toSource implementation
-        if (source.toSource) {
-            target.toSource = function toSource() {
-                return source.toSource();
-            };
-        } else {
-            delete target.toSource;
-        }
-
-        // set special toString implementation
-        target.toString = function toString() {
-            return source.toString();
-        };
-
-        target.prototype = source.prototype;
-        target.parse = source.parse;
-        target.UTC = source.UTC;
-        target.prototype.toUTCString = source.prototype.toUTCString;
-        target.isFake = true;
-
-        return target;
-    }
-
     //eslint-disable-next-line jsdoc/require-jsdoc
     function createDate() {
-        /**
-         * @param {number} year
-         * @param {number} month
-         * @param {number} date
-         * @param {number} hour
-         * @param {number} minute
-         * @param {number} second
-         * @param {number} ms
-         * @returns {Date}
-         */
-        function ClockDate(year, month, date, hour, minute, second, ms) {
-            // the Date constructor called as a function, ref Ecma-262 Edition 5.1, section 15.9.2.
-            // This remains so in the 10th edition of 2019 as well.
-            if (!(this instanceof ClockDate)) {
-                return new NativeDate(ClockDate.clock.now).toString();
-            }
-
-            // if Date is called as a constructor with 'new' keyword
-            // Defensive and verbose to avoid potential harm in passing
-            // explicit undefined when user does not pass argument
-            switch (arguments.length) {
-                case 0:
-                    return new NativeDate(ClockDate.clock.now);
-                case 1:
-                    return new NativeDate(year);
-                case 2:
-                    return new NativeDate(year, month);
-                case 3:
-                    return new NativeDate(year, month, date);
-                case 4:
-                    return new NativeDate(year, month, date, hour);
-                case 5:
-                    return new NativeDate(year, month, date, hour, minute);
-                case 6:
-                    return new NativeDate(
-                        year,
-                        month,
-                        date,
-                        hour,
-                        minute,
-                        second,
-                    );
-                default:
-                    return new NativeDate(
-                        year,
-                        month,
-                        date,
-                        hour,
-                        minute,
-                        second,
-                        ms,
-                    );
+        class ClockDate extends NativeDate {
+            /**
+             * @param {number} year
+             * @param {number} month
+             * @param {number} date
+             * @param {number} hour
+             * @param {number} minute
+             * @param {number} second
+             * @param {number} ms
+             * @returns void
+             */
+            // eslint-disable-next-line no-unused-vars
+            constructor(year, month, date, hour, minute, second, ms) {
+                // Defensive and verbose to avoid potential harm in passing
+                // explicit undefined when user does not pass argument
+                if (arguments.length === 0) {
+                    super(ClockDate.clock.now);
+                } else {
+                    super(...arguments);
+                }
             }
         }
 
-        return mirrorDateProperties(ClockDate, NativeDate);
+        ClockDate.isFake = true;
+
+        if (NativeDate.now) {
+            ClockDate.now = function now() {
+                return ClockDate.clock.now;
+            };
+        }
+
+        if (NativeDate.toSource) {
+            ClockDate.toSource = function toSource() {
+                return NativeDate.toSource();
+            };
+        }
+
+        // noinspection UnnecessaryLocalVariableJS
+        /**
+         * A normal Class constructor cannot be called without `new`, but Date can, so we need
+         * to wrap it in a Proxy in order to ensure this functionality of Date is kept intact
+         * @type {ClockDate}
+         */
+        const ClockDateProxy = new Proxy(ClockDate, {
+            // handler for [[Call]] invocations (i.e. not using `new`)
+            apply() {
+                // the Date constructor called as a function, ref Ecma-262 Edition 5.1, section 15.9.2.
+                // This remains so in the 10th edition of 2019 as well.
+                if (this instanceof ClockDate) {
+                    throw new TypeError(
+                        "A Proxy should only capture `new` calls with the `construct` handler. This is not supposed to be possible, so check the logic.",
+                    );
+                }
+
+                return new NativeDate(ClockDate.clock.now).toString();
+            },
+        });
+
+        return ClockDateProxy;
     }
 
     /**
@@ -995,8 +953,7 @@ function withGlobal(_global) {
         clock[`_${method}`] = target[method];
 
         if (method === "Date") {
-            const date = mirrorDateProperties(clock[method], target[method]);
-            target[method] = date;
+            target[method] = clock[method];
         } else if (method === "Intl") {
             target[method] = clock[method];
         } else if (method === "performance") {
