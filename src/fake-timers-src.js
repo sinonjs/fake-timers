@@ -437,16 +437,24 @@ function withGlobal(_global) {
             };
         }
 
+        // noinspection UnnecessaryLocalVariableJS
+        /**
+         * A normal Class constructor cannot be called without `new`, but Date can, so we need
+         * to wrap it in a Proxy in order to ensure this functionality of Date is kept intact
+         * @type {ClockDate}
+         */
         const ClockDateProxy = new Proxy(ClockDate, {
-            apply(Target, thisArg, argumentsList) {
+            // handler for [[Call]] invocations (i.e. not using `new`)
+            apply() {
                 // the Date constructor called as a function, ref Ecma-262 Edition 5.1, section 15.9.2.
                 // This remains so in the 10th edition of 2019 as well.
-                if (!(this instanceof ClockDate)) {
-                    return new NativeDate(ClockDate.clock.now).toString();
+                if (this instanceof ClockDate) {
+                    throw new TypeError(
+                        "A Proxy should only capture `new` calls with the `construct` handler. This is not supposed to be possible, so check the logic.",
+                    );
                 }
 
-                // if Date is called as a constructor with 'new' keyword
-                return new Target(...argumentsList);
+                return new NativeDate(ClockDate.clock.now).toString();
             },
         });
 
