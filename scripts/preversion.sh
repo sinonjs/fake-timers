@@ -10,6 +10,13 @@ if [ -z $SAUCE_ACCESS_KEY ]; then
     exit 1
 fi
 
+CURRENT_BRANCH=$(git branch --show-current);
+if [ "$CURRENT_BRANCH" != "main" ]; then
+    echo "The current branch is '$CURRENT_BRANCH'. Exiting to avoid dangling releases."
+    exit 1
+fi
+
+
 npm run lint
 npm test # lints and tests
 
