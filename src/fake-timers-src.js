@@ -218,6 +218,25 @@ function withGlobal(_global) {
     isPresent.Date = true;
 
     /**
+     * The PerformanceEntry object encapsulates a single performance metric
+     * that is part of the browser's performance timeline.
+     *
+     * This is an object returned by the `mark` and `measure` methods on the Performance prototype
+     */
+    class FakePerformanceEntry {
+        constructor(name, entryType, startTime, duration) {
+            this.name = name;
+            this.entryType = entryType;
+            this.startTime = startTime;
+            this.duration = duration;
+        }
+
+        toJSON() {
+            return JSON.stringify({ ...this });
+        }
+    }
+
+    /**
      * @param {number} num
      * @returns {boolean}
      */
@@ -1794,6 +1813,11 @@ function withGlobal(_global) {
                                 : NOOP;
                     }
                 });
+                // ensure `mark` returns a value that is valid
+                clock.performance.mark = (name) =>
+                    new FakePerformanceEntry(name, "mark", 0, 0);
+                clock.performance.measure = (name) =>
+                    new FakePerformanceEntry(name, "measure", 0, 100);
             } else if ((config.toFake || []).includes("performance")) {
                 return handleMissingTimer("performance");
             }
