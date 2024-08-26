@@ -3358,8 +3358,8 @@ describe("FakeTimers", function () {
             });
         });
 
-        it("mirrors toString", function () {
-            assert.same(this.clock.Date.toString, Date.toString);
+        it("mirrors toString output", function () {
+            assert.same(this.clock.Date.toString(), Date.toString());
         });
     });
 
