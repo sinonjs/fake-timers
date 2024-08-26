@@ -456,6 +456,10 @@ function withGlobal(_global) {
             };
         }
 
+        ClockDate.toString = function toString() {
+            return NativeDate.toString();
+        };
+
         // noinspection UnnecessaryLocalVariableJS
         /**
          * A normal Class constructor cannot be called without `new`, but Date can, so we need
