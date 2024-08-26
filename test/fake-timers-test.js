@@ -6069,12 +6069,18 @@ describe("missing timers", function () {
         });
 
         it(`should ignore timers in toFake that are not present in "global" when passed the ignore flag: [${timer}]`, function () {
-            //refute.exception(function () {
             FakeTimers.withGlobal({ Date }).install({
                 ignoreMissingTimers: true,
                 toFake: [timer],
             });
-            //});
         });
+    });
+
+    it("should throw on trying to use standard timers that are not present on the custom global", function () {
+        assert.exception(function () {
+            FakeTimers.withGlobal({ setTimeout, Date }).install({
+                toFake: ["setInterval"],
+            });
+        }, /cannot be faked: 'setInterval'/);
     });
 });
