@@ -1,4 +1,11 @@
 
+13.0.1 / 2024-08-26
+==================
+
+  * Add a guard to prevent test from failing in Puppeteer
+  * Add a missing test on using timers not present on a custom global
+  * Fix toString() output
+
 13.0.0 / 2024-08-25
 ==================
 
