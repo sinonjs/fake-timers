@@ -1057,6 +1057,9 @@ function withGlobal(_global) {
 
     if (isPresent.setImmediate) {
         timers.setImmediate = _global.setImmediate;
+    }
+
+    if (isPresent.clearImmediate) {
         timers.clearImmediate = _global.clearImmediate;
     }
 
@@ -1077,7 +1080,7 @@ function withGlobal(_global) {
     }
 
     if (isPresent.queueMicrotask) {
-        timers.queueMicrotask = true;
+        timers.queueMicrotask = _global.queueMicrotask;
     }
 
     if (isPresent.cancelAnimationFrame) {
