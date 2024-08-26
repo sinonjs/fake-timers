@@ -26,6 +26,14 @@ let timersModule, timersPromisesModule;
 /* eslint-disable no-underscore-dangle */
 globalObject.__runs = globalObject.__runs || 0;
 
+let environmentSupportsCallingBuiltInsOnAlternativeThis = true;
+try {
+    setTimeout.call({}, NOOP, 0);
+} catch {
+    // Google Puppeteer will throw "Illegal invocation"
+    environmentSupportsCallingBuiltInsOnAlternativeThis = false;
+}
+
 const isRunningInWatchMode = ++globalObject.__runs > 1;
 /* eslint-enable no-underscore-dangle */
 
@@ -6076,11 +6084,13 @@ describe("missing timers", function () {
         });
     });
 
-    it("should throw on trying to use standard timers that are not present on the custom global", function () {
-        assert.exception(function () {
-            FakeTimers.withGlobal({ setTimeout, Date }).install({
-                toFake: ["setInterval"],
-            });
-        }, /cannot be faked: 'setInterval'/);
-    });
+    if (environmentSupportsCallingBuiltInsOnAlternativeThis) {
+        it("should throw on trying to install standard timers that are not present on the custom global", function () {
+            assert.exception(function () {
+                FakeTimers.withGlobal({ setTimeout, Date }).install({
+                    toFake: ["setInterval"],
+                });
+            }, /cannot be faked: 'setInterval'/);
+        });
+    }
 });
