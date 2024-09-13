@@ -448,6 +448,10 @@ function withGlobal(_global) {
                     super(...arguments);
                 }
             }
+
+            static [Symbol.hasInstance](instance) {
+                return instance instanceof NativeDate;
+            }
         }
 
         ClockDate.isFake = true;
