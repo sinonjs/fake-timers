@@ -1,4 +1,9 @@
 
+13.0.2 / 2024-09-13
+==================
+
+  * fix #504: make instances of original Date pass as instances of the fake Date (#505)
+
 13.0.1 / 2024-08-26
 ==================
 
