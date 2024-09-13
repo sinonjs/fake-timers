@@ -3369,6 +3369,11 @@ describe("FakeTimers", function () {
         it("mirrors toString output", function () {
             assert.same(this.clock.Date.toString(), Date.toString());
         });
+
+        it("recognises instances of the original Date as instances of itself", function () {
+            var originalDateInstance = new Date();
+            assert(originalDateInstance instanceof this.clock.Date);
+        });
     });
 
     describe("stubTimers", function () {
@@ -4765,6 +4770,7 @@ describe("FakeTimers", function () {
 
         /**
          * Returns elements that are present in both lists.
+         *
          * @function
          * @template E
          * @param {E[]} [list1]
@@ -4777,6 +4783,7 @@ describe("FakeTimers", function () {
 
         /**
          * Get property names and original values from timers module.
+         *
          * @function
          * @param {string[]} [toFake]
          * @returns {{propertyName: string, originalValue: any}[]}
@@ -5923,6 +5930,7 @@ describe("Node Timer: ref(), unref(),hasRef()", function () {
 describe("Intl API", function () {
     /**
      * Tester function to check if the globally hijacked Intl object is plugging into the faked Clock
+     *
      * @param {string} ianaTimeZone - IANA time zone name
      * @param {number} timestamp - UNIX timestamp
      * @returns {boolean}

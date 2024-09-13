@@ -23,6 +23,7 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * Queues a function to be called during a browser's idle periods
+ *
  * @callback RequestIdleCallback
  * @param {function(IdleDeadline)} callback
  * @param {{timeout: number}} options - an options object
@@ -105,6 +106,7 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * Configuration object for the `install` method.
+ *
  * @typedef {object} Config
  * @property {number|Date} [now] a number (in milliseconds) or a Date object (default epoch)
  * @property {string[]} [toFake] names of the methods that should be faked.
@@ -118,6 +120,7 @@ if (typeof require === "function" && typeof module === "object") {
 /* eslint-disable jsdoc/require-property-description */
 /**
  * The internal structure to describe a scheduled fake timer
+ *
  * @typedef {object} Timer
  * @property {Function} func
  * @property {*[]} args
@@ -131,6 +134,7 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * A Node timer
+ *
  * @typedef {object} NodeImmediate
  * @property {function(): boolean} hasRef
  * @property {function(): NodeImmediate} ref
@@ -142,6 +146,7 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * Mocks available features in the specified global namespace.
+ *
  * @param {*} _global Namespace to mock (e.g. `window`)
  * @returns {FakeTimers}
  */
@@ -271,6 +276,7 @@ function withGlobal(_global) {
      * Parse strings like "01:10:00" (meaning 1 hour, 10 minutes, 0 seconds) into
      * number of milliseconds. This is used to support human-readable strings passed
      * to clock.tick()
+     *
      * @param {string} str
      * @returns {number}
      */
@@ -306,6 +312,7 @@ function withGlobal(_global) {
 
     /**
      * Get the decimal part of the millisecond value as nanoseconds
+     *
      * @param {number} msFloat the number of milliseconds
      * @returns {number} an integer number of nanoseconds in the range [0,1e6)
      *
@@ -322,6 +329,7 @@ function withGlobal(_global) {
 
     /**
      * Used to grok the `now` parameter to createClock.
+     *
      * @param {Date|number} epoch the system time
      * @returns {number}
      */
@@ -440,6 +448,10 @@ function withGlobal(_global) {
                     super(...arguments);
                 }
             }
+
+            static [Symbol.hasInstance](instance) {
+                return instance instanceof NativeDate;
+            }
         }
 
         ClockDate.isFake = true;
@@ -464,6 +476,7 @@ function withGlobal(_global) {
         /**
          * A normal Class constructor cannot be called without `new`, but Date can, so we need
          * to wrap it in a Proxy in order to ensure this functionality of Date is kept intact
+         *
          * @type {ClockDate}
          */
         const ClockDateProxy = new Proxy(ClockDate, {
@@ -490,6 +503,7 @@ function withGlobal(_global) {
      * Most of the properties are the original native ones,
      * but we need to take control of those that have a
      * dependency on the current clock.
+     *
      * @returns {object} the partly fake Intl implementation
      */
     function createIntl() {
@@ -662,6 +676,7 @@ function withGlobal(_global) {
     /* eslint consistent-return: "off" */
     /**
      * Timer comparitor
+     *
      * @param {Timer} a
      * @param {Timer} b
      * @returns {number}
@@ -793,6 +808,7 @@ function withGlobal(_global) {
 
     /**
      * Gets clear handler name for a given timer type
+     *
      * @param {string} ttype
      */
     function getClearHandler(ttype) {
@@ -804,6 +820,7 @@ function withGlobal(_global) {
 
     /**
      * Gets schedule handler name for a given timer type
+     *
      * @param {string} ttype
      */
     function getScheduleHandler(ttype) {
@@ -1159,11 +1176,13 @@ function withGlobal(_global) {
 
         /**
          * A high resolution timestamp in milliseconds.
+         *
          * @typedef {number} DOMHighResTimeStamp
          */
 
         /**
          * performance.now()
+         *
          * @returns {DOMHighResTimeStamp}
          */
         function fakePerformanceNow() {
