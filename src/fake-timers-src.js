@@ -16,6 +16,30 @@ if (typeof require === "function" && typeof module === "object") {
 }
 
 /**
+ * @typedef {"nextAsync" | "manual" | "interval"} TickMode
+ */
+
+/**
+ * @typedef {object} NextAsyncTickMode
+ * @property {"nextAsync"} mode
+ */
+
+/**
+ * @typedef {object} ManualTickMode
+ * @property {"manual"} mode
+ */
+
+/**
+ * @typedef {object} IntervalTickMode
+ * @property {"interval"} mode
+ * @property {number} [delta]
+ */
+
+/**
+ * @typedef {IntervalTickMode | NextAsyncTickMode | ManualTickMode} TimerTickMode
+ */
+
+/**
  * @typedef {object} IdleDeadline
  * @property {boolean} didTimeout - whether or not the callback was called before reaching the optional timeout
  * @property {function():number} timeRemaining - a floating-point value providing an estimate of the number of milliseconds remaining in the current idle period
@@ -101,6 +125,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {{methodName:string, original:any}[] | undefined} timersModuleMethods
  * @property {{methodName:string, original:any}[] | undefined} timersPromisesModuleMethods
  * @property {Map<function(): void, AbortSignal>} abortListenerMap
+ * @property {function(TimerTickMode): void} setTickMode
  */
 /* eslint-enable jsdoc/require-property-description */
 
@@ -901,7 +926,7 @@ function withGlobal(_global) {
      * @param {Config} config
      * @returns {Timer[]}
      */
-    function uninstall(clock, config) {
+    function uninstall(clock) {
         let method, i, l;
         const installedHrTime = "_hrtime";
         const installedNextTick = "_nextTick";
@@ -959,9 +984,7 @@ function withGlobal(_global) {
             }
         }
 
-        if (config.shouldAdvanceTime === true) {
-            _global.clearInterval(clock.attachedInterval);
-        }
+        clock.setTickMode("manual");
 
         // Prevent multiple executions which will completely remove these props
         clock.methods = [];
@@ -1117,6 +1140,8 @@ function withGlobal(_global) {
     }
 
     const originalSetTimeout = _global.setImmediate || _global.setTimeout;
+    const originalClearInterval = _global.clearInterval;
+    const originalSetInterval = _global.setInterval;
 
     /**
      * @param {Date|number} [start] the system time - non-integer values are floored
@@ -1135,6 +1160,7 @@ function withGlobal(_global) {
             now: start,
             Date: createDate(),
             loopLimit: loopLimit,
+            tickMode: { mode: "manual", counter: 0 },
         };
 
         clock.Date.clock = clock;
@@ -1201,6 +1227,67 @@ function withGlobal(_global) {
         if (isPresent.Intl) {
             clock.Intl = createIntl();
             clock.Intl.clock = clock;
+        }
+
+        clock.setTickMode = function (tickModeConfig) {
+            const { mode: newMode, delta: newDelta } = tickModeConfig;
+            const { mode: oldMode, delta: oldDelta } = clock.tickMode;
+            if (newMode === oldMode && newDelta === oldDelta) {
+                return;
+            }
+
+            if (oldMode === "interval") {
+                originalClearInterval(clock.attachedInterval);
+            }
+
+            clock.tickMode = {
+                counter: clock.tickMode.counter + 1,
+                mode: newMode,
+                delta: newDelta,
+            };
+
+            if (newMode === "nextAsync") {
+                advanceUntilModeChanges();
+            } else if (newMode === "interval") {
+                createIntervalTick(clock, newDelta || 20);
+            }
+        };
+
+        async function advanceUntilModeChanges() {
+            async function newMacrotask() {
+                // MessageChannel ensures that setTimeout is not throttled to 4ms.
+                // https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#reasons_for_delays_longer_than_specified
+                // https://stackblitz.com/edit/stackblitz-starters-qtlpcc
+                await new Promise((resolve) => {
+                    const channel = new MessageChannel();
+                    channel.port1.onmessage = () => {
+                        resolve();
+                        channel.port1.close();
+                    };
+                    channel.port2.postMessage(undefined);
+                });
+                // setTimeout ensures microtask queue is emptied
+                await new Promise((resolve) => {
+                    originalSetTimeout(resolve);
+                });
+            }
+
+            const { counter } = clock.tickMode;
+            while (clock.tickMode.counter === counter) {
+                await newMacrotask();
+                if (clock.tickMode.counter !== counter) {
+                    return;
+                }
+                clock.next();
+            }
+        }
+
+        function setToManualIfAsync() {
+            if (clock.tickMode.mode === "nextAsync") {
+                clock.setTickMode({ mode: "manual" });
+                return true;
+            }
+            return false;
         }
 
         clock.requestIdleCallback = function requestIdleCallback(
@@ -1501,6 +1588,7 @@ function withGlobal(_global) {
              * @returns {Promise}
              */
             clock.tickAsync = function tickAsync(tickValue) {
+                const resetModeToNextAsync = setToManualIfAsync();
                 return new _global.Promise(function (resolve, reject) {
                     originalSetTimeout(function () {
                         try {
@@ -1509,6 +1597,10 @@ function withGlobal(_global) {
                             reject(e);
                         }
                     });
+                }).finally(() => {
+                    if (resetModeToNextAsync) {
+                        clock.setTickMode({ mode: "nextAsync" });
+                    }
                 });
             };
         }
@@ -1533,6 +1625,7 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             clock.nextAsync = function nextAsync() {
+                const resetModeToNextAsync = setToManualIfAsync();
                 return new _global.Promise(function (resolve, reject) {
                     originalSetTimeout(function () {
                         try {
@@ -1563,6 +1656,10 @@ function withGlobal(_global) {
                             reject(e);
                         }
                     });
+                }).finally(() => {
+                    if (resetModeToNextAsync) {
+                        clock.setTickMode({ mode: "nextAsync" });
+                    }
                 });
             };
         }
@@ -1596,6 +1693,7 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             clock.runAllAsync = function runAllAsync() {
+                const resetModeToNextAsync = setToManualIfAsync();
                 return new _global.Promise(function (resolve, reject) {
                     let i = 0;
                     /**
@@ -1640,6 +1738,10 @@ function withGlobal(_global) {
                         });
                     }
                     doRun();
+                }).finally(() => {
+                    if (resetModeToNextAsync) {
+                        this.setTickMode({ mode: "nextAsync" });
+                    }
                 });
             };
         }
@@ -1656,6 +1758,7 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             clock.runToLastAsync = function runToLastAsync() {
+                const resetModeToNextAsync = setToManualIfAsync();
                 return new _global.Promise(function (resolve, reject) {
                     originalSetTimeout(function () {
                         try {
@@ -1670,6 +1773,10 @@ function withGlobal(_global) {
                             reject(e);
                         }
                     });
+                }).finally(() => {
+                    if (resetModeToNextAsync) {
+                        this.setTickMode({ mode: "nextAsync" });
+                    }
                 });
             };
         }
@@ -1734,6 +1841,12 @@ function withGlobal(_global) {
         return clock;
     }
 
+    function createIntervalTick(clock, delta) {
+        const intervalTick = doIntervalTick.bind(null, clock, delta);
+        const intervalId = originalSetInterval(intervalTick, delta);
+        clock.attachedInterval = intervalId;
+    }
+
     /* eslint-disable complexity */
 
     /**
@@ -1794,7 +1907,7 @@ function withGlobal(_global) {
         clock.shouldClearNativeTimers = config.shouldClearNativeTimers;
 
         clock.uninstall = function () {
-            return uninstall(clock, config);
+            return uninstall(clock);
         };
 
         clock.abortListenerMap = new Map();
@@ -1806,16 +1919,10 @@ function withGlobal(_global) {
         }
 
         if (config.shouldAdvanceTime === true) {
-            const intervalTick = doIntervalTick.bind(
-                null,
-                clock,
-                config.advanceTimeDelta,
-            );
-            const intervalId = _global.setInterval(
-                intervalTick,
-                config.advanceTimeDelta,
-            );
-            clock.attachedInterval = intervalId;
+            clock.setTickMode({
+                mode: "interval",
+                delta: config.advanceTimeDelta,
+            });
         }
 
         if (clock.methods.includes("performance")) {

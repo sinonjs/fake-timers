@@ -3842,6 +3842,48 @@ describe("FakeTimers", function () {
             }, testDelay);
         });
 
+        it("can change the delta on the auto advancing timer", async function () {
+            const testDelay = 10;
+            const date = new Date("2015-09-25");
+            const clock = FakeTimers.install({
+                now: date,
+                shouldAdvanceTime: true,
+                advanceTimeDelta: 20,
+            });
+            clock.setTickMode({ mode: "interval", delta: 10 });
+            assert.same(Date.now(), 1443139200000);
+            const timeoutStarted = Date.now();
+
+            await new Promise((resolve) => {
+                setTimeout(() => {
+                    const timeDifference = Date.now() - timeoutStarted;
+                    assert.same(timeDifference, testDelay);
+                    clock.uninstall();
+                    resolve();
+                }, testDelay);
+            });
+        });
+
+        it("can cancel the auto advancing timer by setting mode to manual", async function () {
+            const testDelay = 10;
+            const date = new Date("2015-09-25");
+            const originalSetTimeout = setTimeout;
+            const clock = FakeTimers.install({
+                now: date,
+                shouldAdvanceTime: true,
+            });
+            clock.setTickMode({ mode: "manual" });
+            const timeoutStarted = Date.now();
+
+            await new Promise((resolve) => {
+                originalSetTimeout(() => {
+                    assert.same(timeoutStarted, Date.now());
+                    clock.uninstall();
+                    resolve();
+                }, testDelay);
+            });
+        });
+
         it("should test setImmediate", function (done) {
             if (!setImmediatePresent) {
                 return this.skip();
@@ -3902,6 +3944,146 @@ describe("FakeTimers", function () {
                 clock.uninstall();
                 done();
             }, 0);
+        });
+    });
+
+    describe("setTickMode", function () {
+        const originalSetTimeout = setTimeout;
+        let clock;
+
+        beforeEach(function () {
+            clock = FakeTimers.install();
+        });
+
+        afterEach(function () {
+            clock.reset();
+            clock.uninstall();
+        });
+
+        describe("nextAsync", function () {
+            beforeEach(function () {
+                clock.setTickMode({ mode: "nextAsync" });
+            });
+
+            it("can always wait for a timer to execute", async function () {
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 100);
+                });
+            });
+
+            it("can mix promises inside timers", async function () {
+                await new Promise((resolve) => {
+                    setTimeout(async function () {
+                        await Promise.resolve();
+                        setTimeout(() => {
+                            resolve();
+                        }, 100);
+                    }, 100);
+                });
+            });
+
+            it("automatically advances all timers", async function () {
+                const p1 = new Promise((resolve) => {
+                    setTimeout(resolve, 50);
+                });
+                const p2 = new Promise((resolve) => {
+                    setTimeout(resolve, 50);
+                });
+                const p3 = new Promise((resolve) => {
+                    setTimeout(resolve, 100);
+                });
+                await Promise.all([p1, p2, p3]);
+            });
+
+            it("can turn off and on auto advancing of time", async function () {
+                let p2Resolved = false;
+                const p1 = new Promise((resolve) => {
+                    setTimeout(resolve, 1);
+                });
+                const p2 = new Promise((resolve) => {
+                    setTimeout(() => {
+                        p2Resolved = true;
+                        resolve();
+                    }, 2);
+                });
+                const p3 = new Promise((resolve) => {
+                    setTimeout(resolve, 3);
+                });
+
+                await p1;
+
+                clock.setTickMode({ mode: "manual" });
+                // wait real, unpatched time to ensure p2 doesn't resolve on its own
+                await new Promise((resolve) => {
+                    originalSetTimeout(resolve, 5);
+                });
+                assert.isFalse(p2Resolved);
+
+                // simply updating the tick mode should not result in time immediately advancing
+                clock.setTickMode({ mode: "nextAsync" });
+                assert.isFalse(p2Resolved);
+
+                // wait real, unpatched time and observe p2 and p3 resolve on their own
+                await new Promise((resolve) => {
+                    originalSetTimeout(resolve, 5);
+                });
+                await p2;
+                await p3;
+                assert.equals(p2Resolved, true);
+            });
+
+            describe("works with manual calls to async tick functions", function () {
+                let timerLog;
+                let allTimersDone;
+
+                beforeEach(function () {
+                    timerLog = [];
+                    allTimersDone = new Promise((resolve) => {
+                        setTimeout(() => timerLog.push(1), 1);
+                        setTimeout(() => timerLog.push(2), 2);
+                        setTimeout(() => timerLog.push(3), 3);
+                        setTimeout(() => {
+                            timerLog.push(4);
+                            setTimeout(() => {
+                                timerLog.push(5);
+                                resolve();
+                            }, 1);
+                        }, 5);
+                    });
+                });
+
+                afterEach(async function () {
+                    await allTimersDone;
+                    assert.equals(timerLog, [1, 2, 3, 4, 5]);
+                });
+
+                it("runAllAsync", async function () {
+                    await clock.runAllAsync();
+                    assert.equals(timerLog, [1, 2, 3, 4, 5]);
+                });
+
+                it("runToLastAsync", async function () {
+                    await clock.runToLastAsync();
+                    // 5 should not resolve because it wasn't queued when we called "only pending timers"
+                    assert.equals(timerLog, [1, 2, 3, 4]);
+                });
+
+                it("nextAsync", async function () {
+                    await clock.nextAsync();
+                    assert.equals(timerLog, [1]);
+                    await clock.nextAsync();
+                    assert.equals(timerLog, [1, 2]);
+                    await clock.nextAsync();
+                    assert.equals(timerLog, [1, 2, 3]);
+                });
+
+                it("tickAsync", async function () {
+                    await clock.tickAsync(2);
+                    assert.equals(timerLog, [1, 2]);
+                    await clock.tickAsync(1);
+                    assert.equals(timerLog, [1, 2, 3]);
+                });
+            });
         });
     });
 
