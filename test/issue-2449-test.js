@@ -1,6 +1,6 @@
 "use strict";
 
-const { sinon, FakeTimers, assert, refute } = require("./helpers/setup-tests");
+import { sinon, FakeTimers, assert, refute } from "./helpers/setup-tests.js";
 
 describe("issue #2449: permanent loss of native functions", function () {
     it("should not fake faked timers", function () {

@@ -1,6 +1,6 @@
 "use strict";
 
-const { FakeTimers, assert, hrtimePresent } = require("./helpers/setup-tests");
+import { FakeTimers, assert, hrtimePresent } from "./helpers/setup-tests.js";
 
 describe("issue #207 - nanosecond round-off errors on high-res timer", function () {
     let clock;

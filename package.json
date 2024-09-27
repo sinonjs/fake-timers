@@ -8,6 +8,7 @@
     "type": "git",
     "url": "git+https://github.com/sinonjs/fake-timers.git"
   },
+  "type": "module",
   "bugs": {
     "mail": "christian@cjohansen.no",
     "url": "https://github.com/sinonjs/fake-timers/issues"

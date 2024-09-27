@@ -1,6 +1,6 @@
 "use strict";
 
-const { FakeTimers, assert } = require("./helpers/setup-tests");
+import { FakeTimers, assert } from "./helpers/setup-tests.js";
 
 describe("issue #sinonjs/2086 - don't install setImmediate in unsupported environment", function () {
     let clock;
