@@ -3200,6 +3200,15 @@ describe("FakeTimers", function () {
             assert(date instanceof realDate.constructor);
         });
 
+        // issue #510
+        it("creates Date objects where the constructor prop matches the original", function () {
+            const realDate = new Date();
+            const date = new this.clock.Date();
+
+            assert.equals(date.constructor.name, realDate.constructor.name);
+            assert.equals(date.constructor, realDate.constructor);
+        });
+
         it("creates Date objects representing clock time", function () {
             const date = new this.clock.Date();
 
