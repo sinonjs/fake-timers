@@ -3203,6 +3203,9 @@ describe("FakeTimers", function () {
         // issue #510
         it("creates Date objects where the constructor prop matches the original", function () {
             const realDate = new Date();
+            Date = NOOP; // eslint-disable-line no-global-assign
+            global.Date = NOOP;
+
             const date = new this.clock.Date();
 
             assert.equals(date.constructor.name, realDate.constructor.name);
