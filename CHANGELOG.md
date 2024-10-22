@@ -1,4 +1,9 @@
 
+13.0.4 / 2024-10-22
+==================
+
+  * Fix constructor-based checks for fake Date no longer pass after installing (#512) (patches the patch)
+
 13.0.3 / 2024-10-17
 ==================
   * Ensure checks based on the constructor property passes for fake Dates (#511)
