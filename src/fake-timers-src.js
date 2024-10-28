@@ -450,7 +450,10 @@ function withGlobal(_global) {
 
                 // ensures identity checks using the constructor prop still works
                 // this should have no other functional effect
-                this.constructor = NativeDate;
+                Object.defineProperty(this, "constructor", {
+                    value: NativeDate,
+                    enumerable: false,
+                });
             }
 
             static [Symbol.hasInstance](instance) {
