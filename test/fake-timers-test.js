@@ -3212,6 +3212,12 @@ describe("FakeTimers", function () {
             assert.equals(date.constructor, realDate.constructor);
         });
 
+        it("creates Date objects where the constructor prop is not enumerable", function () {
+            const date = new this.clock.Date();
+
+            assert.equals(Object.keys(date).length, 0);
+        });
+
         it("creates Date objects representing clock time", function () {
             const date = new this.clock.Date();
 
