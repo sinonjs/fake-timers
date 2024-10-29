@@ -1,4 +1,9 @@
 
+13.0.5 / 2024-10-28
+==================
+
+  * Ensure checks based Object.keys length pass for fake Dates (#513)
+
 13.0.4 / 2024-10-22
 ==================
 
