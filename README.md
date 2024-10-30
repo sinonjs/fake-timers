@@ -146,6 +146,12 @@ setTimeout(() => {
 }, 50);
 ```
 
+In addition to the above, mocked time can be configured to advance more quickly
+using `clock.setTickMode({ mode: "nextAsync" });`. With this mode, the clock
+advances to the first scheduled timer and fires it, in a loop. Between each timer,
+it will also break the event loop, allowing any scheduled promise
+callbacks to execute _before_ running the next one.
+
 ## API Reference
 
 ### `var clock = FakeTimers.createClock([now[, loopLimit]])`
@@ -175,6 +181,29 @@ The following configuration options are available
 | `config.advanceTimeDelta`        | Number      | 20                                                                                                                                                                                                                             | relevant only when using with `shouldAdvanceTime: true`. increment mocked time by `advanceTimeDelta` ms every `advanceTimeDelta` ms change in the real system time.                                                                                                    |
 | `config.shouldClearNativeTimers` | Boolean     | false                                                                                                                                                                                                                          | tells FakeTimers to clear 'native' (i.e. not fake) timers by delegating to their respective handlers. These are not cleared by default, leading to potentially unexpected behavior if timers existed prior to installing FakeTimers.                                   |
 | `config.ignoreMissingTimers`     | Boolean     | false                                                                                                                                                                                                                          | tells FakeTimers to ignore missing timers that might not exist in the given environment                                                                                                                                                                                |
+
+### `clock.setTickMode(mode)`
+
+Allows configuring how the clock advances time, automatically or manually.
+
+There are 3 different types of modes for advancing timers:
+
+-   `{mode: 'manual'}`: Timers do not advance without explicit, manual calls to the tick
+    APIs (`jest.advanceTimersToNextTimer`, `jest.runAllTimers`, etc). This mode is equivalent to `false`.
+-   `{mode: 'nextAsync'}`: The clock will continuously break the event loop, then run the next timer until the mode changes.
+    As a result, tests can be written in a way that is independent from whether fake timers are installed.
+    Tests can always be written to wait for timers to resolve, even when using fake timers.
+-   `{mode: 'interval', delta?: <number>}`: This is the same as specifying `shouldAdvanceTime: true` with an `advanceTimeDelta`. If the delta is
+    not specified, 20 will be used by default.
+
+The 'nextAsync' mode differs from `interval` in two key ways:
+
+1.  The microtask queue is allowed to empty between each timer execution,
+    as would be the case without fake timers installed.
+1.  It advances as quickly and as far as necessary. If the next timer in
+    the queue is at 1000ms, it will advance 1000ms immediately whereas interval,
+    without manually advancing time in the test, would take `1000 / advanceTimeDelta`
+    real time to reach and execute the timer.
 
 ### `var id = clock.setTimeout(callback, timeout)`
 
