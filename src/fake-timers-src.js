@@ -1848,6 +1848,10 @@ function withGlobal(_global) {
                     new FakePerformanceEntry(name, "mark", 0, 0);
                 clock.performance.measure = (name) =>
                     new FakePerformanceEntry(name, "measure", 0, 100);
+                // ensure `timeOrigin` returns a valid value
+                clock.performance.timeOrigin = config.now
+                    ? getEpoch(config.now)
+                    : new Date().getTime();
             } else if ((config.toFake || []).includes("performance")) {
                 return handleMissingTimer("performance");
             }

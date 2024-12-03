@@ -3684,6 +3684,16 @@ describe("FakeTimers", function () {
                 testEntry(performance.measure("bar", "s", "t"));
             });
 
+            it("should create fake version of `timeOrigin` that returns the installed time", function () {
+                if (typeof Performance === "undefined") {
+                    return this.skip();
+                }
+
+                this.clock = FakeTimers.install();
+                assert.isNumber(performance.timeOrigin);
+                assert.isTrue(performance.timeOrigin > 0);
+            });
+
             it("should replace the getEntries, getEntriesByX methods with noops that return []", function () {
                 if (typeof Performance === "undefined") {
                     return this.skip();
