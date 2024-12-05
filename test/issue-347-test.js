@@ -1,12 +1,12 @@
 "use strict";
 
-const {
+import {
     FakeTimers,
     assert,
     utilPromisifyAvailable,
     utilPromisify,
     setImmediatePresent,
-} = require("./helpers/setup-tests");
+} from "./helpers/setup-tests.js";
 
 describe("#347 - Support util.promisify once installed", function () {
     before(function () {

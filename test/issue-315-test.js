@@ -1,6 +1,6 @@
 "use strict";
 
-const { sinon, FakeTimers, assert } = require("./helpers/setup-tests");
+import { sinon, FakeTimers, assert } from "./helpers/setup-tests.js";
 
 describe("issue #315 - praseInt if delay is not a number", function () {
     it("should successfully execute the timer", function () {
