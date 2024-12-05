@@ -3689,9 +3689,9 @@ describe("FakeTimers", function () {
                     return this.skip();
                 }
 
-                this.clock = FakeTimers.install();
+                this.clock = FakeTimers.install({ now: new Date(1234) });
                 assert.isNumber(performance.timeOrigin);
-                assert.isTrue(performance.timeOrigin > 0);
+                assert.equals(performance.timeOrigin, 1234);
             });
 
             it("should replace the getEntries, getEntriesByX methods with noops that return []", function () {
@@ -4798,7 +4798,6 @@ describe("FakeTimers", function () {
 
         /**
          * Returns elements that are present in both lists.
-         *
          * @function
          * @template E
          * @param {E[]} [list1]
@@ -4811,7 +4810,6 @@ describe("FakeTimers", function () {
 
         /**
          * Get property names and original values from timers module.
-         *
          * @function
          * @param {string[]} [toFake]
          * @returns {{propertyName: string, originalValue: any}[]}
@@ -5958,7 +5956,6 @@ describe("Node Timer: ref(), unref(),hasRef()", function () {
 describe("Intl API", function () {
     /**
      * Tester function to check if the globally hijacked Intl object is plugging into the faked Clock
-     *
      * @param {string} ianaTimeZone - IANA time zone name
      * @param {number} timestamp - UNIX timestamp
      * @returns {boolean}
