@@ -206,7 +206,12 @@ function withGlobal(_global) {
     }
 
     const NativeDate = _global.Date;
-    const NativeIntl = _global.Intl;
+    const NativeIntl = isPresent.Intl
+        ? Object.defineProperties(
+              Object.create(null),
+              Object.getOwnPropertyDescriptors(_global.Intl),
+          )
+        : undefined;
     let uniqueTimerId = idCounterStart;
 
     if (NativeDate === undefined) {
@@ -1107,7 +1112,7 @@ function withGlobal(_global) {
     }
 
     if (isPresent.Intl) {
-        timers.Intl = _global.Intl;
+        timers.Intl = NativeIntl;
     }
 
     const originalSetTimeout = _global.setImmediate || _global.setTimeout;
