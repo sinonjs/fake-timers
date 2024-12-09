@@ -59,7 +59,7 @@ describe("withGlobal", function () {
 });
 
 describe("globally configured browser objects", function () {
-    let withGlobal, originalDescriptors;
+    let withGlobal, originalDescriptors, originalNavigatorDescriptor;
 
     // We use a set up function instead of beforeEach to avoid Mocha's check leaks detector
     function setUpGlobal() {
@@ -68,6 +68,11 @@ describe("globally configured browser objects", function () {
             "<!doctype html><html><body></body></html>",
         );
         const window = dom.window;
+
+        originalNavigatorDescriptor = Object.getOwnPropertyDescriptor(
+            global,
+            "navigator",
+        );
 
         function makeMutable(descriptor) {
             descriptor.configurable = true;
@@ -88,6 +93,8 @@ describe("globally configured browser objects", function () {
 
         global.window = window;
         global.document = window.document;
+        // navigator is a getter, so we need to remove it, as assigning does not work
+        delete global.navigator;
         global.navigator = window.navigator;
         global.requestAnimationFrame = function (callback) {
             return setTimeout(callback, 0);
@@ -114,6 +121,9 @@ describe("globally configured browser objects", function () {
         delete global.navigator;
         delete global.requestAnimationFrame;
         delete global.cancelAnimationFrame;
+
+        // restore
+        Object.defineProperty(global, "navigator", originalNavigatorDescriptor);
     }
 
     it("correctly instantiates and tears down", function () {
