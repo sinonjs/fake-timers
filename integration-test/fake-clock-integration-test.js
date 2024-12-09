@@ -123,7 +123,13 @@ describe("globally configured browser objects", function () {
         delete global.cancelAnimationFrame;
 
         // restore
-        Object.defineProperty(global, "navigator", originalNavigatorDescriptor);
+        if (originalNavigatorDescriptor) {
+            Object.defineProperty(
+                global,
+                "navigator",
+                originalNavigatorDescriptor,
+            );
+        }
     }
 
     it("correctly instantiates and tears down", function () {
