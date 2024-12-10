@@ -1,4 +1,11 @@
 
+14.0.0 / 2024-12-09
+==================
+
+  * breaking: Drop Node 16, use Node 22 LTS and update tests to handle the new Navigation API (#519)
+  * fix: Resilient to prototype pollution of Intl (#517)
+  * fix: return fake version for `performance.timeOrigin` (#515)
+
 13.0.5 / 2024-10-28
 ==================
 
