@@ -15,6 +15,8 @@ if (typeof require === "function" && typeof module === "object") {
     }
 }
 
+const identity = (e) => e;
+
 /**
  * @typedef {object} IdleDeadline
  * @property {boolean} didTimeout - whether or not the callback was called before reaching the optional timeout
@@ -631,7 +633,7 @@ function withGlobal(_global) {
         }
 
         if (!clock.timers) {
-            clock.timers = {};
+            clock.timers = [];
         }
 
         timer.id = uniqueTimerId++;
@@ -639,7 +641,7 @@ function withGlobal(_global) {
         timer.callAt =
             clock.now + (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
-        clock.timers[timer.id] = timer;
+        clock.timers.push(timer);
 
         if (addTimerReturnsObject) {
             const res = {
@@ -661,7 +663,14 @@ function withGlobal(_global) {
                         (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
                     // it _might_ have been removed, but if not the assignment is perfectly fine
-                    clock.timers[timer.id] = timer;
+                    const indexOfTimer = clock.timers.findIndex(
+                        (t) => t.id === timer.id,
+                    );
+                    if (indexOfTimer) {
+                        clock.timers[indexOfTimer] = timer;
+                    } else {
+                        clock.timers.push(timer);
+                    }
 
                     return res;
                 },
@@ -725,20 +734,17 @@ function withGlobal(_global) {
      * @returns {Timer}
      */
     function firstTimerInRange(clock, from, to) {
-        const timers = clock.timers;
         let timer = null;
-        let id, isInRange;
+        let isInRange;
 
-        for (id in timers) {
-            if (timers.hasOwnProperty(id)) {
-                isInRange = inRange(from, to, timers[id]);
+        for (const currentTimer of clock.timers) {
+            isInRange = inRange(from, to, currentTimer);
 
-                if (
-                    isInRange &&
-                    (!timer || compareTimers(timer, timers[id]) === 1)
-                ) {
-                    timer = timers[id];
-                }
+            if (
+                isInRange &&
+                (!timer || compareTimers(timer, currentTimer) === 1)
+            ) {
+                timer = currentTimer;
             }
         }
 
@@ -750,15 +756,11 @@ function withGlobal(_global) {
      * @returns {Timer}
      */
     function firstTimer(clock) {
-        const timers = clock.timers;
         let timer = null;
-        let id;
 
-        for (id in timers) {
-            if (timers.hasOwnProperty(id)) {
-                if (!timer || compareTimers(timer, timers[id]) === 1) {
-                    timer = timers[id];
-                }
+        for (const currentTimer of clock.timers) {
+            if (!timer || compareTimers(timer, currentTimer) === 1) {
+                timer = currentTimer;
             }
         }
 
@@ -770,15 +772,11 @@ function withGlobal(_global) {
      * @returns {Timer}
      */
     function lastTimer(clock) {
-        const timers = clock.timers;
         let timer = null;
-        let id;
 
-        for (id in timers) {
-            if (timers.hasOwnProperty(id)) {
-                if (!timer || compareTimers(timer, timers[id]) === -1) {
-                    timer = timers[id];
-                }
+        for (const currentTimer of clock.timers) {
+            if (!timer || compareTimers(timer, currentTimer) === -1) {
+                timer = currentTimer;
             }
         }
 
@@ -791,9 +789,13 @@ function withGlobal(_global) {
      */
     function callTimer(clock, timer) {
         if (typeof timer.interval === "number") {
-            clock.timers[timer.id].callAt += timer.interval;
+            timer.callAt += timer.interval;
         } else {
-            delete clock.timers[timer.id];
+            const indexOfTimer = clock.timers.findIndex(
+                (t) => t.id === timer.id,
+            );
+            // delete one
+            clock.timers.splice(indexOfTimer, 1);
         }
 
         if (typeof timer.func === "function") {
@@ -854,7 +856,7 @@ function withGlobal(_global) {
         }
 
         if (!clock.timers) {
-            clock.timers = {};
+            clock.timers = [];
         }
 
         // in Node, the ID is stored as the primitive value for `Timeout` objects
@@ -876,15 +878,17 @@ function withGlobal(_global) {
             );
         }
 
-        if (clock.timers.hasOwnProperty(id)) {
+        if (clock.timers.some((t) => t.id === id)) {
+            const timerIndex = clock.timers.findIndex((t) => t.id === id);
             // check that the ID matches a timer of the correct type
-            const timer = clock.timers[id];
+            const timer = clock.timers[timerIndex];
             if (
                 timer.type === ttype ||
                 (timer.type === "Timeout" && ttype === "Interval") ||
                 (timer.type === "Interval" && ttype === "Timeout")
             ) {
-                delete clock.timers[id];
+                // delete
+                clock.timers.splice(timerIndex, 1);
             } else {
                 const clear = getClearHandler(ttype);
                 const schedule = getScheduleHandler(timer.type);
@@ -1134,6 +1138,7 @@ function withGlobal(_global) {
             now: start,
             Date: createDate(),
             loopLimit: loopLimit,
+            timers: [],
         };
 
         clock.Date.clock = clock;
@@ -1311,7 +1316,7 @@ function withGlobal(_global) {
 
         clock.countTimers = function countTimers() {
             return (
-                Object.keys(clock.timers || {}).length +
+                (clock.timers || []).filter(identity).length +
                 (clock.jobs || []).length
             );
         };
@@ -1394,7 +1399,11 @@ function withGlobal(_global) {
                 timer = firstTimerInRange(clock, tickFrom, tickTo);
                 // eslint-disable-next-line no-unmodified-loop-condition
                 while (timer && tickFrom <= tickTo) {
-                    if (clock.timers[timer.id]) {
+                    const indexOfTimer = clock.timers.findIndex(
+                        /* eslint-disable no-loop-func */
+                        (t) => t.id === timer.id,
+                    );
+                    if (clock.timers[indexOfTimer]) {
                         tickFrom = timer.callAt;
                         clock.now = timer.callAt;
                         oldNow = clock.now;
@@ -1573,7 +1582,7 @@ function withGlobal(_global) {
                     return clock.now;
                 }
 
-                numTimers = Object.keys(clock.timers).length;
+                numTimers = clock.timers.filter(identity).length;
                 if (numTimers === 0) {
                     resetIsNearInfiniteLimit();
                     return clock.now;
@@ -1611,9 +1620,8 @@ function withGlobal(_global) {
                                         return;
                                     }
 
-                                    numTimers = Object.keys(
-                                        clock.timers,
-                                    ).length;
+                                    numTimers =
+                                        clock.timers.filter(identity).length;
                                     if (numTimers === 0) {
                                         resetIsNearInfiniteLimit();
                                         resolve(clock.now);
@@ -1673,7 +1681,7 @@ function withGlobal(_global) {
 
         clock.reset = function reset() {
             nanos = 0;
-            clock.timers = {};
+            clock.timers = [];
             clock.jobs = [];
             clock.now = start;
         };
@@ -1682,7 +1690,6 @@ function withGlobal(_global) {
             // determine time difference
             const newNow = getEpoch(systemTime);
             const difference = newNow - clock.now;
-            let id, timer;
 
             adjustedSystemTime[0] = adjustedSystemTime[0] + difference;
             adjustedSystemTime[1] = adjustedSystemTime[1] + nanos;
@@ -1691,12 +1698,9 @@ function withGlobal(_global) {
             nanos = 0;
 
             // update timers and intervals to keep them stable
-            for (id in clock.timers) {
-                if (clock.timers.hasOwnProperty(id)) {
-                    timer = clock.timers[id];
-                    timer.createdAt += difference;
-                    timer.callAt += difference;
-                }
+            for (const timer of clock.timers) {
+                timer.createdAt += difference;
+                timer.callAt += difference;
             }
         };
 
@@ -1711,7 +1715,7 @@ function withGlobal(_global) {
                     : parseTime(tickValue);
             const ms = Math.floor(msFloat);
 
-            for (const timer of Object.values(clock.timers)) {
+            for (const timer of clock.timers) {
                 if (clock.now + ms > timer.callAt) {
                     timer.callAt = clock.now + ms;
                 }
