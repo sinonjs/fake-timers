@@ -3842,6 +3842,48 @@ describe("FakeTimers", function () {
             }, testDelay);
         });
 
+        it("can change the delta on the auto advancing timer", async function () {
+            const testDelay = 10;
+            const date = new Date("2015-09-25");
+            const clock = FakeTimers.install({
+                now: date,
+                shouldAdvanceTime: true,
+                advanceTimeDelta: 20,
+            });
+            clock.setTickMode({ mode: "interval", delta: 10 });
+            assert.same(Date.now(), 1443139200000);
+            const timeoutStarted = Date.now();
+
+            await new Promise((resolve) => {
+                setTimeout(() => {
+                    const timeDifference = Date.now() - timeoutStarted;
+                    assert.same(timeDifference, testDelay);
+                    clock.uninstall();
+                    resolve();
+                }, testDelay);
+            });
+        });
+
+        it("can cancel the auto advancing timer by setting mode to manual", async function () {
+            const testDelay = 10;
+            const date = new Date("2015-09-25");
+            const originalSetTimeout = setTimeout;
+            const clock = FakeTimers.install({
+                now: date,
+                shouldAdvanceTime: true,
+            });
+            clock.setTickMode({ mode: "manual" });
+            const timeoutStarted = Date.now();
+
+            await new Promise((resolve) => {
+                originalSetTimeout(() => {
+                    assert.same(timeoutStarted, Date.now());
+                    clock.uninstall();
+                    resolve();
+                }, testDelay);
+            });
+        });
+
         it("should test setImmediate", function (done) {
             if (!setImmediatePresent) {
                 return this.skip();
@@ -3902,6 +3944,54 @@ describe("FakeTimers", function () {
                 clock.uninstall();
                 done();
             }, 0);
+        });
+    });
+
+    describe("setTickMode", function () {
+        const originalSetTimeout = setTimeout;
+        let clock;
+        const date = new Date("2015-09-25");
+
+        beforeEach(function () {
+            clock = FakeTimers.install({ now: date });
+        });
+
+        afterEach(function () {
+            clock.reset();
+            clock.uninstall();
+        });
+
+        it("should support setting the tick mode to interval", function (done) {
+            const testDelay = 29;
+            clock.setTickMode({ mode: "interval", delta: 10 });
+            assert.same(Date.now(), 1443139200000);
+            const timeoutStarted = Date.now();
+
+            setTimeout(() => {
+                const timeDifference = Date.now() - timeoutStarted;
+                assert.same(timeDifference, testDelay);
+                clock.uninstall();
+                done();
+            }, testDelay);
+        });
+
+        it("should support setting the tick mode to manual from interval", async function () {
+            clock.setTickMode({ mode: "interval", delta: 1 });
+            // ensure interval tick is on by resolving a patched timer
+            await new Promise((resolve) => {
+                setTimeout(resolve, 5);
+            });
+
+            clock.setTickMode({ mode: "manual" });
+            let resolved = false;
+            setTimeout(() => {
+                resolved = true;
+            });
+            // wait unpatched time and verify the patched timer was not resolved automatically
+            await new Promise((resolve) => {
+                originalSetTimeout(resolve, 5);
+            });
+            assert.isFalse(resolved);
         });
     });
 

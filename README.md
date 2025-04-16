@@ -176,6 +176,17 @@ The following configuration options are available
 | `config.shouldClearNativeTimers` | Boolean     | false                                                                                                                                                                                                                          | tells FakeTimers to clear 'native' (i.e. not fake) timers by delegating to their respective handlers. These are not cleared by default, leading to potentially unexpected behavior if timers existed prior to installing FakeTimers.                                   |
 | `config.ignoreMissingTimers`     | Boolean     | false                                                                                                                                                                                                                          | tells FakeTimers to ignore missing timers that might not exist in the given environment                                                                                                                                                                                |
 
+### `clock.setTickMode(mode)`
+
+Allows configuring how the clock advances time, automatically or manually.
+
+There are 2 different types of modes for advancing timers:
+
+-   `{mode: 'manual'}`: Timers do not advance without explicit, manual calls to the tick
+    APIs (`jest.advanceTimersToNextTimer`, `jest.runAllTimers`, etc). This mode is equivalent to `false`.
+-   `{mode: 'interval', delta?: <number>}`: This is the same as specifying `shouldAdvanceTime: true` with an `advanceTimeDelta`. If the delta is
+    not specified, 20 will be used by default.
+
 ### `var id = clock.setTimeout(callback, timeout)`
 
 Schedules the callback to be fired once `timeout` milliseconds have ticked by.
