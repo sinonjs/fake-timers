@@ -46,18 +46,18 @@
     "src/"
   ],
   "devDependencies": {
-    "@mochify/cli": "^0.4.1",
-    "@mochify/driver-puppeteer": "^0.4.0",
-    "@mochify/driver-webdriver": "^0.2.1",
-    "@sinonjs/eslint-config": "^5.0.3",
+    "@mochify/cli": "^1.0.0",
+    "@mochify/driver-puppeteer": "^1.0.1",
+    "@mochify/driver-webdriver": "^1.0.0",
+    "@sinonjs/eslint-config": "^5.0.4",
     "@sinonjs/referee-sinon": "12.0.0",
-    "esbuild": "^0.25.0",
-    "husky": "^9.1.5",
-    "jsdom": "24.1.1",
-    "lint-staged": "15.2.9",
-    "mocha": "10.7.3",
-    "nyc": "17.0.0",
-    "prettier": "3.3.3"
+    "esbuild": "^0.25.10",
+    "husky": "^9.1.7",
+    "jsdom": "27.0.0",
+    "lint-staged": "16.1.6",
+    "mocha": "11.7.2",
+    "nyc": "17.1.0",
+    "prettier": "3.6.2"
   },
   "main": "./src/fake-timers-src.js",
   "dependencies": {
