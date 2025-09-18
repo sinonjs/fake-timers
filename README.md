@@ -189,7 +189,7 @@ Allows configuring how the clock advances time, automatically or manually.
 There are 3 different types of modes for advancing timers:
 
 - `{mode: 'manual'}`: Timers do not advance without explicit, manual calls to the tick
-  APIs (`jest.advanceTimersToNextTimer`, `jest.runAllTimers`, etc). This mode is equivalent to `false`.
+  APIs (`clock.nextAsync`, `clock.runAllAsync`, etc). This mode is equivalent to `false`.
 - `{mode: 'nextAsync'}`: The clock will continuously break the event loop, then run the next timer until the mode changes.
   As a result, tests can be written in a way that is independent from whether fake timers are installed.
   Tests can always be written to wait for timers to resolve, even when using fake timers.
