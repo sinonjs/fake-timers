@@ -1,11 +1,9 @@
-"use strict";
-
-const {
+import {
     sinon,
     FakeTimers,
     assert,
     addTimerReturnsObject,
-} = require("./helpers/setup-tests");
+} from "./helpers/setup-tests.js";
 
 describe("#368 - timeout.refresh setTimeout arguments", function () {
     before(function () {

@@ -1,6 +1,6 @@
 "use strict";
 
-const { sinon, FakeTimers, assert, NOOP } = require("./helpers/setup-tests");
+import { sinon, FakeTimers, assert, NOOP } from "./helpers/setup-tests.js";
 
 describe("issue #59", function () {
     it("should install and uninstall the clock on a custom target", function () {

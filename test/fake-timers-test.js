@@ -1,6 +1,4 @@
-"use strict";
-
-const {
+import {
     addTimerReturnsObject,
     assert,
     FakeTimers,
@@ -19,7 +17,7 @@ const {
     sinon,
     utilPromisify,
     utilPromisifyAvailable,
-} = require("./helpers/setup-tests");
+} from "./helpers/setup-tests.js";
 
 let timersModule, timersPromisesModule;
 
@@ -52,13 +50,13 @@ if (typeof require === "function" && typeof module === "object") {
 
 describe("FakeTimers", function () {
     describe("setTimeout", function () {
+        let evalCalled = false;
         beforeEach(function () {
             this.clock = FakeTimers.createClock();
-            FakeTimers.evalCalled = false;
         });
 
         afterEach(function () {
-            delete FakeTimers.evalCalled;
+            evalCalled = false;
         });
 
         it("throws if no arguments", function () {
@@ -107,20 +105,20 @@ describe("FakeTimers", function () {
 
         it("parses numeric string times", function () {
             this.clock.setTimeout(function () {
-                FakeTimers.evalCalled = true;
+                evalCalled = true;
             }, "10");
             this.clock.tick(10);
 
-            assert(FakeTimers.evalCalled);
+            assert(evalCalled);
         });
 
         it("parses no-numeric string times", function () {
             this.clock.setTimeout(function () {
-                FakeTimers.evalCalled = true;
+                evalCalled = true;
             }, "string");
             this.clock.tick(10);
 
-            assert(FakeTimers.evalCalled);
+            assert(evalCalled);
         });
 
         it("passes setTimeout parameters", function () {
@@ -251,6 +249,7 @@ describe("FakeTimers", function () {
         });
 
         describe("use of eval when not in node", function () {
+            let evalCalled;
             before(function () {
                 if (addTimerReturnsObject) {
                     this.skip();
@@ -259,18 +258,14 @@ describe("FakeTimers", function () {
 
             beforeEach(function () {
                 this.clock = FakeTimers.createClock();
-                FakeTimers.evalCalled = false;
-            });
-
-            afterEach(function () {
-                delete FakeTimers.evalCalled;
+                evalCalled = false;
             });
 
             it("evals non-function callbacks", function () {
-                this.clock.setTimeout("FakeTimers.evalCalled = true", 10);
+                this.clock.setTimeout("evalCalled = true", 10);
                 this.clock.tick(10);
 
-                assert(FakeTimers.evalCalled);
+                assert(evalCalled);
             });
 
             it("only evals on global scope", function () {
@@ -286,6 +281,7 @@ describe("FakeTimers", function () {
         });
 
         describe("use of eval in node", function () {
+            let evalCalled = false;
             before(function () {
                 if (!addTimerReturnsObject) {
                     this.skip();
@@ -294,15 +290,11 @@ describe("FakeTimers", function () {
 
             beforeEach(function () {
                 this.clock = FakeTimers.createClock();
-                FakeTimers.evalCalled = false;
-            });
-
-            afterEach(function () {
-                delete FakeTimers.evalCalled;
+                evalCalled = false;
             });
 
             it("does not eval non-function callbacks", function () {
-                const notTypeofFunction = "FakeTimers.evalCalled = true";
+                const notTypeofFunction = "evalCalled = true";
 
                 assert.exception(
                     function () {

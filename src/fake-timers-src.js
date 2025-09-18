@@ -1,19 +1,24 @@
-"use strict";
+const globalObject = (await import("@sinonjs/commons")).global;
 
-const globalObject = require("@sinonjs/commons").global;
-let timersModule, timersPromisesModule;
-if (typeof require === "function" && typeof module === "object") {
-    try {
-        timersModule = require("timers");
-    } catch (e) {
-        // ignored
+async function tryImportModules() {
+    if (typeof module === "object") {
+        try {
+            timersModule = import("node:timers");
+        } catch (e) {
+            // ignored
+        }
     }
     try {
         timersPromisesModule = require("timers/promises");
     } catch (e) {
         // ignored
     }
+    try {
+        utilPromisify = (await import("util")).promisify;
+    } catch (err) {}
 }
+let timersModule, timersPromisesModule, utilPromisify;
+await tryImportModules();
 
 /**
  * @typedef {"nextAsync" | "manual" | "interval"} TickMode
@@ -170,7 +175,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @param {*} _global Namespace to mock (e.g. `window`)
  * @returns {FakeTimers}
  */
-function withGlobal(_global) {
+export function withGlobal(_global) {
     const maxTimeout = Math.pow(2, 31) - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
     const idCounterStart = 1e12; // arbitrarily large number to avoid collisions with native timer IDs
     const NOOP = function () {
@@ -197,7 +202,6 @@ function withGlobal(_global) {
         isPresent.hrtime && typeof _global.process.hrtime.bigint === "function";
     isPresent.nextTick =
         _global.process && typeof _global.process.nextTick === "function";
-    const utilPromisify = _global.process && require("util").promisify;
     isPresent.performance =
         _global.performance && typeof _global.performance.now === "function";
     const hasPerformancePrototype =
@@ -2255,7 +2259,6 @@ function withGlobal(_global) {
 /** @type {FakeTimers} */
 const defaultImplementation = withGlobal(globalObject);
 
-exports.timers = defaultImplementation.timers;
-exports.createClock = defaultImplementation.createClock;
-exports.install = defaultImplementation.install;
-exports.withGlobal = withGlobal;
+export const timers = defaultImplementation.timers;
+export const createClock = defaultImplementation.createClock;
+export const install = defaultImplementation.install;
