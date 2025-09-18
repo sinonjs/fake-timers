@@ -1,4 +1,10 @@
 
+15.0.0 / 2025-09-18
+==================
+
+  * feat: Add additional auto advance time controls (#509)
+  * Upgrade dependencies and drop support for Node 18 in favor of Node 24 (#526 and #523)
+
 14.0.0 / 2024-12-09
 ==================
 
