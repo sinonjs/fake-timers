@@ -1,6 +1,6 @@
 "use strict";
 
-const { sinon, FakeTimers, assert, NOOP } = require("./helpers/setup-tests");
+import { sinon, FakeTimers, assert, NOOP } from "./helpers/setup-tests.js";
 
 describe("#187 - Support timeout.refresh in node environments", function () {
     it("calls the stub again after refreshing the timeout", function () {

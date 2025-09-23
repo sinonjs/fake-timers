@@ -1,25 +1,7 @@
-"use strict";
-
-let jsdom;
-
-if (typeof require === "function" && typeof module === "object") {
-    try {
-        jsdom = require("jsdom");
-    } catch (e) {
-        // ignored
-    }
-}
-
-if (!jsdom) {
-    // eslint-disable-next-line no-console
-    console.warn("JSDOM is not supported in the current environment.");
-
-    return;
-}
-
-const assert = require("@sinonjs/referee-sinon").assert;
-const FakeTimers = require("../src/fake-timers-src");
-const sinon = require("@sinonjs/referee-sinon").sinon;
+import * as jsdom from "jsdom";
+import { assert } from "@sinonjs/referee-sinon";
+import * as FakeTimers from "../src/fake-timers-src.js";
+import { sinon } from "@sinonjs/referee-sinon";
 
 describe("withGlobal", function () {
     let jsdomGlobal, withGlobal, timers;
@@ -33,7 +15,10 @@ describe("withGlobal", function () {
     });
 
     it("matches the normal FakeTimers API", function () {
-        assert.equals(Object.keys(withGlobal), Object.keys(FakeTimers));
+        assert.equals(
+            Object.keys(withGlobal).sort(),
+            Object.keys(FakeTimers).sort(),
+        );
     });
 
     it("should support basic setTimeout", function () {

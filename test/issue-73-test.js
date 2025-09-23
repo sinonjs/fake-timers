@@ -1,6 +1,4 @@
-"use strict";
-
-const { FakeTimers, assert } = require("./helpers/setup-tests");
+import { FakeTimers, assert } from "./helpers/setup-tests.js";
 
 describe("issue #73", function () {
     it("should install with date object", function () {

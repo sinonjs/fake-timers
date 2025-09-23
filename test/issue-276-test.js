@@ -1,6 +1,6 @@
 "use strict";
 
-const { FakeTimers, assert } = require("./helpers/setup-tests");
+import { FakeTimers, assert } from "./helpers/setup-tests.js";
 
 describe("#276 - remove config.target", function () {
     it("should throw on using `config.target`", function () {
