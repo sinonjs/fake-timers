@@ -4181,6 +4181,12 @@ describe("FakeTimers", function () {
             globalObject.clearTimeout(timer);
             globalObject.clearTimeout(timer);
             assert.equals(stub.callCount, 1);
+
+            const lines = stub.getCall(0).args[0].split("\n");
+            assert(
+                lines[2].includes("at "),
+                "expected stack trace to be included in warning",
+            );
         });
 
         it("can clear setTimeout", function (done) {
