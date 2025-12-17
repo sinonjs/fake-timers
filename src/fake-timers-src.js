@@ -895,9 +895,17 @@ function withGlobal(_global) {
                     ? nativeHandler(timerId)
                     : undefined;
             }
+
+            // Include the stacktrace, excluding the 'error' line
+            const stackTrace = new Error().stack
+                .split("\n")
+                .slice(1)
+                .join("\n");
+
             warnOnce(
                 `FakeTimers: ${handlerName} was invoked to clear a native timer instead of one created by this library.` +
-                    "\nTo automatically clean-up native timers, use `shouldClearNativeTimers`.",
+                    "\nTo automatically clean-up native timers, use `shouldClearNativeTimers`." +
+                    `\n${stackTrace}`,
             );
         }
 
