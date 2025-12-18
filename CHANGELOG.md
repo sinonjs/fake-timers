@@ -1,4 +1,10 @@
 
+15.0.1 / 2025-12-18
+==================
+
+  * Include stacktrace clear native timers warning (#529)
+  * docs: Update `setTickMode` docs to mention sinon APIs, not jest (#527)
+
 15.0.0 / 2025-09-18
 ==================
 
