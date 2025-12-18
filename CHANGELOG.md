@@ -1,5 +1,5 @@
 
-15.0.1 / 2025-12-18
+15.1.0 / 2025-12-18
 ==================
 
   * Include stacktrace clear native timers warning (#529)
