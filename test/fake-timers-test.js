@@ -19,6 +19,7 @@ const {
     sinon,
     utilPromisify,
     utilPromisifyAvailable,
+    hasV8StyleStackFormat,
 } = require("./helpers/setup-tests");
 
 let timersModule, timersPromisesModule;
@@ -4170,7 +4171,7 @@ describe("FakeTimers", function () {
         it("outputs a warning once if not enabled", function (done) {
             // This test does not work well in watch mode, as Chokidar sets up timers
             // that trips up this test
-            if (isRunningInWatchMode) {
+            if (isRunningInWatchMode || !hasV8StyleStackFormat) {
                 this.skip();
             }
 
@@ -4182,6 +4183,7 @@ describe("FakeTimers", function () {
             globalObject.clearTimeout(timer);
             assert.equals(stub.callCount, 1);
 
+            // asserting on stack trace formats is engine dependent
             const lines = stub.getCall(0).args[0].split("\n");
             assert(
                 lines[2].includes("at "),

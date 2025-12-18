@@ -49,6 +49,13 @@ const utilPromisifyAvailable = promisePresent && utilPromisify;
 const timeoutResult = global.setTimeout(NOOP, 0);
 const addTimerReturnsObject = typeof timeoutResult === "object";
 
+let hasV8StyleStackFormat;
+try {
+    throw new Error();
+} catch (error) {
+    hasV8StyleStackFormat = error.stack.includes("\n    at");
+}
+
 module.exports = {
     FakeTimers,
     assert,
@@ -69,4 +76,5 @@ module.exports = {
     utilPromisifyAvailable,
     timeoutResult,
     addTimerReturnsObject,
+    hasV8StyleStackFormat,
 };
