@@ -16,8 +16,8 @@ clock - and a `process.hrtime` shim that works with the clock.
 situations where you want the scheduling semantics, but don't want to actually
 wait.
 
-`@sinonjs/fake-timers` is extracted from [Sinon.JS](https://github.com/sinonjs/sinon.js) and targets
-the [same runtimes](https://sinonjs.org/releases/latest/#supported-runtimes).
+`@sinonjs/fake-timers` is an integral part of [Sinon.JS](https://github.com/sinonjs/sinon.js) and targets
+the [same runtimes](https://sinonjs.org/releases/latest#compatibility-and-supported-runtimes).
 
 ## Autocomplete, IntelliSense and TypeScript definitions
 
