@@ -4970,9 +4970,9 @@ describe("FakeTimers", function () {
             assert(spy.called);
         });
 
-        it("runs immediately with timeout option if there isn't any timer", function () {
+        it("runs immediately with timeout option if there isn't any timer already queued", function () {
             const spy = sinon.spy();
-            this.clock.requestIdleCallback(spy, 20);
+            this.clock.requestIdleCallback(spy, { timeout: 20 });
             this.clock.tick(1);
 
             assert(spy.called);
@@ -4982,19 +4982,19 @@ describe("FakeTimers", function () {
             const spy = sinon.spy();
             this.clock.setTimeout(NOOP, 10);
             this.clock.setTimeout(NOOP, 30);
-            this.clock.requestIdleCallback(spy, 20);
+            this.clock.requestIdleCallback(spy, { timeout: 20 });
             this.clock.tick(20);
 
             assert(spy.called);
         });
 
-        it("doesn't runs if there are any timers and no timeout option", function () {
+        it("runs only if existing timers have been processed when no timeout option is provided", function () {
             const spy = sinon.spy();
             this.clock.setTimeout(NOOP, 30);
             this.clock.requestIdleCallback(spy);
             this.clock.tick(35);
 
-            assert.isFalse(spy.called);
+            assert.isTrue(spy.called);
         });
     });
 
@@ -5005,7 +5005,9 @@ describe("FakeTimers", function () {
 
         it("removes idle callback", function () {
             const stub = sinon.stub();
-            const callbackId = this.clock.requestIdleCallback(stub, 0);
+            const callbackId = this.clock.requestIdleCallback(stub, {
+                timeout: 0,
+            });
             this.clock.cancelIdleCallback(callbackId);
             this.clock.runAll();
 
@@ -5923,7 +5925,7 @@ describe("loop limit stack trace", function () {
                     function recursiveCreateTimerTimeout() {
                         recursiveCreateTimer();
                     },
-                    10,
+                    { timeout: 10 },
                 );
             }
 
@@ -5943,7 +5945,7 @@ describe("loop limit stack trace", function () {
                     assert.match(
                         err.stack,
                         new RegExp(
-                            `Error: ${expectedMessage}\\s+IdleCallback - recursiveCreateTimerTimeout`,
+                            `Error: ${expectedMessage}\\s+Timeout - recursiveCreateTimerTimeout`,
                         ),
                     );
                 });
@@ -5960,7 +5962,7 @@ describe("loop limit stack trace", function () {
                 assert.match(
                     err.stack,
                     new RegExp(
-                        `Error: ${expectedMessage}\\s+IdleCallback - recursiveCreateTimerTimeout`,
+                        `Error: ${expectedMessage}\\s+Timeout - recursiveCreateTimerTimeout`,
                     ),
                 );
             }
