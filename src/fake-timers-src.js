@@ -46,10 +46,15 @@ if (typeof require === "function" && typeof module === "object") {
  */
 
 /**
+ * @callback RequestIdleCallbackCallback
+ * @param {IdleDeadline} deadline
+ */
+
+/**
  * Queues a function to be called during a browser's idle periods
  * @callback RequestIdleCallback
- * @param {function(IdleDeadline)} callback
- * @param {{timeout: number}} options - an options object
+ * @param {RequestIdleCallbackCallback} callback
+ * @param {{timeout: number}} [options] - an options object
  * @returns {number} the id
  */
 
@@ -146,6 +151,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @typedef {object} Timer
  * @property {Function} func
  * @property {*[]} args
+ * @property {'Timeout' | 'Interval' | 'Immediate' | 'AnimationFrame' | 'IdleCallback'} type
  * @property {number} delay
  * @property {number} callAt
  * @property {number} createdAt
@@ -650,9 +656,13 @@ function withGlobal(_global) {
             timer.animation = true;
         }
 
-        if (timer.hasOwnProperty("idleCallback")) {
-            timer.type = "IdleCallback";
-            timer.idleCallback = true;
+        if (timer.hasOwnProperty("requestIdleCallback")) {
+            // mark timer as IdleCallback type if it has no delay, otherwise it'd be of type timeout
+            // this way we are able to sort such that the timer only gets called when there's truly no pending task to run
+            if (!timer.delay) {
+                timer.type = "IdleCallback";
+            }
+            timer.requestIdleCallback = true;
         }
 
         if (!clock.timers) {
@@ -702,12 +712,20 @@ function withGlobal(_global) {
 
     /* eslint consistent-return: "off" */
     /**
-     * Timer comparitor
+     * Timer comparator
      * @param {Timer} a
      * @param {Timer} b
      * @returns {number}
      */
     function compareTimers(a, b) {
+        // Sort IdleCallback timers to the bottom when scheduled for the same time
+        if (a.type === "IdleCallback" && b.type !== "IdleCallback") {
+            return 1;
+        }
+        if (a.type !== "IdleCallback" && b.type === "IdleCallback") {
+            return -1;
+        }
+
         // Sort first by absolute timing
         if (a.callAt < b.callAt) {
             return -1;
@@ -750,19 +768,34 @@ function withGlobal(_global) {
      * @returns {Timer}
      */
     function firstTimerInRange(clock, from, to) {
+        /**
+         * @type {?Object<string, Timer>}
+         */
         const timers = clock.timers;
+        /**
+         * @type {?Timer}
+         */
         let timer = null;
-        let id, isInRange;
+        let id, isInRange, timersList;
 
-        for (id in timers) {
-            if (timers.hasOwnProperty(id)) {
-                isInRange = inRange(from, to, timers[id]);
+        if (
+            timers &&
+            (timersList = Object.values(timers)).length === 1 &&
+            timersList[0].requestIdleCallback
+        ) {
+            // if there's only one requestIdleCallback timer in the queue, return it immediately
+            timer = timersList[0];
+        } else {
+            for (id in timers) {
+                if (timers.hasOwnProperty(id)) {
+                    isInRange = inRange(from, to, timers[id]);
 
-                if (
-                    isInRange &&
-                    (!timer || compareTimers(timer, timers[id]) === 1)
-                ) {
-                    timer = timers[id];
+                    if (
+                        isInRange &&
+                        (!timer || compareTimers(timer, timers[id]) === 1)
+                    ) {
+                        timer = timers[id];
+                    }
                 }
             }
         }
@@ -1301,24 +1334,33 @@ function withGlobal(_global) {
             });
         }
 
-        clock.requestIdleCallback = function requestIdleCallback(
-            func,
-            timeout,
-        ) {
+        function getTimeToNextIdlePeriod() {
             let timeToNextIdlePeriod = 0;
 
             if (clock.countTimers() > 0) {
                 timeToNextIdlePeriod = 50; // const for now
             }
 
+            return timeToNextIdlePeriod;
+        }
+
+        clock.requestIdleCallback = function requestIdleCallback(
+            func,
+            { timeout } = {},
+        ) {
+            /**
+             * @type {IdleDeadline}
+             */
+            const idleDeadline = {
+                didTimeout: true,
+                timeRemaining: getTimeToNextIdlePeriod,
+            };
+
             const result = addTimer(clock, {
                 func: func,
-                args: Array.prototype.slice.call(arguments, 2),
-                delay:
-                    typeof timeout === "undefined"
-                        ? timeToNextIdlePeriod
-                        : Math.min(timeout, timeToNextIdlePeriod),
-                idleCallback: true,
+                args: [idleDeadline],
+                delay: timeout,
+                requestIdleCallback: true,
             });
 
             return Number(result);
