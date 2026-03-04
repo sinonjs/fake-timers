@@ -3577,6 +3577,20 @@ describe("FakeTimers", function () {
             assert.same(clearInterval, FakeTimers.timers.clearInterval);
         });
 
+        it("uninstalls global cancelIdleCallback", function () {
+            if (globalObject.cancelIdleCallback === undefined) {
+                return this.skip();
+            }
+            this.clock = FakeTimers.install();
+            sinon.stub();
+            this.clock.uninstall();
+
+            assert.same(
+                cancelIdleCallback,
+                FakeTimers.timers.cancelIdleCallback,
+            );
+        });
+
         if (hrtimePresent) {
             it("replaces global process.hrtime", function () {
                 this.clock = FakeTimers.install();
