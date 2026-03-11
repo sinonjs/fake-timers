@@ -1866,9 +1866,11 @@ function withGlobal(_global) {
                     : parseTime(tickValue);
             const ms = Math.floor(msFloat);
 
-            for (const timer of Object.values(clock.timers)) {
-                if (clock.now + ms > timer.callAt) {
-                    timer.callAt = clock.now + ms;
+            if (clock.timers) {
+                for (const timer of Object.values(clock.timers)) {
+                    if (clock.now + ms > timer.callAt) {
+                        timer.callAt = clock.now + ms;
+                    }
                 }
             }
             clock.tick(ms);
