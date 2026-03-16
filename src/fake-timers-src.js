@@ -138,6 +138,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @typedef {object} Config
  * @property {number|Date} [now] a number (in milliseconds) or a Date object (default epoch)
  * @property {string[]} [toFake] names of the methods that should be faked.
+ * @property {string[]} [toNotFake] names of the methods that should not be faked.
  * @property {number} [loopLimit] the maximum number of timers that will be run when calling runAll()
  * @property {boolean} [shouldAdvanceTime] tells FakeTimers to increment mocked time automatically (default false)
  * @property {number} [advanceTimeDelta] increment mocked time every <<advanceTimeDelta>> ms (default: 20ms)
@@ -1929,6 +1930,21 @@ function withGlobal(_global) {
         config.shouldClearNativeTimers =
             config.shouldClearNativeTimers || false;
 
+        const hasToFake = Object.prototype.hasOwnProperty.call(
+            config,
+            "toFake",
+        );
+        const hasToNotFake = Object.prototype.hasOwnProperty.call(
+            config,
+            "toNotFake",
+        );
+
+        if (hasToFake && hasToNotFake) {
+            throw new TypeError(
+                "config.toFake and config.toNotFake cannot be used together",
+            );
+        }
+
         if (config.target) {
             throw new TypeError(
                 "config.target is no longer supported. Use `withGlobal(target)` instead.",
@@ -1959,9 +1975,17 @@ function withGlobal(_global) {
 
         clock.abortListenerMap = new Map();
 
-        clock.methods = config.toFake || [];
-
-        if (clock.methods.length === 0) {
+        if (hasToFake) {
+            clock.methods = config.toFake || [];
+            if (clock.methods.length === 0) {
+                clock.methods = Object.keys(timers);
+            }
+        } else if (hasToNotFake) {
+            const methodsToNotFake = config.toNotFake || [];
+            clock.methods = Object.keys(timers).filter(
+                (method) => !methodsToNotFake.includes(method),
+            );
+        } else {
             clock.methods = Object.keys(timers);
         }
 

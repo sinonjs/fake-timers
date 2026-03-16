@@ -3434,6 +3434,22 @@ describe("FakeTimers", function () {
             this.clock = FakeTimers.install({});
         });
 
+        it("throws a TypeError when toFake and toNotFake are both specified", function () {
+            assert.exception(
+                function () {
+                    FakeTimers.install({
+                        toFake: ["setTimeout"],
+                        toNotFake: ["setInterval"],
+                    });
+                },
+                {
+                    name: "TypeError",
+                    message:
+                        "config.toFake and config.toNotFake cannot be used together",
+                },
+            );
+        });
+
         it("throws a TypeError on a number parameter", function () {
             assert.exception(function () {
                 this.clock = FakeTimers.install(0);
@@ -5145,6 +5161,23 @@ describe("FakeTimers", function () {
 
             for (const { propertyName, originalValue } of originals) {
                 assert.same(timersModule[propertyName], originalValue);
+            }
+        });
+
+        it("does not fake methods excluded with toNotFake", function () {
+            const excludedMethods = ["setTimeout", "setInterval"];
+            const fakedMethods = ["setImmediate"];
+            const excludedOriginals = getOriginals(excludedMethods);
+            const fakedOriginals = getOriginals(fakedMethods);
+
+            this.clock = FakeTimers.install({ toNotFake: excludedMethods });
+
+            for (const { propertyName, originalValue } of excludedOriginals) {
+                assert.same(timersModule[propertyName], originalValue);
+            }
+
+            for (const { propertyName, originalValue } of fakedOriginals) {
+                refute.same(timersModule[propertyName], originalValue);
             }
         });
 
