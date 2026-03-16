@@ -223,7 +223,7 @@ function withGlobal(_global) {
     isPresent.requestIdleCallback =
         _global.requestIdleCallback &&
         typeof _global.requestIdleCallback === "function";
-    isPresent.cancelIdleCallbackPresent =
+    isPresent.cancelIdleCallback =
         _global.cancelIdleCallback &&
         typeof _global.cancelIdleCallback === "function";
     isPresent.setImmediate =
