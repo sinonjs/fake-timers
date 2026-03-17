@@ -9,21 +9,13 @@
 const FakeTimers = require("../../src/fake-timers-src");
 
 /*
- * 2. Define global, if missing.
- */
-if (typeof global === "undefined") {
-    window.global = window;
-}
-
-/*
- * 3. Load sinon with global defined.
+ * 2. Load sinon with global defined.
  */
 const assert = require("@sinonjs/referee-sinon").assert;
 const refute = require("@sinonjs/referee-sinon").refute;
 const sinon = require("@sinonjs/referee-sinon").sinon;
 
-const globalObject = typeof global !== "undefined" ? global : window;
-globalObject.FakeTimers = FakeTimers; // For testing eval
+globalThis.FakeTimers = FakeTimers; // For testing eval
 
 const GlobalDate = Date;
 
@@ -31,22 +23,22 @@ const NOOP = function NOOP() {
     return undefined;
 };
 const nextTickPresent =
-    global.process && typeof global.process.nextTick === "function";
-const queueMicrotaskPresent = typeof global.queueMicrotask === "function";
+    globalThis.process && typeof globalThis.process.nextTick === "function";
+const queueMicrotaskPresent = typeof globalThis.queueMicrotask === "function";
 const hrtimePresent =
-    global.process && typeof global.process.hrtime === "function";
+    globalThis.process && typeof globalThis.process.hrtime === "function";
 const hrtimeBigintPresent =
-    hrtimePresent && typeof global.process.hrtime.bigint === "function";
+    hrtimePresent && typeof globalThis.process.hrtime.bigint === "function";
 const performanceNowPresent =
-    global.performance && typeof global.performance.now === "function";
+    globalThis.performance && typeof globalThis.performance.now === "function";
 const performanceMarkPresent =
-    global.performance && typeof global.performance.mark === "function";
+    globalThis.performance && typeof globalThis.performance.mark === "function";
 const setImmediatePresent =
-    global.setImmediate && typeof global.setImmediate === "function";
-const utilPromisify = global.process && require("util").promisify;
-const promisePresent = typeof global.Promise !== "undefined";
+    globalThis.setImmediate && typeof globalThis.setImmediate === "function";
+const utilPromisify = globalThis.process && require("util").promisify;
+const promisePresent = typeof globalThis.Promise !== "undefined";
 const utilPromisifyAvailable = promisePresent && utilPromisify;
-const timeoutResult = global.setTimeout(NOOP, 0);
+const timeoutResult = globalThis.setTimeout(NOOP, 0);
 const addTimerReturnsObject = typeof timeoutResult === "object";
 
 let hasV8StyleStackFormat;
@@ -61,7 +53,6 @@ module.exports = {
     assert,
     refute,
     sinon,
-    globalObject,
     GlobalDate,
     NOOP,
     nextTickPresent,

@@ -25,7 +25,7 @@ describe("#347 - Support util.promisify once installed", function () {
 
     it("setTimeout", function () {
         let resolved = false;
-        utilPromisify(global.setTimeout)(100).then(function () {
+        utilPromisify(globalThis.setTimeout)(100).then(function () {
             resolved = true;
         });
 
@@ -40,7 +40,7 @@ describe("#347 - Support util.promisify once installed", function () {
         }
 
         let resolved = false;
-        utilPromisify(global.setImmediate)().then(function () {
+        utilPromisify(globalThis.setImmediate)().then(function () {
             resolved = true;
         });
 

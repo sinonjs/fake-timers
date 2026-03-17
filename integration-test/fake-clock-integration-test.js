@@ -70,7 +70,7 @@ describe("globally configured browser objects", function () {
         const window = dom.window;
 
         originalNavigatorDescriptor = Object.getOwnPropertyDescriptor(
-            global,
+            globalThis,
             "navigator",
         );
 
@@ -91,41 +91,43 @@ describe("globally configured browser objects", function () {
             });
         }
 
-        global.window = window;
-        global.document = window.document;
+        globalThis.window = window;
+        globalThis.document = window.document;
         // navigator is a getter, so we need to remove it, as assigning does not work
-        delete global.navigator;
-        global.navigator = window.navigator;
-        global.requestAnimationFrame = function (callback) {
+        delete globalThis.navigator;
+        globalThis.navigator = window.navigator;
+        globalThis.requestAnimationFrame = function (callback) {
             return setTimeout(callback, 0);
         };
-        global.cancelAnimationFrame = function (id) {
+        globalThis.cancelAnimationFrame = function (id) {
             clearTimeout(id);
         };
-        copyProps(window, global);
+        copyProps(window, globalThis);
 
-        withGlobal = FakeTimers.withGlobal(global);
+        withGlobal = FakeTimers.withGlobal(globalThis);
     }
 
     function tearDownGlobal() {
         const originalDescriptorNames = Object.keys(originalDescriptors);
-        const windowDescriptorNames = Object.getOwnPropertyNames(global.window);
+        const windowDescriptorNames = Object.getOwnPropertyNames(
+            globalThis.window,
+        );
         windowDescriptorNames.forEach(function (descriptorName) {
             if (!originalDescriptorNames.includes(descriptorName)) {
-                delete global[descriptorName];
+                delete globalThis[descriptorName];
             }
         });
 
-        delete global.window;
-        delete global.document;
-        delete global.navigator;
-        delete global.requestAnimationFrame;
-        delete global.cancelAnimationFrame;
+        delete globalThis.window;
+        delete globalThis.document;
+        delete globalThis.navigator;
+        delete globalThis.requestAnimationFrame;
+        delete globalThis.cancelAnimationFrame;
 
         // restore
         if (originalNavigatorDescriptor) {
             Object.defineProperty(
-                global,
+                globalThis,
                 "navigator",
                 originalNavigatorDescriptor,
             );
