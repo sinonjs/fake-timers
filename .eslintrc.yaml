@@ -2,11 +2,12 @@ extends:
     - "@sinonjs/eslint-config"
 
 overrides:
-    - files: "**/*-test.js"
+    - files: ["**/*-test.js", "test/**/*.js"]
       plugins:
           - mocha
       env:
           mocha: true
+          es2022: true
       rules:
           max-nested-callbacks: off
           mocha/no-exclusive-tests: error
