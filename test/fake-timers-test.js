@@ -54,11 +54,11 @@ describe("FakeTimers", function () {
     describe("setTimeout", function () {
         beforeEach(function () {
             this.clock = FakeTimers.createClock();
-            FakeTimers.evalCalled = false;
+            FakeTimers.callbackCalled = false;
         });
 
         afterEach(function () {
-            delete FakeTimers.evalCalled;
+            delete FakeTimers.callbackCalled;
         });
 
         it("throws if no arguments", function () {
@@ -107,20 +107,20 @@ describe("FakeTimers", function () {
 
         it("parses numeric string times", function () {
             this.clock.setTimeout(function () {
-                FakeTimers.evalCalled = true;
+                FakeTimers.callbackCalled = true;
             }, "10");
             this.clock.tick(10);
 
-            assert(FakeTimers.evalCalled);
+            assert(FakeTimers.callbackCalled);
         });
 
         it("parses no-numeric string times", function () {
             this.clock.setTimeout(function () {
-                FakeTimers.evalCalled = true;
+                FakeTimers.callbackCalled = true;
             }, "string");
             this.clock.tick(10);
 
-            assert(FakeTimers.evalCalled);
+            assert(FakeTimers.callbackCalled);
         });
 
         it("passes setTimeout parameters", function () {
@@ -250,66 +250,20 @@ describe("FakeTimers", function () {
             assert.equals(calls, ["NaN", "Infinity", "-Infinity"]);
         });
 
-        describe("use of eval when not in node", function () {
-            before(function () {
-                if (addTimerReturnsObject) {
-                    this.skip();
-                }
-            });
-
+        describe("string callbacks", function () {
             beforeEach(function () {
                 this.clock = FakeTimers.createClock();
-                FakeTimers.evalCalled = false;
             });
 
-            afterEach(function () {
-                delete FakeTimers.evalCalled;
-            });
-
-            it("evals non-function callbacks", function () {
-                this.clock.setTimeout("FakeTimers.evalCalled = true", 10);
-                this.clock.tick(10);
-
-                assert(FakeTimers.evalCalled);
-            });
-
-            it("only evals on global scope", function () {
-                const x = 15;
-                try {
-                    this.clock.setTimeout("x", x);
-                    this.clock.tick(x);
-                    assert.fail();
-                } catch (e) {
-                    assert(e instanceof ReferenceError);
-                }
-            });
-        });
-
-        describe("use of eval in node", function () {
-            before(function () {
-                if (!addTimerReturnsObject) {
-                    this.skip();
-                }
-            });
-
-            beforeEach(function () {
-                this.clock = FakeTimers.createClock();
-                FakeTimers.evalCalled = false;
-            });
-
-            afterEach(function () {
-                delete FakeTimers.evalCalled;
-            });
-
-            it("does not eval non-function callbacks", function () {
-                const notTypeofFunction = "FakeTimers.evalCalled = true";
+            it("rejects non-function callbacks", function () {
+                const invalidCallback = "FakeTimers.callbackCalled = true";
 
                 assert.exception(
                     function () {
-                        this.clock.setTimeout(notTypeofFunction, 10);
+                        this.clock.setTimeout(invalidCallback, 10);
                     }.bind(this),
                     {
-                        message: `[ERR_INVALID_CALLBACK]: Callback must be a function. Received ${notTypeofFunction} of type ${typeof notTypeofFunction}`,
+                        message: `[ERR_INVALID_CALLBACK]: Callback must be a function. Received ${invalidCallback} of type ${typeof invalidCallback}`,
                     },
                 );
             });
