@@ -668,25 +668,38 @@ function withGlobal(_global) {
 
         if (!clock.timers) {
             clock.timers = {};
+            clock.timerHeap = new TimerHeap();
+        }
+
+        while (clock.timers && clock.timers[uniqueTimerId]) {
+            uniqueTimerId++;
+            if (uniqueTimerId >= Number.MAX_SAFE_INTEGER) {
+                uniqueTimerId = idCounterStart;
+            }
         }
 
         timer.id = uniqueTimerId++;
+        if (uniqueTimerId >= Number.MAX_SAFE_INTEGER) {
+            uniqueTimerId = idCounterStart;
+        }
+
         timer.createdAt = clock.now;
         timer.callAt =
             clock.now + (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
         clock.timers[timer.id] = timer;
+        clock.timerHeap.push(timer);
 
         if (addTimerReturnsObject) {
             const res = {
                 refed: true,
                 ref: function () {
                     this.refed = true;
-                    return res;
+                    return this;
                 },
                 unref: function () {
                     this.refed = false;
-                    return res;
+                    return this;
                 },
                 hasRef: function () {
                     return this.refed;
@@ -697,9 +710,13 @@ function withGlobal(_global) {
                         (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
                     // it _might_ have been removed, but if not the assignment is perfectly fine
+                    if (clock.timers[timer.id]) {
+                        clock.timerHeap.remove(timer);
+                    }
                     clock.timers[timer.id] = timer;
+                    clock.timerHeap.push(timer);
 
-                    return res;
+                    return this;
                 },
                 [Symbol.toPrimitive]: function () {
                     return timer.id;
@@ -763,41 +780,133 @@ function withGlobal(_global) {
     }
 
     /**
+     * @class TimerHeap
+     */
+    function TimerHeap() {
+        this.timers = [];
+    }
+
+    TimerHeap.prototype.peek = function () {
+        return this.timers[0];
+    };
+
+    TimerHeap.prototype.push = function (timer) {
+        this.timers.push(timer);
+        this.bubbleUp(this.timers.length - 1);
+    };
+
+    TimerHeap.prototype.pop = function () {
+        if (this.timers.length === 0) {
+            return undefined;
+        }
+        const first = this.timers[0];
+        const last = this.timers.pop();
+        if (this.timers.length > 0) {
+            this.timers[0] = last;
+            last.heapIndex = 0;
+            this.bubbleDown(0);
+        }
+        delete first.heapIndex;
+        return first;
+    };
+
+    TimerHeap.prototype.remove = function (timer) {
+        const index = timer.heapIndex;
+        if (index === undefined || this.timers[index] !== timer) {
+            return false;
+        }
+        const last = this.timers.pop();
+        if (timer !== last) {
+            this.timers[index] = last;
+            last.heapIndex = index;
+            if (compareTimers(last, timer) < 0) {
+                this.bubbleUp(index);
+            } else {
+                this.bubbleDown(index);
+            }
+        }
+        delete timer.heapIndex;
+        return true;
+    };
+
+    TimerHeap.prototype.bubbleUp = function (index) {
+        const timer = this.timers[index];
+        while (index > 0) {
+            const parentIndex = (index - 1) >> 1;
+            const parent = this.timers[parentIndex];
+            if (compareTimers(timer, parent) < 0) {
+                this.timers[index] = parent;
+                parent.heapIndex = index;
+                index = parentIndex;
+            } else {
+                break;
+            }
+        }
+        this.timers[index] = timer;
+        timer.heapIndex = index;
+    };
+
+    TimerHeap.prototype.bubbleDown = function (index) {
+        const timer = this.timers[index];
+        const halfLength = this.timers.length >> 1;
+        while (index < halfLength) {
+            const leftIndex = (index << 1) + 1;
+            const rightIndex = leftIndex + 1;
+            let bestChildIndex = leftIndex;
+            let bestChild = this.timers[leftIndex];
+
+            if (
+                rightIndex < this.timers.length &&
+                compareTimers(this.timers[rightIndex], bestChild) < 0
+            ) {
+                bestChildIndex = rightIndex;
+                bestChild = this.timers[rightIndex];
+            }
+
+            if (compareTimers(bestChild, timer) < 0) {
+                this.timers[index] = bestChild;
+                bestChild.heapIndex = index;
+                index = bestChildIndex;
+            } else {
+                break;
+            }
+        }
+        this.timers[index] = timer;
+        timer.heapIndex = index;
+    };
+
+    /**
      * @param {Clock} clock
      * @param {number} from
      * @param {number} to
      * @returns {Timer}
      */
     function firstTimerInRange(clock, from, to) {
-        /**
-         * @type {?Object<string, Timer>}
-         */
-        const timers = clock.timers;
+        if (!clock.timerHeap) {
+            return null;
+        }
+
+        const timers = clock.timerHeap.timers;
+        if (timers.length === 1 && timers[0].requestIdleCallback) {
+            return timers[0];
+        }
+
+        const first = clock.timerHeap.peek();
+        if (first && inRange(from, to, first)) {
+            return first;
+        }
+
         /**
          * @type {?Timer}
          */
         let timer = null;
-        let id, isInRange, timersList;
 
-        if (
-            timers &&
-            (timersList = Object.values(timers)).length === 1 &&
-            timersList[0].requestIdleCallback
-        ) {
-            // if there's only one requestIdleCallback timer in the queue, return it immediately
-            timer = timersList[0];
-        } else {
-            for (id in timers) {
-                if (timers.hasOwnProperty(id)) {
-                    isInRange = inRange(from, to, timers[id]);
-
-                    if (
-                        isInRange &&
-                        (!timer || compareTimers(timer, timers[id]) === 1)
-                    ) {
-                        timer = timers[id];
-                    }
-                }
+        for (let i = 0; i < timers.length; i++) {
+            if (
+                inRange(from, to, timers[i]) &&
+                (!timer || compareTimers(timer, timers[i]) === 1)
+            ) {
+                timer = timers[i];
             }
         }
 
@@ -809,19 +918,10 @@ function withGlobal(_global) {
      * @returns {Timer}
      */
     function firstTimer(clock) {
-        const timers = clock.timers;
-        let timer = null;
-        let id;
-
-        for (id in timers) {
-            if (timers.hasOwnProperty(id)) {
-                if (!timer || compareTimers(timer, timers[id]) === 1) {
-                    timer = timers[id];
-                }
-            }
+        if (!clock.timerHeap) {
+            return null;
         }
-
-        return timer;
+        return clock.timerHeap.peek() || null;
     }
 
     /**
@@ -829,15 +929,15 @@ function withGlobal(_global) {
      * @returns {Timer}
      */
     function lastTimer(clock) {
-        const timers = clock.timers;
+        if (!clock.timerHeap) {
+            return null;
+        }
+        const timers = clock.timerHeap.timers;
         let timer = null;
-        let id;
 
-        for (id in timers) {
-            if (timers.hasOwnProperty(id)) {
-                if (!timer || compareTimers(timer, timers[id]) === -1) {
-                    timer = timers[id];
-                }
+        for (let i = 0; i < timers.length; i++) {
+            if (!timer || compareTimers(timer, timers[i]) === -1) {
+                timer = timers[i];
             }
         }
 
@@ -850,9 +950,12 @@ function withGlobal(_global) {
      */
     function callTimer(clock, timer) {
         if (typeof timer.interval === "number") {
-            clock.timers[timer.id].callAt += timer.interval;
+            clock.timerHeap.remove(timer);
+            timer.callAt += timer.interval;
+            clock.timerHeap.push(timer);
         } else {
             delete clock.timers[timer.id];
+            clock.timerHeap.remove(timer);
         }
 
         if (typeof timer.func === "function") {
@@ -952,6 +1055,7 @@ function withGlobal(_global) {
                 (timer.type === "Interval" && ttype === "Timeout")
             ) {
                 delete clock.timers[id];
+                clock.timerHeap.remove(timer);
             } else {
                 const clear = getClearHandler(ttype);
                 const schedule = getScheduleHandler(timer.type);
@@ -996,7 +1100,7 @@ function withGlobal(_global) {
                     _global[method] = clock[`_${method}`];
                 }
             } else {
-                if (_global[method] && _global[method].hadOwnProperty) {
+                if (clock[method] && clock[method].hadOwnProperty) {
                     _global[method] = clock[`_${method}`];
                 } else {
                     try {
@@ -1035,12 +1139,10 @@ function withGlobal(_global) {
         }
 
         // return pending timers, to enable checking what timers remained on uninstall
-        if (!clock.timers) {
+        if (!clock.timerHeap) {
             return [];
         }
-        return Object.keys(clock.timers).map(function mapper(key) {
-            return clock.timers[key];
-        });
+        return clock.timerHeap.timers.slice();
     }
 
     /**
@@ -1455,7 +1557,7 @@ function withGlobal(_global) {
 
         clock.countTimers = function countTimers() {
             return (
-                Object.keys(clock.timers || {}).length +
+                (clock.timerHeap ? clock.timerHeap.timers.length : 0) +
                 (clock.jobs || []).length
             );
         };
@@ -1721,7 +1823,7 @@ function withGlobal(_global) {
                     return clock.now;
                 }
 
-                numTimers = Object.keys(clock.timers).length;
+                numTimers = clock.timerHeap.timers.length;
                 if (numTimers === 0) {
                     resetIsNearInfiniteLimit();
                     return clock.now;
@@ -1754,15 +1856,14 @@ function withGlobal(_global) {
 
                                     let numTimers;
                                     if (i < clock.loopLimit) {
-                                        if (!clock.timers) {
+                                        if (!clock.timerHeap) {
                                             resetIsNearInfiniteLimit();
                                             resolve(clock.now);
                                             return;
                                         }
 
-                                        numTimers = Object.keys(
-                                            clock.timers,
-                                        ).length;
+                                        numTimers =
+                                            clock.timerHeap.timers.length;
                                         if (numTimers === 0) {
                                             resetIsNearInfiniteLimit();
                                             resolve(clock.now);
@@ -1830,6 +1931,7 @@ function withGlobal(_global) {
         clock.reset = function reset() {
             nanos = 0;
             clock.timers = {};
+            clock.timerHeap = new TimerHeap();
             clock.jobs = [];
             clock.now = start;
         };
@@ -1872,6 +1974,11 @@ function withGlobal(_global) {
                     if (clock.now + ms > timer.callAt) {
                         timer.callAt = clock.now + ms;
                     }
+                }
+                // Rebuild heap as order might have changed
+                clock.timerHeap = new TimerHeap();
+                for (const timer of Object.values(clock.timers)) {
+                    clock.timerHeap.push(timer);
                 }
             }
             clock.tick(ms);
