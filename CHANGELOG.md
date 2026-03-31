@@ -1,4 +1,18 @@
 
+15.1.2 / 2026-03-31
+==================
+
+  * Access to the global object via `globalThis` in test files (#544)
+  * Bump flatted from 3.2.9 to 3.4.2 (#547)
+  * Bump fast-xml-parser from 5.4.1 to 5.5.7 (#546)
+  * new feature: toNotFake:[] - ref #540
+  * Ensure cancelIdleCallback is reset when uninstalling (#539)
+  * Fix "TypeError: Cannot convert undefined or null to object" error (#541)
+  * Bump undici (#543)
+  * make requestIdleCallback spec compliant (#531)
+  * Bump minimatch from 3.1.2 to 3.1.5 (#538)
+  * Bump basic-ftp from 5.0.5 to 5.2.0 (#535)
+
 15.1.1 / 2026-03-02
 ==================
 
