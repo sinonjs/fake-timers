@@ -214,7 +214,10 @@ function withGlobal(_global) {
         _global.performance &&
         _global.performance.constructor &&
         _global.performance.constructor.prototype;
-    isPresent.queueMicrotask = _global.hasOwnProperty("queueMicrotask");
+    isPresent.queueMicrotask = Object.prototype.hasOwnProperty.call(
+        _global,
+        "queueMicrotask",
+    );
     isPresent.requestAnimationFrame =
         _global.requestAnimationFrame &&
         typeof _global.requestAnimationFrame === "function";
@@ -635,7 +638,7 @@ function withGlobal(_global) {
 
         timer.type = timer.immediate ? "Immediate" : "Timeout";
 
-        if (timer.hasOwnProperty("delay")) {
+        if (Object.prototype.hasOwnProperty.call(timer, "delay")) {
             if (typeof timer.delay !== "number") {
                 timer.delay = parseInt(timer.delay, 10);
             }
@@ -647,17 +650,19 @@ function withGlobal(_global) {
             timer.delay = Math.max(0, timer.delay);
         }
 
-        if (timer.hasOwnProperty("interval")) {
+        if (Object.prototype.hasOwnProperty.call(timer, "interval")) {
             timer.type = "Interval";
             timer.interval = timer.interval > maxTimeout ? 1 : timer.interval;
         }
 
-        if (timer.hasOwnProperty("animation")) {
+        if (Object.prototype.hasOwnProperty.call(timer, "animation")) {
             timer.type = "AnimationFrame";
             timer.animation = true;
         }
 
-        if (timer.hasOwnProperty("requestIdleCallback")) {
+        if (
+            Object.prototype.hasOwnProperty.call(timer, "requestIdleCallback")
+        ) {
             // mark timer as IdleCallback type if it has no delay, otherwise it'd be of type timeout
             // this way we are able to sort such that the timer only gets called when there's truly no pending task to run
             if (!timer.delay) {
@@ -709,10 +714,7 @@ function withGlobal(_global) {
                         clock.now +
                         (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
-                    // it _might_ have been removed, but if not the assignment is perfectly fine
-                    if (clock.timers[timer.id]) {
-                        clock.timerHeap.remove(timer);
-                    }
+                    clock.timerHeap.remove(timer);
                     clock.timers[timer.id] = timer;
                     clock.timerHeap.push(timer);
 
@@ -1053,7 +1055,7 @@ function withGlobal(_global) {
             );
         }
 
-        if (clock.timers.hasOwnProperty(id)) {
+        if (Object.prototype.hasOwnProperty.call(clock.timers, id)) {
             // check that the ID matches a timer of the correct type
             const timer = clock.timers[id];
             if (
@@ -1107,7 +1109,7 @@ function withGlobal(_global) {
                     _global[method] = clock[`_${method}`];
                 }
             } else {
-                if (clock[method] && clock[method].hadOwnProperty) {
+                if (clock[method] && clock[method].hasOwnProperty) {
                     _global[method] = clock[`_${method}`];
                 } else {
                     try {
@@ -1158,7 +1160,7 @@ function withGlobal(_global) {
      * @param {Clock} clock
      */
     function hijackMethod(target, method, clock) {
-        clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(
+        clock[method].hasOwnProperty = Object.prototype.hasOwnProperty.call(
             target,
             method,
         );
@@ -1974,7 +1976,7 @@ function withGlobal(_global) {
 
             // update timers and intervals to keep them stable
             for (id in clock.timers) {
-                if (clock.timers.hasOwnProperty(id)) {
+                if (Object.prototype.hasOwnProperty.call(clock.timers, id)) {
                     timer = clock.timers[id];
                     timer.createdAt += difference;
                     timer.callAt += difference;

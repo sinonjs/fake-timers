@@ -5192,6 +5192,21 @@ describe("FakeTimers", function () {
             });
             assert.same(timersModule.setTimeout, original);
         });
+
+        it("does not rely on a custom global hasOwnProperty implementation", function () {
+            const clock = FakeTimers.withGlobal({
+                Date: Date,
+                setTimeout: sinon.fake(),
+                clearTimeout: sinon.fake(),
+                hasOwnProperty() {
+                    throw new Error("should not be called");
+                },
+            }).install({
+                ignoreMissingTimers: true,
+            });
+
+            clock.uninstall();
+        });
     });
 
     describe("Node timers/promises module", function () {
