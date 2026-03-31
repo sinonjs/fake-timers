@@ -13,7 +13,7 @@ describe("issue #sinonjs/2086 - don't install setImmediate in unsupported enviro
         it("should not install setImmediate", function () {
             clock = FakeTimers.install();
 
-            assert.isUndefined(global.setImmediate);
+            assert.isUndefined(globalThis.setImmediate);
         });
     }
 });

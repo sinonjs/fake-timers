@@ -5,7 +5,6 @@ const {
     assert,
     FakeTimers,
     GlobalDate,
-    globalObject,
     hrtimeBigintPresent,
     hrtimePresent,
     nextTickPresent,
@@ -25,7 +24,7 @@ const {
 let timersModule, timersPromisesModule;
 
 /* eslint-disable no-underscore-dangle */
-globalObject.__runs = globalObject.__runs || 0;
+globalThis.__runs = globalThis.__runs || 0;
 
 let environmentSupportsCallingBuiltInsOnAlternativeThis = true;
 try {
@@ -35,7 +34,7 @@ try {
     environmentSupportsCallingBuiltInsOnAlternativeThis = false;
 }
 
-const isRunningInWatchMode = ++globalObject.__runs > 1;
+const isRunningInWatchMode = ++globalThis.__runs > 1;
 /* eslint-enable no-underscore-dangle */
 
 if (typeof require === "function" && typeof module === "object") {
@@ -681,7 +680,7 @@ describe("FakeTimers", function () {
                 clock.tick(100);
             });
 
-            assert(stub.calledOn(global) || stub.calledOn(null));
+            assert(stub.calledOn(globalThis) || stub.calledOn(null));
         });
 
         it("triggers in the order scheduled", function () {
@@ -1058,7 +1057,7 @@ describe("FakeTimers", function () {
             const test = this;
             const spies = [
                 sinon.spy(function () {
-                    global.Promise.resolve().then(function () {
+                    globalThis.Promise.resolve().then(function () {
                         test.clock.setTimeout(spies[1], 0);
                     });
                 }),
@@ -1158,7 +1157,7 @@ describe("FakeTimers", function () {
                 .catch(catchSpy)
                 .then(function () {
                     assert(catchSpy.calledOnce);
-                    assert(stub.calledOn(global) || stub.calledOn(null));
+                    assert(stub.calledOn(globalThis) || stub.calledOn(null));
                 });
         });
 
@@ -1198,7 +1197,7 @@ describe("FakeTimers", function () {
             const spy = sinon.spy();
 
             this.clock.setInterval(function () {
-                global.Promise.resolve().then(function () {
+                globalThis.Promise.resolve().then(function () {
                     spy(new Date().getTime());
                 });
             }, 10);
@@ -1256,13 +1255,13 @@ describe("FakeTimers", function () {
             const spy10 = sinon.spy();
 
             this.clock.setInterval(function () {
-                global.Promise.resolve().then(function () {
+                globalThis.Promise.resolve().then(function () {
                     spy13(new Date().getTime());
                 });
             }, 13);
 
             this.clock.setInterval(function () {
-                global.Promise.resolve().then(function () {
+                globalThis.Promise.resolve().then(function () {
                     spy10(new Date().getTime());
                 });
             }, 10);
@@ -1313,7 +1312,7 @@ describe("FakeTimers", function () {
             let id;
             const callback = sinon.spy(function () {
                 if (callback.callCount === 3) {
-                    global.Promise.resolve().then(function () {
+                    globalThis.Promise.resolve().then(function () {
                         clearInterval(id);
                     });
                 }
@@ -1427,10 +1426,10 @@ describe("FakeTimers", function () {
             const clock = this.clock;
 
             const callback = function () {
-                global.Promise.resolve().then(function () {
+                globalThis.Promise.resolve().then(function () {
                     ++i;
                     clock.setTimeout(function () {
-                        global.Promise.resolve().then(function () {
+                        globalThis.Promise.resolve().then(function () {
                             callback();
                         });
                     }, 100);
@@ -1489,7 +1488,7 @@ describe("FakeTimers", function () {
         it("is not influenced by forward system clock changes in promises", function () {
             const clock = this.clock;
             const callback = function () {
-                global.Promise.resolve().then(function () {
+                globalThis.Promise.resolve().then(function () {
                     clock.setSystemTime(new clock.Date().getTime() + 1000);
                 });
             };
@@ -1534,7 +1533,7 @@ describe("FakeTimers", function () {
             const spy = sinon.spy();
 
             setTimeout(function () {
-                global.Promise.resolve().then(spy);
+                globalThis.Promise.resolve().then(spy);
             }, 100);
 
             return this.clock.tickAsync(100).then(function () {
@@ -1546,7 +1545,7 @@ describe("FakeTimers", function () {
             const spies = [sinon.spy(), sinon.spy(), sinon.spy()];
 
             setTimeout(function () {
-                global.Promise.resolve()
+                globalThis.Promise.resolve()
                     .then(spies[0])
                     .then(spies[1])
                     .then(spies[2]);
@@ -1563,9 +1562,9 @@ describe("FakeTimers", function () {
             const spies = [sinon.spy(), sinon.spy(), sinon.spy()];
 
             setTimeout(function () {
-                global.Promise.resolve().then(spies[0]);
-                global.Promise.resolve().then(spies[1]);
-                global.Promise.resolve().then(spies[2]);
+                globalThis.Promise.resolve().then(spies[0]);
+                globalThis.Promise.resolve().then(spies[1]);
+                globalThis.Promise.resolve().then(spies[2]);
             }, 100);
 
             return this.clock.tickAsync(100).then(function () {
@@ -1579,9 +1578,9 @@ describe("FakeTimers", function () {
             const spy = sinon.spy();
 
             setTimeout(function () {
-                global.Promise.resolve().then(function () {
-                    global.Promise.resolve().then(function () {
-                        global.Promise.resolve().then(spy);
+                globalThis.Promise.resolve().then(function () {
+                    globalThis.Promise.resolve().then(function () {
+                        globalThis.Promise.resolve().then(spy);
                     });
                 });
             }, 100);
@@ -1595,8 +1594,8 @@ describe("FakeTimers", function () {
             const spies = [sinon.spy(), sinon.spy(), sinon.spy(), sinon.spy()];
 
             setTimeout(function () {
-                global.Promise.reject().then(spies[0]).catch(spies[1]);
-                global.Promise.resolve().then(spies[2]).catch(spies[3]);
+                globalThis.Promise.reject().then(spies[0]).catch(spies[1]);
+                globalThis.Promise.resolve().then(spies[2]).catch(spies[3]);
             }, 100);
 
             return this.clock.tickAsync(100).then(function () {
@@ -1611,7 +1610,7 @@ describe("FakeTimers", function () {
             const spies = [sinon.spy(), sinon.spy()];
 
             setTimeout(function () {
-                global.Promise.resolve().then(spies[0]);
+                globalThis.Promise.resolve().then(spies[0]);
             }, 100);
 
             setTimeout(spies[1], 200);
@@ -1624,7 +1623,7 @@ describe("FakeTimers", function () {
         it("should settle local promises before calling timeouts", function () {
             const spies = [sinon.spy(), sinon.spy()];
 
-            global.Promise.resolve().then(spies[0]);
+            globalThis.Promise.resolve().then(spies[0]);
 
             setTimeout(spies[1], 100);
 
@@ -1636,9 +1635,9 @@ describe("FakeTimers", function () {
         it("should settle local nested promises before calling timeouts", function () {
             const spies = [sinon.spy(), sinon.spy()];
 
-            global.Promise.resolve().then(function () {
-                global.Promise.resolve().then(function () {
-                    global.Promise.resolve().then(spies[0]);
+            globalThis.Promise.resolve().then(function () {
+                globalThis.Promise.resolve().then(function () {
+                    globalThis.Promise.resolve().then(spies[0]);
                 });
             });
 
@@ -1752,7 +1751,7 @@ describe("FakeTimers", function () {
                 clock.next();
             });
 
-            assert(stub.calledOn(global) || stub.calledOn(null));
+            assert(stub.calledOn(globalThis) || stub.calledOn(null));
         });
 
         it("subsequent calls trigger in the order scheduled", function () {
@@ -1954,7 +1953,7 @@ describe("FakeTimers", function () {
             const test = this;
             const spies = [
                 sinon.spy(function () {
-                    global.Promise.resolve().then(function () {
+                    globalThis.Promise.resolve().then(function () {
                         test.clock.setTimeout(spies[1], 0);
                     });
                 }),
@@ -2013,7 +2012,7 @@ describe("FakeTimers", function () {
                 .then(function () {
                     assert(catchSpy.calledOnce);
 
-                    assert(stub.calledOn(global) || stub.calledOn(null));
+                    assert(stub.calledOn(globalThis) || stub.calledOn(null));
                 });
         });
 
@@ -2072,7 +2071,7 @@ describe("FakeTimers", function () {
             const spy = sinon.spy();
 
             this.clock.setInterval(function () {
-                global.Promise.resolve().then(function () {
+                globalThis.Promise.resolve().then(function () {
                     spy(new Date().getTime());
                 });
             }, 10);
@@ -2152,7 +2151,7 @@ describe("FakeTimers", function () {
             const clock = this.clock;
             const callback = sinon.spy(function () {
                 if (callback.callCount === 3) {
-                    global.Promise.resolve().then(function () {
+                    globalThis.Promise.resolve().then(function () {
                         clearInterval(id);
                     });
                 }
@@ -2189,7 +2188,7 @@ describe("FakeTimers", function () {
             const spy = sinon.spy();
 
             setTimeout(function () {
-                global.Promise.resolve().then(spy);
+                globalThis.Promise.resolve().then(spy);
             }, 55);
 
             return this.clock.nextAsync().then(function () {
@@ -2201,9 +2200,9 @@ describe("FakeTimers", function () {
             const spy = sinon.spy();
 
             setTimeout(function () {
-                global.Promise.resolve().then(function () {
-                    global.Promise.resolve().then(function () {
-                        global.Promise.resolve().then(spy);
+                globalThis.Promise.resolve().then(function () {
+                    globalThis.Promise.resolve().then(function () {
+                        globalThis.Promise.resolve().then(spy);
                     });
                 });
             }, 55);
@@ -2216,7 +2215,7 @@ describe("FakeTimers", function () {
         it("should settle local promises before firing timers", function () {
             const spies = [sinon.spy(), sinon.spy()];
 
-            global.Promise.resolve().then(spies[0]);
+            globalThis.Promise.resolve().then(spies[0]);
 
             setTimeout(spies[1], 55);
 
@@ -2354,7 +2353,7 @@ describe("FakeTimers", function () {
             const test = this;
             const spies = [
                 sinon.spy(function () {
-                    global.Promise.resolve().then(function () {
+                    globalThis.Promise.resolve().then(function () {
                         test.clock.setTimeout(spies[1], 50);
                     });
                 }),
@@ -2392,7 +2391,7 @@ describe("FakeTimers", function () {
             this.clock = FakeTimers.createClock(0, 100);
             const test = this;
             const recursiveCallback = function () {
-                global.Promise.resolve().then(function () {
+                globalThis.Promise.resolve().then(function () {
                     test.clock.setTimeout(recursiveCallback, 10);
                 });
             };
@@ -2449,7 +2448,7 @@ describe("FakeTimers", function () {
             const spy = sinon.spy();
 
             this.clock.setTimeout(function () {
-                global.Promise.resolve().then(spy);
+                globalThis.Promise.resolve().then(spy);
             }, 55);
 
             return this.clock.runAllAsync().then(function () {
@@ -2462,9 +2461,9 @@ describe("FakeTimers", function () {
             const spy = sinon.spy();
 
             this.clock.setTimeout(function () {
-                global.Promise.resolve().then(function () {
-                    global.Promise.resolve().then(function () {
-                        global.Promise.resolve().then(spy);
+                globalThis.Promise.resolve().then(function () {
+                    globalThis.Promise.resolve().then(function () {
+                        globalThis.Promise.resolve().then(spy);
                     });
                 });
             }, 55);
@@ -2478,7 +2477,7 @@ describe("FakeTimers", function () {
             this.clock = FakeTimers.createClock();
             const spies = [sinon.spy(), sinon.spy()];
 
-            global.Promise.resolve().then(spies[0]);
+            globalThis.Promise.resolve().then(spies[0]);
 
             this.clock.setTimeout(spies[1], 55);
 
@@ -2492,7 +2491,7 @@ describe("FakeTimers", function () {
             const spies = [sinon.spy(), sinon.spy()];
 
             this.clock.setTimeout(function () {
-                global.Promise.resolve().then(spies[0]);
+                globalThis.Promise.resolve().then(spies[0]);
             }, 55);
 
             this.clock.setTimeout(spies[1], 75);
@@ -2729,7 +2728,7 @@ describe("FakeTimers", function () {
                 const test = this;
                 const spies = [
                     sinon.spy(function () {
-                        global.Promise.resolve().then(function () {
+                        globalThis.Promise.resolve().then(function () {
                             test.clock.setTimeout(spies[1], 50);
                         });
                     }),
@@ -2777,7 +2776,7 @@ describe("FakeTimers", function () {
                 const spies = [
                     sinon.spy(),
                     sinon.spy(function () {
-                        global.Promise.resolve().then(function () {
+                        globalThis.Promise.resolve().then(function () {
                             test.clock.setTimeout(spies[2], 50);
                         });
                     }),
@@ -2817,7 +2816,7 @@ describe("FakeTimers", function () {
             const test = this;
             const spy = sinon.spy();
             const recursiveCallback = function () {
-                global.Promise.resolve().then(function () {
+                globalThis.Promise.resolve().then(function () {
                     test.clock.setTimeout(recursiveCallback, 0);
                 });
             };
@@ -2835,7 +2834,7 @@ describe("FakeTimers", function () {
             const spy = sinon.spy();
 
             this.clock.setTimeout(function () {
-                global.Promise.resolve().then(spy);
+                globalThis.Promise.resolve().then(spy);
             }, 55);
 
             return this.clock.runToLastAsync().then(function () {
@@ -2848,9 +2847,9 @@ describe("FakeTimers", function () {
             const spy = sinon.spy();
 
             this.clock.setTimeout(function () {
-                global.Promise.resolve().then(function () {
-                    global.Promise.resolve().then(function () {
-                        global.Promise.resolve().then(spy);
+                globalThis.Promise.resolve().then(function () {
+                    globalThis.Promise.resolve().then(function () {
+                        globalThis.Promise.resolve().then(spy);
                     });
                 });
             }, 55);
@@ -2864,7 +2863,7 @@ describe("FakeTimers", function () {
             this.clock = FakeTimers.createClock();
             const spies = [sinon.spy(), sinon.spy()];
 
-            global.Promise.resolve().then(spies[0]);
+            globalThis.Promise.resolve().then(spies[0]);
 
             this.clock.setTimeout(spies[1], 55);
 
@@ -2878,7 +2877,7 @@ describe("FakeTimers", function () {
             const spies = [sinon.spy(), sinon.spy()];
 
             this.clock.setTimeout(function () {
-                global.Promise.resolve().then(spies[0]);
+                globalThis.Promise.resolve().then(spies[0]);
             }, 55);
 
             this.clock.setTimeout(spies[1], 75);
@@ -3168,11 +3167,11 @@ describe("FakeTimers", function () {
         beforeEach(function () {
             this.now = new GlobalDate().getTime() - 3000;
             this.clock = FakeTimers.createClock(this.now);
-            this.Date = global.Date;
+            this.Date = globalThis.Date;
         });
 
         afterEach(function () {
-            global.Date = this.Date;
+            globalThis.Date = this.Date;
         });
 
         it("provides date constructor", function () {
@@ -3194,7 +3193,7 @@ describe("FakeTimers", function () {
         it("creates real Date objects when Date constructor is gone", function () {
             const realDate = new Date();
             Date = NOOP; // eslint-disable-line no-global-assign
-            global.Date = NOOP;
+            globalThis.Date = NOOP;
 
             const date = new this.clock.Date();
 
@@ -3205,7 +3204,7 @@ describe("FakeTimers", function () {
         it("creates Date objects where the constructor prop matches the original", function () {
             const realDate = new Date();
             Date = NOOP; // eslint-disable-line no-global-assign
-            global.Date = NOOP;
+            globalThis.Date = NOOP;
 
             const date = new this.clock.Date();
 
@@ -3397,7 +3396,7 @@ describe("FakeTimers", function () {
 
     describe("stubTimers", function () {
         beforeEach(function () {
-            this.dateNow = global.Date.now;
+            this.dateNow = globalThis.Date.now;
         });
 
         afterEach(function () {
@@ -3407,9 +3406,9 @@ describe("FakeTimers", function () {
 
             clearTimeout(this.timer);
             if (this.dateNow === undefined) {
-                delete global.Date.now;
+                delete globalThis.Date.now;
             } else {
-                global.Date.now = this.dateNow;
+                globalThis.Date.now = this.dateNow;
             }
         });
 
@@ -3594,7 +3593,7 @@ describe("FakeTimers", function () {
         });
 
         it("uninstalls global cancelIdleCallback", function () {
-            if (globalObject.cancelIdleCallback === undefined) {
+            if (globalThis.cancelIdleCallback === undefined) {
                 return this.skip();
             }
             this.clock = FakeTimers.install();
@@ -3651,7 +3650,7 @@ describe("FakeTimers", function () {
                 it("should let performance.mark still be callable after FakeTimers.install() (#136)", function () {
                     this.clock = FakeTimers.install();
                     refute.exception(function () {
-                        global.performance.mark("a name");
+                        globalThis.performance.mark("a name");
                     });
                 });
             }
@@ -3819,14 +3818,14 @@ describe("FakeTimers", function () {
         });
 
         it("decide on Date.now support at call-time when supported", function () {
-            global.Date.now = NOOP;
+            globalThis.Date.now = NOOP;
             this.clock = FakeTimers.install({ now: 0 });
 
             assert.equals(typeof Date.now, "function");
         });
 
         it("decide on Date.now support at call-time when unsupported", function () {
-            global.Date.now = undefined;
+            globalThis.Date.now = undefined;
             this.clock = FakeTimers.install({ now: 0 });
 
             assert.isUndefined(Date.now);
@@ -3836,7 +3835,7 @@ describe("FakeTimers", function () {
             const f = function () {
                 return "";
             };
-            global.Date.format = f;
+            globalThis.Date.format = f;
             this.clock = FakeTimers.install();
 
             assert.equals(Date.format, f);
@@ -3988,16 +3987,16 @@ describe("FakeTimers", function () {
         });
 
         it("should not depend on having to stub setInterval or clearInterval to work", function (done) {
-            const origSetInterval = globalObject.setInterval;
-            const origClearInterval = globalObject.clearInterval;
+            const origSetInterval = globalThis.setInterval;
+            const origClearInterval = globalThis.clearInterval;
 
             const clock = FakeTimers.install({
                 shouldAdvanceTime: true,
                 toFake: ["setTimeout"],
             });
 
-            assert.equals(globalObject.setInterval, origSetInterval);
-            assert.equals(globalObject.clearInterval, origClearInterval);
+            assert.equals(globalThis.setInterval, origSetInterval);
+            assert.equals(globalThis.clearInterval, origClearInterval);
 
             setTimeout(function () {
                 clock.uninstall();
@@ -4205,12 +4204,12 @@ describe("FakeTimers", function () {
                 this.skip();
             }
 
-            const timer = globalObject.setTimeout(createCallback(done, true));
-            const stub = sinon.stub(globalObject.console, "warn");
+            const timer = globalThis.setTimeout(createCallback(done, true));
+            const stub = sinon.stub(globalThis.console, "warn");
             this.clock = FakeTimers.install();
 
-            globalObject.clearTimeout(timer);
-            globalObject.clearTimeout(timer);
+            globalThis.clearTimeout(timer);
+            globalThis.clearTimeout(timer);
             assert.equals(stub.callCount, 1);
 
             // asserting on stack trace formats is engine dependent
@@ -4222,61 +4221,62 @@ describe("FakeTimers", function () {
         });
 
         it("can clear setTimeout", function (done) {
-            const timer = globalObject.setTimeout(createCallback(done, false));
-            globalObject.setTimeout(createCallback(done, true));
+            const timer = globalThis.setTimeout(createCallback(done, false));
+            globalThis.setTimeout(createCallback(done, true));
 
             this.clock = FakeTimers.install({ shouldClearNativeTimers: true });
-            globalObject.clearTimeout(timer);
+            globalThis.clearTimeout(timer);
         });
 
         it("can clear setInterval", function (done) {
-            const timer = globalObject.setInterval(createCallback(done, false));
+            const timer = globalThis.setInterval(createCallback(done, false));
             if (timer && typeof timer === "object") {
                 timer.unref(); // prevents hung failed test for node
             }
 
-            globalObject.setTimeout(createCallback(done, true));
+            globalThis.setTimeout(createCallback(done, true));
             this.clock = FakeTimers.install({ shouldClearNativeTimers: true });
-            globalObject.clearInterval(timer);
+            globalThis.clearInterval(timer);
         });
 
         it("can clear setImmediate", function (done) {
-            if (globalObject.setImmediate === undefined) {
+            if (globalThis.setImmediate === undefined) {
                 return this.skip();
             }
 
-            const timer = globalObject.setImmediate(
-                createCallback(done, false),
-            );
-            globalObject.setImmediate(createCallback(done, true));
+            const timer = globalThis.setImmediate(createCallback(done, false));
+            globalThis.setImmediate(createCallback(done, true));
             this.clock = FakeTimers.install({ shouldClearNativeTimers: true });
-            globalObject.clearImmediate(timer);
+            globalThis.clearImmediate(timer);
         });
 
         it("can clear requestAnimationFrame", function (done) {
-            if (globalObject.requestAnimationFrame === undefined) {
+            if (globalThis.requestAnimationFrame === undefined) {
                 return this.skip();
             }
 
-            const timer = globalObject.requestAnimationFrame(
+            const timer = globalThis.requestAnimationFrame(
                 createCallback(done, false),
             );
-            globalObject.requestAnimationFrame(createCallback(done, true));
+            globalThis.requestAnimationFrame(createCallback(done, true));
             this.clock = FakeTimers.install({ shouldClearNativeTimers: true });
-            globalObject.cancelAnimationFrame(timer);
+            globalThis.cancelAnimationFrame(timer);
         });
 
         it("can clear requestIdleCallback", function (done) {
-            if (globalObject.requestIdleCallback === undefined) {
+            if (globalThis.requestIdleCallback === undefined) {
                 return this.skip();
             }
 
-            const timer = globalObject.requestIdleCallback(
+            // it's safe to use `requestIdleCallback` here
+            // eslint-disable-next-line compat/compat
+            const timer = globalThis.requestIdleCallback(
                 createCallback(done, false),
             );
-            globalObject.requestIdleCallback(createCallback(done, true));
+            // eslint-disable-next-line compat/compat
+            globalThis.requestIdleCallback(createCallback(done, true));
             this.clock = FakeTimers.install({ shouldClearNativeTimers: true });
-            globalObject.cancelIdleCallback(timer);
+            globalThis.cancelIdleCallback(timer);
         });
     });
 
