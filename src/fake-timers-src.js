@@ -248,6 +248,7 @@ function withGlobal(_global) {
           )
         : undefined;
     let uniqueTimerId = idCounterStart;
+    let uniqueTimerOrder = 0;
 
     if (NativeDate === undefined) {
         throw new Error(
@@ -685,6 +686,7 @@ function withGlobal(_global) {
             uniqueTimerId = idCounterStart;
         }
 
+        timer.order = uniqueTimerOrder++;
         timer.createdAt = clock.now;
         timer.callAt =
             clock.now + (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
@@ -712,6 +714,7 @@ function withGlobal(_global) {
                         (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
                     clock.timerHeap.remove(timer);
+                    timer.order = uniqueTimerOrder++;
                     clock.timers[timer.id] = timer;
                     clock.timerHeap.push(timer);
 
@@ -756,6 +759,13 @@ function withGlobal(_global) {
             return -1;
         }
         if (!a.immediate && b.immediate) {
+            return 1;
+        }
+
+        if (a.order < b.order) {
+            return -1;
+        }
+        if (a.order > b.order) {
             return 1;
         }
 
@@ -954,6 +964,7 @@ function withGlobal(_global) {
         if (typeof timer.interval === "number") {
             clock.timerHeap.remove(timer);
             timer.callAt += timer.interval;
+            timer.order = uniqueTimerOrder++;
             clock.timerHeap.push(timer);
         } else {
             delete clock.timers[timer.id];
