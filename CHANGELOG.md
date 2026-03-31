@@ -1,4 +1,14 @@
 
+15.2.0 / 2026-03-31
+==================
+
+The 2000x perf increase release.
+
+  * fix(#522): setInterval(0,fn) starved setTimeout(0,fn)
+  * fix: reject non-function callbacks
+  * fix(#534): remove memory leak and potential security issue
+  * fix: memory leak and performance issues from #532
+
 15.1.2 / 2026-03-31
 ==================
 
