@@ -791,20 +791,46 @@ function withGlobal(_global) {
 
     /**
      * @class TimerHeap
+     *
+     * A compact "soonest timer first" container.
+     *
+     * Think of this as a waiting room for scheduled callbacks where the next
+     * callback to run is always kept at the front of the list. The internal
+     * array is arranged so we can find, add, remove, and reorder timers
+     * efficiently without sorting the whole list every time something changes.
+     *
+     * The important idea is not the data structure name, but the behavior:
+     * the timer that should run next stays near the front, and when one timer
+     * moves, the rest are shifted just enough to keep that promise true.
      */
     function TimerHeap() {
         this.timers = [];
     }
 
+    /**
+     * Look at the next timer without removing it.
+     * This is the timer the clock would run first if time advanced now.
+     */
     TimerHeap.prototype.peek = function () {
         return this.timers[0];
     };
 
+    /**
+     * Add a timer to the waiting room, then move it upward until it is in the
+     * right place relative to the timers it should run before and after.
+     */
     TimerHeap.prototype.push = function (timer) {
         this.timers.push(timer);
         this.bubbleUp(this.timers.length - 1);
     };
 
+    /**
+     * Remove and return the next timer to run.
+     *
+     * We pull the front timer out, move the last timer into the empty spot,
+     * and then shift that replacement down until the ordering is correct
+     * again. That avoids rebuilding the whole list from scratch.
+     */
     TimerHeap.prototype.pop = function () {
         if (this.timers.length === 0) {
             return undefined;
@@ -820,6 +846,13 @@ function withGlobal(_global) {
         return first;
     };
 
+    /**
+     * Remove a specific timer from the waiting room.
+     *
+     * The heap stores timers in a shape that lets us jump directly to the
+     * timer's current position, replace it with the last timer, and then move
+     * that replacement up or down until the ordering is correct again.
+     */
     TimerHeap.prototype.remove = function (timer) {
         const index = timer.heapIndex;
         if (index === undefined || this.timers[index] !== timer) {
@@ -839,6 +872,14 @@ function withGlobal(_global) {
         return true;
     };
 
+    /**
+     * Move a timer toward the front until it is no longer "earlier" than the
+     * timer above it.
+     *
+     * Conceptually, this is what happens when something newly scheduled turns
+     * out to belong ahead of its parent in the waiting room. We keep swapping
+     * it upward until it is no longer out of place.
+     */
     TimerHeap.prototype.bubbleUp = function (index) {
         const timer = this.timers[index];
         let currentIndex = index;
@@ -857,6 +898,14 @@ function withGlobal(_global) {
         timer.heapIndex = currentIndex;
     };
 
+    /**
+     * Move a timer away from the front until the timer below it is no longer
+     * supposed to run after it.
+     *
+     * This is the opposite of `bubbleUp`: when a timer at the front is removed
+     * or moved, the replacement may be too far ahead, so we repeatedly swap it
+     * downward with the best child until the waiting room is ordered again.
+     */
     TimerHeap.prototype.bubbleDown = function (index) {
         const timer = this.timers[index];
         let currentIndex = index;
