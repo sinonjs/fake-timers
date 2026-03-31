@@ -5056,9 +5056,9 @@ describe("FakeTimers", function () {
          * Returns elements that are present in both lists.
          * @function
          * @template E
-         * @param {E[]} [list1]
-         * @param {E[]} [list2]
-         * @returns {E[]}
+         * @param {E[]} [list1] first list to compare
+         * @param {E[]} [list2] second list to compare
+         * @returns {E[]} values that appear in both lists
          */
         function getIntersection(list1, list2) {
             return list1.filter((value) => list2.indexOf(value) !== -1);
@@ -5067,8 +5067,8 @@ describe("FakeTimers", function () {
         /**
          * Get property names and original values from timers module.
          * @function
-         * @param {string[]} [toFake]
-         * @returns {{propertyName: string, originalValue: any}[]}
+         * @param {string[]} [toFake] timer or API names to inspect
+         * @returns {{propertyName: string, originalValue: any}[]} the original values for each requested property
          */
         function getOriginals(toFake) {
             return toFake.map((propertyName) => ({
@@ -6231,7 +6231,7 @@ describe("Intl API", function () {
      * Tester function to check if the globally hijacked Intl object is plugging into the faked Clock
      * @param {string} ianaTimeZone - IANA time zone name
      * @param {number} timestamp - UNIX timestamp
-     * @returns {boolean}
+     * @returns {boolean} true when the formatted day is the first of the month
      */
     function isFirstOfMonth(ianaTimeZone, timestamp) {
         return (
