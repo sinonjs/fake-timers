@@ -2929,6 +2929,16 @@ describe("FakeTimers", function () {
             this.clock.clearTimeout(null);
             assert(true); // doesn't fail
         });
+
+        it("allows a timeout to be scheduled after clearing a native id first", function () {
+            this.clock.clearTimeout(1e12);
+
+            refute.exception(() => {
+                this.clock.setTimeout(NOOP, 50);
+            });
+
+            assert.equals(this.clock.countTimers(), 1);
+        });
     });
 
     describe("reset", function () {
