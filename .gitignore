@@ -6,3 +6,4 @@ coverage/
 types
 .gitnexus
 docs/
+.worktrees/
