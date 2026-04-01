@@ -5199,7 +5199,7 @@ describe("FakeTimers", function () {
 
     describe("Node timers module", function () {
         before(function () {
-            if (!timersModule) {
+            if (!timersModule || !timersModule.setTimeout) {
                 this.skip();
             }
         });
@@ -5365,7 +5365,7 @@ describe("FakeTimers", function () {
         let clock;
 
         before(function () {
-            if (!timersPromisesModule) {
+            if (!timersPromisesModule || !timersPromisesModule.setTimeout) {
                 this.skip();
             }
         });
