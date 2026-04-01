@@ -74,5 +74,9 @@
       "types/**",
       "fake-timers.js"
     ]
+  },
+  "browser": {
+    "timers": false,
+    "timers/promises": false
   }
 }
