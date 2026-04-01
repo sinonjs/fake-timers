@@ -786,13 +786,7 @@ function withGlobal(_global) {
     function ensureTimerState(clock) {
         if (!clock.timers) {
             clock.timers = new Map();
-        }
-
-        if (!clock.timerHeap) {
             clock.timerHeap = new TimerHeap();
-            for (const timer of clock.timers.values()) {
-                clock.timerHeap.push(timer);
-            }
         }
     }
 
@@ -1129,8 +1123,6 @@ function withGlobal(_global) {
             // relied upon by some libraries, like Bootstrap carousel
             return;
         }
-
-        ensureTimerState(clock);
 
         // in Node, the ID is stored as the primitive value for `Timeout` objects
         // for `Immediate` objects, no ID exists, so it gets coerced to NaN

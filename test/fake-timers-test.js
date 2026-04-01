@@ -6378,4 +6378,34 @@ describe("missing timers", function () {
             }, /cannot be faked: 'setInterval'/);
         });
     }
+
+    describe("initialization", function () {
+        beforeEach(function () {
+            this.clock = FakeTimers.createClock();
+        });
+
+        it("clearTimeout works before timer state is initialized", function () {
+            refute.exception(() => {
+                this.clock.clearTimeout(1e12);
+            });
+        });
+
+        it("setSystemTime works before timer state is initialized", function () {
+            refute.exception(() => {
+                this.clock.setSystemTime(1000);
+            });
+        });
+
+        it("jump works before timer state is initialized", function () {
+            refute.exception(() => {
+                this.clock.jump(1000);
+            });
+        });
+
+        it("runAll works before timer state is initialized", function () {
+            refute.exception(() => {
+                this.clock.runAll();
+            });
+        });
+    });
 });
