@@ -1746,10 +1746,7 @@ function withGlobal(_global) {
 
         /**
          * @param {number|string} tickValue milliseconds or a string parseable by parseTime
-         * @param {boolean} isAsync
-         * @param {Function} resolve
-         * @param {Function} reject
-         * @returns {number|undefined} will return the new `now` value or nothing for async
+         * @returns {object} a mutable state object for the tick execution
          */
         function createTickState(tickValue) {
             const msFloat =
@@ -1784,6 +1781,12 @@ function withGlobal(_global) {
             };
         }
 
+        /**
+         * @param {object} state mutable tick state
+         * @param {number} oldNow the clock.now before some action
+         * @param {object} [options] compensation options
+         * @param {boolean} [options.includePrevious] whether to also update state.previous
+         */
         function applyClockChangeCompensation(state, oldNow, options) {
             if (oldNow !== clock.now) {
                 const difference = clock.now - oldNow;
@@ -1795,18 +1798,27 @@ function withGlobal(_global) {
             }
         }
 
+        /**
+         * @param {object} state mutable tick state
+         */
         function runInitialJobs(state) {
             state.oldNow = clock.now;
             runJobs(clock);
             applyClockChangeCompensation(state, state.oldNow);
         }
 
+        /**
+         * @param {object} state mutable tick state
+         */
         function runPostLoopJobs(state) {
             state.oldNow = clock.now;
             runJobs(clock);
             applyClockChangeCompensation(state, state.oldNow);
         }
 
+        /**
+         * @param {object} state mutable tick state
+         */
         function selectNextTimerInRange(state) {
             state.timer = firstTimerInRange(
                 clock,
@@ -1816,6 +1828,13 @@ function withGlobal(_global) {
             state.previous = state.tickFrom;
         }
 
+        /**
+         * @param {object} state mutable tick state
+         * @param {boolean} isAsync whether this is an async tick
+         * @param {Function} nextPromiseTick callback for async promise settlement
+         * @param {Function} compensationCheck callback for clock change compensation
+         * @returns {boolean} whether an early return was triggered (async mode)
+         */
         function runTimersInRange(
             state,
             isAsync,
@@ -1856,6 +1875,12 @@ function withGlobal(_global) {
             return false;
         }
 
+        /**
+         * @param {object} state mutable tick state
+         * @param {boolean} isAsync whether this is an async tick
+         * @param {Function} resolve promise resolve function
+         * @returns {number|undefined} the new clock.now or nothing for async
+         */
         function finalizeTick(state, isAsync, resolve) {
             // corner case: during runJobs new timers were scheduled which could be in the range [clock.now, tickTo]
             state.timer = firstTimerInRange(
@@ -1887,6 +1912,13 @@ function withGlobal(_global) {
             }
         }
 
+        /**
+         * @param {number|string} tickValue milliseconds or a string parseable by parseTime
+         * @param {boolean} isAsync whether this is an async tick
+         * @param {Function} [resolve] promise resolve function
+         * @param {Function} [reject] promise reject function
+         * @returns {number|undefined} the new clock.now or nothing for async
+         */
         function doTick(tickValue, isAsync, resolve, reject) {
             const state = createTickState(tickValue);
 
@@ -1961,6 +1993,10 @@ function withGlobal(_global) {
             }
         };
 
+        /**
+         * @param {Function} callback function to run inside native setTimeout
+         * @returns {Promise}
+         */
         function runAsyncWithNativeTimeout(callback) {
             return pauseAutoTickUntilFinished(
                 new _global.Promise(function (resolve, reject) {
@@ -2052,6 +2088,10 @@ function withGlobal(_global) {
 
             clock.runAllAsync = function runAllAsync() {
                 let i = 0;
+                /**
+                 * @param {Function} resolve promise resolve function
+                 * @param {Function} reject promise reject function
+                 */
                 function doRun(resolve, reject) {
                     try {
                         runJobs(clock);
