@@ -1932,6 +1932,26 @@ describe("FakeTimers", function () {
             this.clock.uninstall();
         });
 
+        it("preserves error propagation", async function () {
+            this.clock.setTimeout(() => {
+                throw new Error("BOOM");
+            }, 10);
+
+            try {
+                await this.clock.nextAsync();
+                throw new Error("Should have thrown");
+            } catch (e) {
+                assert.equals(e.message, "BOOM");
+            }
+            assert.equals(this.clock.now, 10);
+        });
+
+        it("stays side-effect free when no timers", async function () {
+            const now = this.clock.now;
+            await this.clock.nextAsync();
+            assert.equals(this.clock.now, now);
+        });
+
         it("triggers the next timer", function () {
             const stub = sinon.stub();
             this.clock.setTimeout(stub, 100);
@@ -2382,6 +2402,29 @@ describe("FakeTimers", function () {
             }
         });
 
+        it("settles local promises before later timers", async function () {
+            this.clock = FakeTimers.install({ now: 0 });
+            const log = [];
+            this.clock.setTimeout(() => {
+                log.push("T1");
+                Promise.resolve().then(() => log.push("P1"));
+            }, 10);
+            this.clock.setTimeout(() => {
+                log.push("T2");
+            }, 20);
+
+            await this.clock.runAllAsync();
+            assert.equals(log, ["T1", "P1", "T2"]);
+            this.clock.uninstall();
+        });
+
+        it("stays side-effect free when no timers", async function () {
+            this.clock = FakeTimers.createClock();
+            const now = this.clock.now;
+            await this.clock.runAllAsync();
+            assert.equals(this.clock.now, now);
+        });
+
         it("if there are no timers just return", function () {
             this.clock = FakeTimers.createClock();
             return this.clock.runAllAsync();
@@ -2726,6 +2769,29 @@ describe("FakeTimers", function () {
             if (!promisePresent) {
                 this.skip();
             }
+        });
+
+        it("settles local promises before later timers", async function () {
+            this.clock = FakeTimers.install({ now: 0 });
+            const log = [];
+            this.clock.setTimeout(() => {
+                log.push("T1");
+                Promise.resolve().then(() => log.push("P1"));
+            }, 10);
+            this.clock.setTimeout(() => {
+                log.push("T2");
+            }, 20);
+
+            await this.clock.runToLastAsync();
+            assert.equals(log, ["T1", "P1", "T2"]);
+            this.clock.uninstall();
+        });
+
+        it("stays side-effect free when no timers", async function () {
+            this.clock = FakeTimers.createClock();
+            const now = this.clock.now;
+            await this.clock.runToLastAsync();
+            assert.equals(this.clock.now, now);
         });
 
         it("returns current time when there are no timers", function () {
