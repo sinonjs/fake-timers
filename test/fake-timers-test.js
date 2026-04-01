@@ -6211,6 +6211,7 @@ describe("loop limit stack trace", function () {
                             `Error: ${expectedMessage}\\s+Interval - recursiveCreateTimerTimeout`,
                         ),
                     );
+                    assert.match(err.stack, /recursiveCreateTimer/);
                 });
         });
 
@@ -6228,6 +6229,7 @@ describe("loop limit stack trace", function () {
                         `Error: ${expectedMessage}\\s+Interval - recursiveCreateTimerTimeout`,
                     ),
                 );
+                assert.match(err.stack, /recursiveCreateTimer/);
             }
             assert.equals(caughtError, true);
         });
