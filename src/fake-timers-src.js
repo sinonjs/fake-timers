@@ -1751,7 +1751,7 @@ function withGlobal(_global) {
          * @param {Function} reject
          * @returns {number|undefined} will return the new `now` value or nothing for async
          */
-        function doTick(tickValue, isAsync, resolve, reject) {
+        function createTickState(tickValue) {
             const msFloat =
                 typeof tickValue === "number"
                     ? tickValue
@@ -1771,45 +1771,58 @@ function withGlobal(_global) {
                 nanosTotal -= 1e6;
             }
 
-            nanos = nanosTotal;
-            let tickFrom = clock.now;
-            let previous = clock.now;
+            return {
+                msFloat: msFloat,
+                ms: ms,
+                nanosTotal: nanosTotal,
+                tickFrom: clock.now,
+                tickTo: tickTo,
+                previous: clock.now,
+                timer: null,
+                firstException: null,
+                oldNow: null,
+            };
+        }
+
+        function doTick(tickValue, isAsync, resolve, reject) {
+            const state = createTickState(tickValue);
+
+            nanos = state.nanosTotal;
             // ESLint fails to detect this correctly
             /* eslint-disable prefer-const */
-            let timer,
-                firstException,
-                oldNow,
-                nextPromiseTick,
-                compensationCheck,
-                postTimerCall;
+            let nextPromiseTick, compensationCheck, postTimerCall;
             /* eslint-enable prefer-const */
 
             clock.duringTick = true;
 
             // perform microtasks
-            oldNow = clock.now;
+            state.oldNow = clock.now;
             runJobs(clock);
-            if (oldNow !== clock.now) {
+            if (state.oldNow !== clock.now) {
                 // compensate for any setSystemTime() call during microtask callback
-                tickFrom += clock.now - oldNow;
-                tickTo += clock.now - oldNow;
+                state.tickFrom += clock.now - state.oldNow;
+                state.tickTo += clock.now - state.oldNow;
             }
 
             //eslint-disable-next-line jsdoc/require-jsdoc
             function doTickInner() {
                 // perform each timer in the requested range
-                timer = firstTimerInRange(clock, tickFrom, tickTo);
+                state.timer = firstTimerInRange(
+                    clock,
+                    state.tickFrom,
+                    state.tickTo,
+                );
                 // eslint-disable-next-line no-unmodified-loop-condition
-                while (timer && tickFrom <= tickTo) {
-                    if (hasTimer(clock, timer.id)) {
-                        tickFrom = timer.callAt;
-                        clock.now = timer.callAt;
-                        oldNow = clock.now;
+                while (state.timer && state.tickFrom <= state.tickTo) {
+                    if (hasTimer(clock, state.timer.id)) {
+                        state.tickFrom = state.timer.callAt;
+                        clock.now = state.timer.callAt;
+                        state.oldNow = clock.now;
                         try {
                             runJobs(clock);
-                            callTimer(clock, timer);
+                            callTimer(clock, state.timer);
                         } catch (e) {
-                            firstException = firstException || e;
+                            state.firstException = state.firstException || e;
                         }
 
                         if (isAsync) {
@@ -1827,32 +1840,36 @@ function withGlobal(_global) {
                 }
 
                 // perform process.nextTick()s again
-                oldNow = clock.now;
+                state.oldNow = clock.now;
                 runJobs(clock);
-                if (oldNow !== clock.now) {
+                if (state.oldNow !== clock.now) {
                     // compensate for any setSystemTime() call during process.nextTick() callback
-                    tickFrom += clock.now - oldNow;
-                    tickTo += clock.now - oldNow;
+                    state.tickFrom += clock.now - state.oldNow;
+                    state.tickTo += clock.now - state.oldNow;
                 }
                 clock.duringTick = false;
 
                 // corner case: during runJobs new timers were scheduled which could be in the range [clock.now, tickTo]
-                timer = firstTimerInRange(clock, tickFrom, tickTo);
-                if (timer) {
+                state.timer = firstTimerInRange(
+                    clock,
+                    state.tickFrom,
+                    state.tickTo,
+                );
+                if (state.timer) {
                     try {
-                        clock.tick(tickTo - clock.now); // do it all again - for the remainder of the requested range
+                        clock.tick(state.tickTo - clock.now); // do it all again - for the remainder of the requested range
                     } catch (e) {
-                        firstException = firstException || e;
+                        state.firstException = state.firstException || e;
                     }
                 } else {
                     // no timers remaining in the requested range: move the clock all the way to the end
-                    clock.now = tickTo;
+                    clock.now = state.tickTo;
 
                     // update nanos
-                    nanos = nanosTotal;
+                    nanos = state.nanosTotal;
                 }
-                if (firstException) {
-                    throw firstException;
+                if (state.firstException) {
+                    throw state.firstException;
                 }
 
                 if (isAsync) {
@@ -1876,16 +1893,20 @@ function withGlobal(_global) {
 
             compensationCheck = function () {
                 // compensate for any setSystemTime() call during timer callback
-                if (oldNow !== clock.now) {
-                    tickFrom += clock.now - oldNow;
-                    tickTo += clock.now - oldNow;
-                    previous += clock.now - oldNow;
+                if (state.oldNow !== clock.now) {
+                    state.tickFrom += clock.now - state.oldNow;
+                    state.tickTo += clock.now - state.oldNow;
+                    state.previous += clock.now - state.oldNow;
                 }
             };
 
             postTimerCall = function () {
-                timer = firstTimerInRange(clock, previous, tickTo);
-                previous = tickFrom;
+                state.timer = firstTimerInRange(
+                    clock,
+                    state.previous,
+                    state.tickTo,
+                );
+                state.previous = state.tickFrom;
             };
 
             return doTickInner();
