@@ -1807,13 +1807,62 @@ function withGlobal(_global) {
             applyClockChangeCompensation(state, state.oldNow);
         }
 
+        function selectNextTimerInRange(state) {
+            state.timer = firstTimerInRange(
+                clock,
+                state.previous,
+                state.tickTo,
+            );
+            state.previous = state.tickFrom;
+        }
+
+        function runTimersInRange(
+            state,
+            isAsync,
+            nextPromiseTick,
+            compensationCheck,
+        ) {
+            state.timer = firstTimerInRange(
+                clock,
+                state.tickFrom,
+                state.tickTo,
+            );
+            // eslint-disable-next-line no-unmodified-loop-condition
+            while (state.timer && state.tickFrom <= state.tickTo) {
+                if (hasTimer(clock, state.timer.id)) {
+                    state.tickFrom = state.timer.callAt;
+                    clock.now = state.timer.callAt;
+                    state.oldNow = clock.now;
+                    try {
+                        runJobs(clock);
+                        callTimer(clock, state.timer);
+                    } catch (e) {
+                        state.firstException = state.firstException || e;
+                    }
+
+                    if (isAsync) {
+                        // finish up after native setImmediate callback to allow
+                        // all native es6 promises to process their callbacks after
+                        // each timer fires.
+                        originalSetTimeout(nextPromiseTick);
+                        return true;
+                    }
+
+                    compensationCheck();
+                }
+
+                selectNextTimerInRange(state);
+            }
+            return false;
+        }
+
         function doTick(tickValue, isAsync, resolve, reject) {
             const state = createTickState(tickValue);
 
             nanos = state.nanosTotal;
             // ESLint fails to detect this correctly
             /* eslint-disable prefer-const */
-            let nextPromiseTick, compensationCheck, postTimerCall;
+            let nextPromiseTick, compensationCheck;
             /* eslint-enable prefer-const */
 
             clock.duringTick = true;
@@ -1822,37 +1871,15 @@ function withGlobal(_global) {
 
             //eslint-disable-next-line jsdoc/require-jsdoc
             function doTickInner() {
-                // perform each timer in the requested range
-                state.timer = firstTimerInRange(
-                    clock,
-                    state.tickFrom,
-                    state.tickTo,
-                );
-                // eslint-disable-next-line no-unmodified-loop-condition
-                while (state.timer && state.tickFrom <= state.tickTo) {
-                    if (hasTimer(clock, state.timer.id)) {
-                        state.tickFrom = state.timer.callAt;
-                        clock.now = state.timer.callAt;
-                        state.oldNow = clock.now;
-                        try {
-                            runJobs(clock);
-                            callTimer(clock, state.timer);
-                        } catch (e) {
-                            state.firstException = state.firstException || e;
-                        }
-
-                        if (isAsync) {
-                            // finish up after native setImmediate callback to allow
-                            // all native es6 promises to process their callbacks after
-                            // each timer fires.
-                            originalSetTimeout(nextPromiseTick);
-                            return;
-                        }
-
-                        compensationCheck();
-                    }
-
-                    postTimerCall();
+                if (
+                    runTimersInRange(
+                        state,
+                        isAsync,
+                        nextPromiseTick,
+                        compensationCheck,
+                    )
+                ) {
+                    return;
                 }
 
                 runPostLoopJobs(state);
@@ -1893,7 +1920,7 @@ function withGlobal(_global) {
                 function () {
                     try {
                         compensationCheck();
-                        postTimerCall();
+                        selectNextTimerInRange(state);
                         doTickInner();
                     } catch (e) {
                         reject(e);
@@ -1904,15 +1931,6 @@ function withGlobal(_global) {
                 applyClockChangeCompensation(state, state.oldNow, {
                     includePrevious: true,
                 });
-            };
-
-            postTimerCall = function () {
-                state.timer = firstTimerInRange(
-                    clock,
-                    state.previous,
-                    state.tickTo,
-                );
-                state.previous = state.tickFrom;
             };
 
             return doTickInner();
