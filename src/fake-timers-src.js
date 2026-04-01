@@ -790,25 +790,64 @@ function withGlobal(_global) {
         }
     }
 
+    /**
+     * @param {Clock} clock
+     * @param {number} id
+     * @returns {boolean}
+     */
     function hasTimer(clock, id) {
         return clock.timers ? clock.timers.has(id) : false;
     }
 
+    /**
+     * @param {Clock} clock
+     * @param {number} id
+     * @returns {Timer}
+     */
     function getTimer(clock, id) {
         return clock.timers ? clock.timers.get(id) : undefined;
     }
 
+    /**
+     * @param {Clock} clock
+     * @param {Timer} timer
+     */
     function setTimer(clock, timer) {
         ensureTimerState(clock);
         clock.timers.set(timer.id, timer);
     }
 
+    /**
+     * @param {Clock} clock
+     * @param {number} id
+     * @returns {boolean}
+     */
     function deleteTimer(clock, id) {
         return clock.timers ? clock.timers.delete(id) : false;
     }
 
-    function activeTimers(clock) {
-        return clock.timers ? clock.timers.values() : [];
+    /**
+     * @param {Clock} clock
+     * @param {Function} callback
+     */
+    function forEachActiveTimer(clock, callback) {
+        if (!clock.timers) {
+            return;
+        }
+
+        for (const timer of clock.timers.values()) {
+            callback(timer);
+        }
+    }
+
+    /**
+     * @param {Clock} clock
+     */
+    function rebuildTimerHeap(clock) {
+        clock.timerHeap = new TimerHeap();
+        forEachActiveTimer(clock, (timer) => {
+            clock.timerHeap.push(timer);
+        });
     }
 
     /**
@@ -2070,12 +2109,10 @@ function withGlobal(_global) {
             nanos = 0;
 
             // update timers and intervals to keep them stable
-            if (clock.timers) {
-                for (const timer of activeTimers(clock)) {
-                    timer.createdAt += difference;
-                    timer.callAt += difference;
-                }
-            }
+            forEachActiveTimer(clock, (timer) => {
+                timer.createdAt += difference;
+                timer.callAt += difference;
+            });
         };
 
         /**
@@ -2090,16 +2127,13 @@ function withGlobal(_global) {
             const ms = Math.floor(msFloat);
 
             if (clock.timers) {
-                for (const timer of activeTimers(clock)) {
+                forEachActiveTimer(clock, (timer) => {
                     if (clock.now + ms > timer.callAt) {
                         timer.callAt = clock.now + ms;
                     }
-                }
+                });
                 // Rebuild heap as order might have changed
-                clock.timerHeap = new TimerHeap();
-                for (const timer of activeTimers(clock)) {
-                    clock.timerHeap.push(timer);
-                }
+                rebuildTimerHeap(clock);
             }
             clock.tick(ms);
             return clock.now;
