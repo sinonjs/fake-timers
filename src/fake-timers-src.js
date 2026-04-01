@@ -1891,14 +1891,27 @@ function withGlobal(_global) {
             const state = createTickState(tickValue);
 
             nanos = state.nanosTotal;
-            // ESLint fails to detect this correctly
-            /* eslint-disable prefer-const */
-            let nextPromiseTick, compensationCheck;
-            /* eslint-enable prefer-const */
-
             clock.duringTick = true;
 
             runInitialJobs(state);
+
+            const compensationCheck = function () {
+                applyClockChangeCompensation(state, state.oldNow, {
+                    includePrevious: true,
+                });
+            };
+
+            const nextPromiseTick =
+                isAsync &&
+                function () {
+                    try {
+                        compensationCheck();
+                        selectNextTimerInRange(state);
+                        doTickInner();
+                    } catch (e) {
+                        reject(e);
+                    }
+                };
 
             //eslint-disable-next-line jsdoc/require-jsdoc
             function doTickInner() {
@@ -1918,24 +1931,6 @@ function withGlobal(_global) {
 
                 return finalizeTick(state, isAsync, resolve);
             }
-
-            nextPromiseTick =
-                isAsync &&
-                function () {
-                    try {
-                        compensationCheck();
-                        selectNextTimerInRange(state);
-                        doTickInner();
-                    } catch (e) {
-                        reject(e);
-                    }
-                };
-
-            compensationCheck = function () {
-                applyClockChangeCompensation(state, state.oldNow, {
-                    includePrevious: true,
-                });
-            };
 
             return doTickInner();
         }
