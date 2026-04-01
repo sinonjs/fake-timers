@@ -1943,26 +1943,6 @@ function withGlobal(_global) {
             return doTick(tickValue, false);
         };
 
-        if (typeof _global.Promise !== "undefined") {
-            /**
-             * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
-             * @returns {Promise}
-             */
-            clock.tickAsync = function tickAsync(tickValue) {
-                return pauseAutoTickUntilFinished(
-                    new _global.Promise(function (resolve, reject) {
-                        originalSetTimeout(function () {
-                            try {
-                                doTick(tickValue, true, resolve, reject);
-                            } catch (e) {
-                                reject(e);
-                            }
-                        });
-                    }),
-                );
-            };
-        }
-
         clock.next = function next() {
             runJobs(clock);
             const timer = firstTimer(clock);
@@ -1981,41 +1961,57 @@ function withGlobal(_global) {
             }
         };
 
+        function runAsyncWithNativeTimeout(callback) {
+            return pauseAutoTickUntilFinished(
+                new _global.Promise(function (resolve, reject) {
+                    originalSetTimeout(function () {
+                        try {
+                            callback(resolve, reject);
+                        } catch (e) {
+                            reject(e);
+                        }
+                    });
+                }),
+            );
+        }
+
         if (typeof _global.Promise !== "undefined") {
+            /**
+             * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
+             * @returns {Promise}
+             */
+            clock.tickAsync = function tickAsync(tickValue) {
+                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                    doTick(tickValue, true, resolve, reject);
+                });
+            };
+
             clock.nextAsync = function nextAsync() {
-                return pauseAutoTickUntilFinished(
-                    new _global.Promise(function (resolve, reject) {
-                        originalSetTimeout(function () {
-                            try {
-                                const timer = firstTimer(clock);
-                                if (!timer) {
-                                    resolve(clock.now);
-                                    return;
-                                }
+                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                    const timer = firstTimer(clock);
+                    if (!timer) {
+                        resolve(clock.now);
+                        return;
+                    }
 
-                                let err;
-                                clock.duringTick = true;
-                                clock.now = timer.callAt;
-                                try {
-                                    callTimer(clock, timer);
-                                } catch (e) {
-                                    err = e;
-                                }
-                                clock.duringTick = false;
+                    let err;
+                    clock.duringTick = true;
+                    clock.now = timer.callAt;
+                    try {
+                        callTimer(clock, timer);
+                    } catch (e) {
+                        err = e;
+                    }
+                    clock.duringTick = false;
 
-                                originalSetTimeout(function () {
-                                    if (err) {
-                                        reject(err);
-                                    } else {
-                                        resolve(clock.now);
-                                    }
-                                });
-                            } catch (e) {
-                                reject(e);
-                            }
-                        });
-                    }),
-                );
+                    originalSetTimeout(function () {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(clock.now);
+                        }
+                    });
+                });
             };
         }
 
