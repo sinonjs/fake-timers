@@ -768,6 +768,24 @@ function withGlobal(_global) {
     }
 
     /**
+     * Ensure timer storage and heap stay in sync even if a clear path touches
+     * timer state before anything has been scheduled.
+     * @param {Clock} clock
+     */
+    function ensureTimerState(clock) {
+        if (!clock.timers) {
+            clock.timers = {};
+        }
+
+        if (!clock.timerHeap) {
+            clock.timerHeap = new TimerHeap();
+            for (const timer of Object.values(clock.timers)) {
+                clock.timerHeap.push(timer);
+            }
+        }
+    }
+
+    /**
      * @param {Clock} clock
      * @param {Timer} timer
      * @returns {number} id of the created timer
@@ -824,10 +842,7 @@ function withGlobal(_global) {
             timer.requestIdleCallback = true;
         }
 
-        if (!clock.timers) {
-            clock.timers = {};
-            clock.timerHeap = new TimerHeap();
-        }
+        ensureTimerState(clock);
 
         while (clock.timers && clock.timers[uniqueTimerId]) {
             uniqueTimerId++;
@@ -1083,9 +1098,7 @@ function withGlobal(_global) {
             return;
         }
 
-        if (!clock.timers) {
-            clock.timers = {};
-        }
+        ensureTimerState(clock);
 
         // in Node, the ID is stored as the primitive value for `Timeout` objects
         // for `Immediate` objects, no ID exists, so it gets coerced to NaN
