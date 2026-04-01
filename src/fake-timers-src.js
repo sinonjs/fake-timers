@@ -796,6 +796,27 @@ function withGlobal(_global) {
         }
     }
 
+    function hasTimer(clock, id) {
+        return clock.timers ? clock.timers.has(id) : false;
+    }
+
+    function getTimer(clock, id) {
+        return clock.timers ? clock.timers.get(id) : undefined;
+    }
+
+    function setTimer(clock, timer) {
+        ensureTimerState(clock);
+        clock.timers.set(timer.id, timer);
+    }
+
+    function deleteTimer(clock, id) {
+        return clock.timers ? clock.timers.delete(id) : false;
+    }
+
+    function activeTimers(clock) {
+        return clock.timers ? clock.timers.values() : [];
+    }
+
     /**
      * @param {Clock} clock
      * @param {Timer} timer
@@ -855,7 +876,7 @@ function withGlobal(_global) {
 
         ensureTimerState(clock);
 
-        while (clock.timers.has(uniqueTimerId)) {
+        while (hasTimer(clock, uniqueTimerId)) {
             uniqueTimerId++;
             if (uniqueTimerId >= Number.MAX_SAFE_INTEGER) {
                 uniqueTimerId = idCounterStart;
@@ -872,7 +893,7 @@ function withGlobal(_global) {
         timer.callAt =
             clock.now + (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
-        clock.timers.set(timer.id, timer);
+        setTimer(clock, timer);
         clock.timerHeap.push(timer);
 
         if (addTimerReturnsObject) {
@@ -896,7 +917,7 @@ function withGlobal(_global) {
 
                     clock.timerHeap.remove(timer);
                     timer.order = uniqueTimerOrder++;
-                    clock.timers.set(timer.id, timer);
+                    setTimer(clock, timer);
                     clock.timerHeap.push(timer);
 
                     return this;
@@ -1050,7 +1071,7 @@ function withGlobal(_global) {
             timer.order = uniqueTimerOrder++;
             clock.timerHeap.push(timer);
         } else {
-            clock.timers.delete(timer.id);
+            deleteTimer(clock, timer.id);
             clock.timerHeap.remove(timer);
         }
 
@@ -1138,15 +1159,15 @@ function withGlobal(_global) {
             );
         }
 
-        if (clock.timers.has(id)) {
+        if (hasTimer(clock, id)) {
             // check that the ID matches a timer of the correct type
-            const timer = clock.timers.get(id);
+            const timer = getTimer(clock, id);
             if (
                 timer.type === ttype ||
                 (timer.type === "Timeout" && ttype === "Interval") ||
                 (timer.type === "Interval" && ttype === "Timeout")
             ) {
-                clock.timers.delete(id);
+                deleteTimer(clock, id);
                 clock.timerHeap.remove(timer);
             } else {
                 const clear = getClearHandler(ttype);
@@ -1749,7 +1770,7 @@ function withGlobal(_global) {
                 timer = firstTimerInRange(clock, tickFrom, tickTo);
                 // eslint-disable-next-line no-unmodified-loop-condition
                 while (timer && tickFrom <= tickTo) {
-                    if (clock.timers.has(timer.id)) {
+                    if (hasTimer(clock, timer.id)) {
                         tickFrom = timer.callAt;
                         clock.now = timer.callAt;
                         oldNow = clock.now;
@@ -2058,7 +2079,7 @@ function withGlobal(_global) {
 
             // update timers and intervals to keep them stable
             if (clock.timers) {
-                for (const timer of clock.timers.values()) {
+                for (const timer of activeTimers(clock)) {
                     timer.createdAt += difference;
                     timer.callAt += difference;
                 }
@@ -2077,14 +2098,14 @@ function withGlobal(_global) {
             const ms = Math.floor(msFloat);
 
             if (clock.timers) {
-                for (const timer of clock.timers.values()) {
+                for (const timer of activeTimers(clock)) {
                     if (clock.now + ms > timer.callAt) {
                         timer.callAt = clock.now + ms;
                     }
                 }
                 // Rebuild heap as order might have changed
                 clock.timerHeap = new TimerHeap();
-                for (const timer of clock.timers.values()) {
+                for (const timer of activeTimers(clock)) {
                     clock.timerHeap.push(timer);
                 }
             }
