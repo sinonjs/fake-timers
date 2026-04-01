@@ -6188,7 +6188,9 @@ describe("loop limit stack trace", function () {
         beforeEach(function () {
             let id;
             function recursiveCreateTimer() {
-                if (id) clearInterval(id);
+                if (id) {
+                    clearInterval(id);
+                }
                 id = setInterval(function recursiveCreateTimerTimeout() {
                     recursiveCreateTimer();
                 }, 10);
