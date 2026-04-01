@@ -2043,54 +2043,47 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             clock.runAllAsync = function runAllAsync() {
-                return pauseAutoTickUntilFinished(
-                    new _global.Promise(function (resolve, reject) {
-                        let i = 0;
-                        /**
-                         *
-                         */
-                        function doRun() {
+                let i = 0;
+                function doRun(resolve, reject) {
+                    try {
+                        runJobs(clock);
+
+                        let numTimers;
+                        if (i < clock.loopLimit) {
+                            if (!clock.timerHeap) {
+                                resetIsNearInfiniteLimit();
+                                resolve(clock.now);
+                                return;
+                            }
+
+                            numTimers = clock.timerHeap.timers.length;
+                            if (numTimers === 0) {
+                                resetIsNearInfiniteLimit();
+                                resolve(clock.now);
+                                return;
+                            }
+
+                            clock.next();
+
+                            i++;
+
                             originalSetTimeout(function () {
-                                try {
-                                    runJobs(clock);
-
-                                    let numTimers;
-                                    if (i < clock.loopLimit) {
-                                        if (!clock.timerHeap) {
-                                            resetIsNearInfiniteLimit();
-                                            resolve(clock.now);
-                                            return;
-                                        }
-
-                                        numTimers =
-                                            clock.timerHeap.timers.length;
-                                        if (numTimers === 0) {
-                                            resetIsNearInfiniteLimit();
-                                            resolve(clock.now);
-                                            return;
-                                        }
-
-                                        clock.next();
-
-                                        i++;
-
-                                        doRun();
-                                        checkIsNearInfiniteLimit(clock, i);
-                                        return;
-                                    }
-
-                                    const excessJob = firstTimer(clock);
-                                    reject(
-                                        getInfiniteLoopError(clock, excessJob),
-                                    );
-                                } catch (e) {
-                                    reject(e);
-                                }
+                                doRun(resolve, reject);
                             });
+                            checkIsNearInfiniteLimit(clock, i);
+                            return;
                         }
-                        doRun();
-                    }),
-                );
+
+                        const excessJob = firstTimer(clock);
+                        reject(getInfiniteLoopError(clock, excessJob));
+                    } catch (e) {
+                        reject(e);
+                    }
+                }
+
+                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                    doRun(resolve, reject);
+                });
             };
         }
 
@@ -2106,25 +2099,16 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             clock.runToLastAsync = function runToLastAsync() {
-                return pauseAutoTickUntilFinished(
-                    new _global.Promise(function (resolve, reject) {
-                        originalSetTimeout(function () {
-                            try {
-                                const timer = lastTimer(clock);
-                                if (!timer) {
-                                    runJobs(clock);
-                                    resolve(clock.now);
-                                }
+                return runAsyncWithNativeTimeout(function (resolve) {
+                    const timer = lastTimer(clock);
+                    if (!timer) {
+                        runJobs(clock);
+                        resolve(clock.now);
+                        return;
+                    }
 
-                                resolve(
-                                    clock.tickAsync(timer.callAt - clock.now),
-                                );
-                            } catch (e) {
-                                reject(e);
-                            }
-                        });
-                    }),
-                );
+                    resolve(clock.tickAsync(timer.callAt - clock.now));
+                });
             };
         }
 
