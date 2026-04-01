@@ -772,7 +772,7 @@ function withGlobal(_global) {
      * timer state before anything has been scheduled.
      *
      * Why do we need two data structures to keep tabs on timers?
-     * 1. Fast ID Lookup (clock.timers): This is a simple object mapping timer IDs to their respective timer objects. It allows clearTimeout(id) and
+     * 1. Fast ID Lookup (clock.timers): This is a Map from timer IDs to their respective timer objects. It allows clearTimeout(id) and
      * clearInterval(id) to be $O(1)$ operations. Without this map, finding a specific timer in the heap to remove it would require a linear
      * $O(n)$ search, which would significantly degrade performance as the number of active timers grows.
      * 2. Efficient Scheduling (clock.timerHeap): This is a priority queue (min-heap) that keeps timers ordered by their execution time (callAt). It
@@ -785,12 +785,12 @@ function withGlobal(_global) {
      */
     function ensureTimerState(clock) {
         if (!clock.timers) {
-            clock.timers = {};
+            clock.timers = new Map();
         }
 
         if (!clock.timerHeap) {
             clock.timerHeap = new TimerHeap();
-            for (const timer of Object.values(clock.timers)) {
+            for (const timer of clock.timers.values()) {
                 clock.timerHeap.push(timer);
             }
         }
@@ -855,7 +855,7 @@ function withGlobal(_global) {
 
         ensureTimerState(clock);
 
-        while (clock.timers && clock.timers[uniqueTimerId]) {
+        while (clock.timers.has(uniqueTimerId)) {
             uniqueTimerId++;
             if (uniqueTimerId >= Number.MAX_SAFE_INTEGER) {
                 uniqueTimerId = idCounterStart;
@@ -872,7 +872,7 @@ function withGlobal(_global) {
         timer.callAt =
             clock.now + (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
-        clock.timers[timer.id] = timer;
+        clock.timers.set(timer.id, timer);
         clock.timerHeap.push(timer);
 
         if (addTimerReturnsObject) {
@@ -896,7 +896,7 @@ function withGlobal(_global) {
 
                     clock.timerHeap.remove(timer);
                     timer.order = uniqueTimerOrder++;
-                    clock.timers[timer.id] = timer;
+                    clock.timers.set(timer.id, timer);
                     clock.timerHeap.push(timer);
 
                     return this;
@@ -1050,7 +1050,7 @@ function withGlobal(_global) {
             timer.order = uniqueTimerOrder++;
             clock.timerHeap.push(timer);
         } else {
-            delete clock.timers[timer.id];
+            clock.timers.delete(timer.id);
             clock.timerHeap.remove(timer);
         }
 
@@ -1138,15 +1138,15 @@ function withGlobal(_global) {
             );
         }
 
-        if (Object.prototype.hasOwnProperty.call(clock.timers, id)) {
+        if (clock.timers.has(id)) {
             // check that the ID matches a timer of the correct type
-            const timer = clock.timers[id];
+            const timer = clock.timers.get(id);
             if (
                 timer.type === ttype ||
                 (timer.type === "Timeout" && ttype === "Interval") ||
                 (timer.type === "Interval" && ttype === "Timeout")
             ) {
-                delete clock.timers[id];
+                clock.timers.delete(id);
                 clock.timerHeap.remove(timer);
             } else {
                 const clear = getClearHandler(ttype);
@@ -1749,7 +1749,7 @@ function withGlobal(_global) {
                 timer = firstTimerInRange(clock, tickFrom, tickTo);
                 // eslint-disable-next-line no-unmodified-loop-condition
                 while (timer && tickFrom <= tickTo) {
-                    if (clock.timers[timer.id]) {
+                    if (clock.timers.has(timer.id)) {
                         tickFrom = timer.callAt;
                         clock.now = timer.callAt;
                         oldNow = clock.now;
@@ -2039,7 +2039,7 @@ function withGlobal(_global) {
 
         clock.reset = function reset() {
             nanos = 0;
-            clock.timers = {};
+            clock.timers = new Map();
             clock.timerHeap = new TimerHeap();
             clock.jobs = [];
             clock.now = start;
@@ -2049,7 +2049,6 @@ function withGlobal(_global) {
             // determine time difference
             const newNow = getEpoch(systemTime);
             const difference = newNow - clock.now;
-            let id, timer;
 
             adjustedSystemTime[0] = adjustedSystemTime[0] + difference;
             adjustedSystemTime[1] = adjustedSystemTime[1] + nanos;
@@ -2058,9 +2057,8 @@ function withGlobal(_global) {
             nanos = 0;
 
             // update timers and intervals to keep them stable
-            for (id in clock.timers) {
-                if (Object.prototype.hasOwnProperty.call(clock.timers, id)) {
-                    timer = clock.timers[id];
+            if (clock.timers) {
+                for (const timer of clock.timers.values()) {
                     timer.createdAt += difference;
                     timer.callAt += difference;
                 }
@@ -2079,14 +2077,14 @@ function withGlobal(_global) {
             const ms = Math.floor(msFloat);
 
             if (clock.timers) {
-                for (const timer of Object.values(clock.timers)) {
+                for (const timer of clock.timers.values()) {
                     if (clock.now + ms > timer.callAt) {
                         timer.callAt = clock.now + ms;
                     }
                 }
                 // Rebuild heap as order might have changed
                 clock.timerHeap = new TimerHeap();
-                for (const timer of Object.values(clock.timers)) {
+                for (const timer of clock.timers.values()) {
                     clock.timerHeap.push(timer);
                 }
             }
