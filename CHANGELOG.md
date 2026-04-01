@@ -1,4 +1,10 @@
 
+15.2.1 / 2026-04-01
+==================
+
+  * fix: restore timer heap initialization after clearTimeout
+  * document why two data structures (map and heap) are needed
+
 15.2.0 / 2026-03-31
 ==================
 
