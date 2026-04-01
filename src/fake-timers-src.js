@@ -1975,6 +1975,42 @@ function withGlobal(_global) {
             );
         }
 
+        clock.runAll = function runAll() {
+            runJobs(clock);
+            for (let i = 0; i < clock.loopLimit; i++) {
+                if (!clock.timers) {
+                    resetIsNearInfiniteLimit();
+                    return clock.now;
+                }
+
+                const numTimers = clock.timerHeap.timers.length;
+                if (numTimers === 0) {
+                    resetIsNearInfiniteLimit();
+                    return clock.now;
+                }
+
+                clock.next();
+                checkIsNearInfiniteLimit(clock, i);
+            }
+
+            const excessJob = firstTimer(clock);
+            throw getInfiniteLoopError(clock, excessJob);
+        };
+
+        clock.runToFrame = function runToFrame() {
+            return clock.tick(getTimeToNextFrame());
+        };
+
+        clock.runToLast = function runToLast() {
+            const timer = lastTimer(clock);
+            if (!timer) {
+                runJobs(clock);
+                return clock.now;
+            }
+
+            return clock.tick(timer.callAt - clock.now);
+        };
+
         if (typeof _global.Promise !== "undefined") {
             /**
              * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
@@ -2013,35 +2049,7 @@ function withGlobal(_global) {
                     });
                 });
             };
-        }
 
-        clock.runAll = function runAll() {
-            runJobs(clock);
-            for (let i = 0; i < clock.loopLimit; i++) {
-                if (!clock.timers) {
-                    resetIsNearInfiniteLimit();
-                    return clock.now;
-                }
-
-                const numTimers = clock.timerHeap.timers.length;
-                if (numTimers === 0) {
-                    resetIsNearInfiniteLimit();
-                    return clock.now;
-                }
-
-                clock.next();
-                checkIsNearInfiniteLimit(clock, i);
-            }
-
-            const excessJob = firstTimer(clock);
-            throw getInfiniteLoopError(clock, excessJob);
-        };
-
-        clock.runToFrame = function runToFrame() {
-            return clock.tick(getTimeToNextFrame());
-        };
-
-        if (typeof _global.Promise !== "undefined") {
             clock.runAllAsync = function runAllAsync() {
                 let i = 0;
                 function doRun(resolve, reject) {
@@ -2085,19 +2093,7 @@ function withGlobal(_global) {
                     doRun(resolve, reject);
                 });
             };
-        }
 
-        clock.runToLast = function runToLast() {
-            const timer = lastTimer(clock);
-            if (!timer) {
-                runJobs(clock);
-                return clock.now;
-            }
-
-            return clock.tick(timer.callAt - clock.now);
-        };
-
-        if (typeof _global.Promise !== "undefined") {
             clock.runToLastAsync = function runToLastAsync() {
                 return runAsyncWithNativeTimeout(function (resolve) {
                     const timer = lastTimer(clock);
