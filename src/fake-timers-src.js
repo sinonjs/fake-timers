@@ -1784,6 +1784,29 @@ function withGlobal(_global) {
             };
         }
 
+        function applyClockChangeCompensation(state, oldNow, options) {
+            if (oldNow !== clock.now) {
+                const difference = clock.now - oldNow;
+                state.tickFrom += difference;
+                state.tickTo += difference;
+                if (options && options.includePrevious) {
+                    state.previous += difference;
+                }
+            }
+        }
+
+        function runInitialJobs(state) {
+            state.oldNow = clock.now;
+            runJobs(clock);
+            applyClockChangeCompensation(state, state.oldNow);
+        }
+
+        function runPostLoopJobs(state) {
+            state.oldNow = clock.now;
+            runJobs(clock);
+            applyClockChangeCompensation(state, state.oldNow);
+        }
+
         function doTick(tickValue, isAsync, resolve, reject) {
             const state = createTickState(tickValue);
 
@@ -1795,14 +1818,7 @@ function withGlobal(_global) {
 
             clock.duringTick = true;
 
-            // perform microtasks
-            state.oldNow = clock.now;
-            runJobs(clock);
-            if (state.oldNow !== clock.now) {
-                // compensate for any setSystemTime() call during microtask callback
-                state.tickFrom += clock.now - state.oldNow;
-                state.tickTo += clock.now - state.oldNow;
-            }
+            runInitialJobs(state);
 
             //eslint-disable-next-line jsdoc/require-jsdoc
             function doTickInner() {
@@ -1839,14 +1855,7 @@ function withGlobal(_global) {
                     postTimerCall();
                 }
 
-                // perform process.nextTick()s again
-                state.oldNow = clock.now;
-                runJobs(clock);
-                if (state.oldNow !== clock.now) {
-                    // compensate for any setSystemTime() call during process.nextTick() callback
-                    state.tickFrom += clock.now - state.oldNow;
-                    state.tickTo += clock.now - state.oldNow;
-                }
+                runPostLoopJobs(state);
                 clock.duringTick = false;
 
                 // corner case: during runJobs new timers were scheduled which could be in the range [clock.now, tickTo]
@@ -1892,12 +1901,9 @@ function withGlobal(_global) {
                 };
 
             compensationCheck = function () {
-                // compensate for any setSystemTime() call during timer callback
-                if (state.oldNow !== clock.now) {
-                    state.tickFrom += clock.now - state.oldNow;
-                    state.tickTo += clock.now - state.oldNow;
-                    state.previous += clock.now - state.oldNow;
-                }
+                applyClockChangeCompensation(state, state.oldNow, {
+                    includePrevious: true,
+                });
             };
 
             postTimerCall = function () {
