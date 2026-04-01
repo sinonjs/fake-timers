@@ -1,4 +1,10 @@
 
+15.2.2-alpha / 2026-04-01
+==================
+
+  * fix: ignore Node 'timers' modules for browser bundlers (#489)
+  * loads of refactorings
+
 15.2.1 / 2026-04-01
 ==================
 
