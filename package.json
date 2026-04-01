@@ -29,8 +29,12 @@
     "preversion": "./scripts/preversion.sh",
     "version": "./scripts/version.sh",
     "postversion": "./scripts/postversion.sh",
-    "prepare": "husky"
+    "prepare": "husky",
+    "types:build": "tsgo -p tsconfig.types.json",
+    "types:check": "tsgo -p tsconfig.types.json --noEmit",
+    "types:smoke": "tsgo -p test/typescript-consumer/tsconfig.json --noEmit"
   },
+  "types": "./types/fake-timers-src.d.ts",
   "lint-staged": {
     "*.{js,css,md}": "prettier --check",
     "*.js": "eslint"
@@ -43,7 +47,8 @@
     "spec": "test/**/*-test.js"
   },
   "files": [
-    "src/"
+    "src/",
+    "types/"
   ],
   "devDependencies": {
     "@mochify/cli": "^1.0.0",
@@ -51,6 +56,8 @@
     "@mochify/driver-webdriver": "^1.0.0",
     "@sinonjs/eslint-config": "^5.0.4",
     "@sinonjs/referee-sinon": "12.0.0",
+    "@types/node": "^25.5.0",
+    "@typescript/native-preview": "^7.0.0-dev.20260401.1",
     "esbuild": "^0.27.3",
     "husky": "^9.1.7",
     "jsdom": "28.1.0",

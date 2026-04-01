@@ -18,6 +18,8 @@ fi
 
 
 npm run lint
+npm run types:build
+npm run types:smoke
 npm test # lints and tests
 
 npm run test-cloud # should not take more than approx 25 seconds

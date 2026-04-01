@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "Node16",
+    "target": "ESNext",
+    "moduleResolution": "node16",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "paths": {
+      "@sinonjs/fake-timers": ["../../types/fake-timers-src.d.ts"]
+    }
+  },
+  "include": ["consume-types.ts"]
+}
