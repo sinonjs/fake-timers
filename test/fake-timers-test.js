@@ -916,6 +916,122 @@ describe("FakeTimers", function () {
                 { message: "Negative ticks are not supported" },
             );
         });
+
+        it("preserves timer ordering when timers are scheduled from nested zero-delay timers", function () {
+            const log = [];
+            this.clock.setTimeout(() => {
+                log.push("A");
+                this.clock.setTimeout(() => {
+                    log.push("C");
+                }, 0);
+            }, 0);
+            this.clock.setTimeout(() => {
+                log.push("B");
+            }, 0);
+
+            this.clock.tick(0);
+            assert.equals(log, ["A", "B"]);
+            this.clock.tick(1);
+            assert.equals(log, ["A", "B", "C"]);
+        });
+
+        it("preserves timer ordering when timers are scheduled from promises", async function () {
+            if (typeof Promise === "undefined") {
+                return;
+            }
+            const log = [];
+            this.clock.setTimeout(() => {
+                log.push("A");
+                Promise.resolve().then(() => {
+                    log.push("P1");
+                    this.clock.setTimeout(() => {
+                        log.push("C");
+                    }, 0);
+                });
+            }, 0);
+            this.clock.setTimeout(() => {
+                log.push("B");
+            }, 0);
+
+            await this.clock.tickAsync(0);
+            assert.equals(log, ["A", "P1", "B"]);
+            await this.clock.tickAsync(1);
+            assert.equals(log, ["A", "P1", "B", "C"]);
+        });
+
+        it("forward setSystemTime during a timer callback", function () {
+            const log = [];
+            this.clock.setTimeout(() => {
+                log.push("A");
+                this.clock.setSystemTime(100);
+            }, 10);
+            this.clock.setTimeout(() => {
+                log.push("B");
+            }, 20);
+
+            this.clock.tick(200);
+            assert.equals(log, ["A", "B"]);
+            assert.equals(this.clock.now, 290);
+        });
+
+        it("forward setSystemTime during a promise/microtask callback", async function () {
+            if (typeof Promise === "undefined") {
+                return;
+            }
+            const log = [];
+            this.clock.setTimeout(() => {
+                log.push("A");
+                Promise.resolve().then(() => {
+                    log.push("P1");
+                    this.clock.setSystemTime(100);
+                });
+            }, 10);
+            this.clock.setTimeout(() => {
+                log.push("B");
+            }, 20);
+
+            await this.clock.tickAsync(200);
+            assert.equals(log, ["A", "P1", "B"]);
+            assert.equals(this.clock.now, 290);
+        });
+
+        it("thrown error during tick with additional timers still in range", function () {
+            const log = [];
+            this.clock.setTimeout(() => {
+                log.push("A");
+                throw new Error("BOOM");
+            }, 10);
+            this.clock.setTimeout(() => {
+                log.push("B");
+            }, 20);
+
+            assert.exception(
+                () => {
+                    this.clock.tick(100);
+                },
+                { message: "BOOM" },
+            );
+
+            assert.equals(log, ["A", "B"]);
+            assert.equals(this.clock.now, 100);
+        });
+
+        it("promise settlement ordering relative to later timers in async mode", async function () {
+            if (typeof Promise === "undefined") {
+                return;
+            }
+            const log = [];
+            this.clock.setTimeout(() => {
+                log.push("T1");
+                Promise.resolve().then(() => log.push("P1"));
+            }, 10);
+            this.clock.setTimeout(() => {
+                log.push("T2");
+            }, 20);
+
+            await this.clock.tickAsync(30);
+            assert.equals(log, ["T1", "P1", "T2"]);
+        });
     });
 
     describe("tickAsync", function () {
@@ -1816,6 +1932,26 @@ describe("FakeTimers", function () {
             this.clock.uninstall();
         });
 
+        it("preserves error propagation", async function () {
+            this.clock.setTimeout(() => {
+                throw new Error("BOOM");
+            }, 10);
+
+            try {
+                await this.clock.nextAsync();
+                throw new Error("Should have thrown");
+            } catch (e) {
+                assert.equals(e.message, "BOOM");
+            }
+            assert.equals(this.clock.now, 10);
+        });
+
+        it("stays side-effect free when no timers", async function () {
+            const now = this.clock.now;
+            await this.clock.nextAsync();
+            assert.equals(this.clock.now, now);
+        });
+
         it("triggers the next timer", function () {
             const stub = sinon.stub();
             this.clock.setTimeout(stub, 100);
@@ -2266,6 +2402,29 @@ describe("FakeTimers", function () {
             }
         });
 
+        it("settles local promises before later timers", async function () {
+            this.clock = FakeTimers.install({ now: 0 });
+            const log = [];
+            this.clock.setTimeout(() => {
+                log.push("T1");
+                Promise.resolve().then(() => log.push("P1"));
+            }, 10);
+            this.clock.setTimeout(() => {
+                log.push("T2");
+            }, 20);
+
+            await this.clock.runAllAsync();
+            assert.equals(log, ["T1", "P1", "T2"]);
+            this.clock.uninstall();
+        });
+
+        it("stays side-effect free when no timers", async function () {
+            this.clock = FakeTimers.createClock();
+            const now = this.clock.now;
+            await this.clock.runAllAsync();
+            assert.equals(this.clock.now, now);
+        });
+
         it("if there are no timers just return", function () {
             this.clock = FakeTimers.createClock();
             return this.clock.runAllAsync();
@@ -2612,6 +2771,29 @@ describe("FakeTimers", function () {
             }
         });
 
+        it("settles local promises before later timers", async function () {
+            this.clock = FakeTimers.install({ now: 0 });
+            const log = [];
+            this.clock.setTimeout(() => {
+                log.push("T1");
+                Promise.resolve().then(() => log.push("P1"));
+            }, 10);
+            this.clock.setTimeout(() => {
+                log.push("T2");
+            }, 20);
+
+            await this.clock.runToLastAsync();
+            assert.equals(log, ["T1", "P1", "T2"]);
+            this.clock.uninstall();
+        });
+
+        it("stays side-effect free when no timers", async function () {
+            this.clock = FakeTimers.createClock();
+            const now = this.clock.now;
+            await this.clock.runToLastAsync();
+            assert.equals(this.clock.now, now);
+        });
+
         it("returns current time when there are no timers", function () {
             this.clock = FakeTimers.createClock();
 
@@ -2938,6 +3120,12 @@ describe("FakeTimers", function () {
             });
 
             assert.equals(this.clock.countTimers(), 1);
+        });
+
+        it("stores timers in a Map once timer state is initialized", function () {
+            this.clock.setTimeout(NOOP, 50);
+
+            assert.equals(this.clock.timers instanceof Map, true);
         });
     });
 
@@ -6378,4 +6566,34 @@ describe("missing timers", function () {
             }, /cannot be faked: 'setInterval'/);
         });
     }
+
+    describe("initialization", function () {
+        beforeEach(function () {
+            this.clock = FakeTimers.createClock();
+        });
+
+        it("clearTimeout works before timer state is initialized", function () {
+            refute.exception(() => {
+                this.clock.clearTimeout(1e12);
+            });
+        });
+
+        it("setSystemTime works before timer state is initialized", function () {
+            refute.exception(() => {
+                this.clock.setSystemTime(1000);
+            });
+        });
+
+        it("jump works before timer state is initialized", function () {
+            refute.exception(() => {
+                this.clock.jump(1000);
+            });
+        });
+
+        it("runAll works before timer state is initialized", function () {
+            refute.exception(() => {
+                this.clock.runAll();
+            });
+        });
+    });
 });

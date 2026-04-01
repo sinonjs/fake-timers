@@ -772,7 +772,7 @@ function withGlobal(_global) {
      * timer state before anything has been scheduled.
      *
      * Why do we need two data structures to keep tabs on timers?
-     * 1. Fast ID Lookup (clock.timers): This is a simple object mapping timer IDs to their respective timer objects. It allows clearTimeout(id) and
+     * 1. Fast ID Lookup (clock.timers): This is a Map from timer IDs to their respective timer objects. It allows clearTimeout(id) and
      * clearInterval(id) to be $O(1)$ operations. Without this map, finding a specific timer in the heap to remove it would require a linear
      * $O(n)$ search, which would significantly degrade performance as the number of active timers grows.
      * 2. Efficient Scheduling (clock.timerHeap): This is a priority queue (min-heap) that keeps timers ordered by their execution time (callAt). It
@@ -785,15 +785,69 @@ function withGlobal(_global) {
      */
     function ensureTimerState(clock) {
         if (!clock.timers) {
-            clock.timers = {};
+            clock.timers = new Map();
+            clock.timerHeap = new TimerHeap();
+        }
+    }
+
+    /**
+     * @param {Clock} clock
+     * @param {number} id
+     * @returns {boolean}
+     */
+    function hasTimer(clock, id) {
+        return clock.timers ? clock.timers.has(id) : false;
+    }
+
+    /**
+     * @param {Clock} clock
+     * @param {number} id
+     * @returns {Timer}
+     */
+    function getTimer(clock, id) {
+        return clock.timers ? clock.timers.get(id) : undefined;
+    }
+
+    /**
+     * @param {Clock} clock
+     * @param {Timer} timer
+     */
+    function setTimer(clock, timer) {
+        ensureTimerState(clock);
+        clock.timers.set(timer.id, timer);
+    }
+
+    /**
+     * @param {Clock} clock
+     * @param {number} id
+     * @returns {boolean}
+     */
+    function deleteTimer(clock, id) {
+        return clock.timers ? clock.timers.delete(id) : false;
+    }
+
+    /**
+     * @param {Clock} clock
+     * @param {Function} callback
+     */
+    function forEachActiveTimer(clock, callback) {
+        if (!clock.timers) {
+            return;
         }
 
-        if (!clock.timerHeap) {
-            clock.timerHeap = new TimerHeap();
-            for (const timer of Object.values(clock.timers)) {
-                clock.timerHeap.push(timer);
-            }
+        for (const timer of clock.timers.values()) {
+            callback(timer);
         }
+    }
+
+    /**
+     * @param {Clock} clock
+     */
+    function rebuildTimerHeap(clock) {
+        clock.timerHeap = new TimerHeap();
+        forEachActiveTimer(clock, (timer) => {
+            clock.timerHeap.push(timer);
+        });
     }
 
     /**
@@ -855,7 +909,7 @@ function withGlobal(_global) {
 
         ensureTimerState(clock);
 
-        while (clock.timers && clock.timers[uniqueTimerId]) {
+        while (hasTimer(clock, uniqueTimerId)) {
             uniqueTimerId++;
             if (uniqueTimerId >= Number.MAX_SAFE_INTEGER) {
                 uniqueTimerId = idCounterStart;
@@ -872,7 +926,7 @@ function withGlobal(_global) {
         timer.callAt =
             clock.now + (parseInt(timer.delay) || (clock.duringTick ? 1 : 0));
 
-        clock.timers[timer.id] = timer;
+        setTimer(clock, timer);
         clock.timerHeap.push(timer);
 
         if (addTimerReturnsObject) {
@@ -896,7 +950,7 @@ function withGlobal(_global) {
 
                     clock.timerHeap.remove(timer);
                     timer.order = uniqueTimerOrder++;
-                    clock.timers[timer.id] = timer;
+                    setTimer(clock, timer);
                     clock.timerHeap.push(timer);
 
                     return this;
@@ -1050,7 +1104,7 @@ function withGlobal(_global) {
             timer.order = uniqueTimerOrder++;
             clock.timerHeap.push(timer);
         } else {
-            delete clock.timers[timer.id];
+            deleteTimer(clock, timer.id);
             clock.timerHeap.remove(timer);
         }
 
@@ -1109,8 +1163,6 @@ function withGlobal(_global) {
             return;
         }
 
-        ensureTimerState(clock);
-
         // in Node, the ID is stored as the primitive value for `Timeout` objects
         // for `Immediate` objects, no ID exists, so it gets coerced to NaN
         const id = Number(timerId);
@@ -1138,15 +1190,15 @@ function withGlobal(_global) {
             );
         }
 
-        if (Object.prototype.hasOwnProperty.call(clock.timers, id)) {
+        if (hasTimer(clock, id)) {
             // check that the ID matches a timer of the correct type
-            const timer = clock.timers[id];
+            const timer = getTimer(clock, id);
             if (
                 timer.type === ttype ||
                 (timer.type === "Timeout" && ttype === "Interval") ||
                 (timer.type === "Interval" && ttype === "Timeout")
             ) {
-                delete clock.timers[id];
+                deleteTimer(clock, id);
                 clock.timerHeap.remove(timer);
             } else {
                 const clear = getClearHandler(ttype);
@@ -1694,12 +1746,9 @@ function withGlobal(_global) {
 
         /**
          * @param {number|string} tickValue milliseconds or a string parseable by parseTime
-         * @param {boolean} isAsync
-         * @param {Function} resolve
-         * @param {Function} reject
-         * @returns {number|undefined} will return the new `now` value or nothing for async
+         * @returns {object} a mutable state object for the tick execution
          */
-        function doTick(tickValue, isAsync, resolve, reject) {
+        function createTickState(tickValue) {
             const msFloat =
                 typeof tickValue === "number"
                     ? tickValue
@@ -1719,122 +1768,201 @@ function withGlobal(_global) {
                 nanosTotal -= 1e6;
             }
 
-            nanos = nanosTotal;
-            let tickFrom = clock.now;
-            let previous = clock.now;
-            // ESLint fails to detect this correctly
-            /* eslint-disable prefer-const */
-            let timer,
-                firstException,
-                oldNow,
-                nextPromiseTick,
-                compensationCheck,
-                postTimerCall;
-            /* eslint-enable prefer-const */
+            return {
+                msFloat: msFloat,
+                ms: ms,
+                nanosTotal: nanosTotal,
+                tickFrom: clock.now,
+                tickTo: tickTo,
+                previous: clock.now,
+                timer: null,
+                firstException: null,
+                oldNow: null,
+            };
+        }
 
+        /**
+         * @param {object} state mutable tick state
+         * @param {number} oldNow the clock.now before some action
+         * @param {object} [options] compensation options
+         * @param {boolean} [options.includePrevious] whether to also update state.previous
+         */
+        function applyClockChangeCompensation(state, oldNow, options) {
+            if (oldNow !== clock.now) {
+                const difference = clock.now - oldNow;
+                state.tickFrom += difference;
+                state.tickTo += difference;
+                if (options && options.includePrevious) {
+                    state.previous += difference;
+                }
+            }
+        }
+
+        /**
+         * @param {object} state mutable tick state
+         */
+        function runInitialJobs(state) {
+            state.oldNow = clock.now;
+            runJobs(clock);
+            applyClockChangeCompensation(state, state.oldNow);
+        }
+
+        /**
+         * @param {object} state mutable tick state
+         */
+        function runPostLoopJobs(state) {
+            state.oldNow = clock.now;
+            runJobs(clock);
+            applyClockChangeCompensation(state, state.oldNow);
+        }
+
+        /**
+         * @param {object} state mutable tick state
+         */
+        function selectNextTimerInRange(state) {
+            state.timer = firstTimerInRange(
+                clock,
+                state.previous,
+                state.tickTo,
+            );
+            state.previous = state.tickFrom;
+        }
+
+        /**
+         * @param {object} state mutable tick state
+         * @param {boolean} isAsync whether this is an async tick
+         * @param {Function} nextPromiseTick callback for async promise settlement
+         * @param {Function} compensationCheck callback for clock change compensation
+         * @returns {boolean} whether an early return was triggered (async mode)
+         */
+        function runTimersInRange(
+            state,
+            isAsync,
+            nextPromiseTick,
+            compensationCheck,
+        ) {
+            state.timer = firstTimerInRange(
+                clock,
+                state.tickFrom,
+                state.tickTo,
+            );
+            // eslint-disable-next-line no-unmodified-loop-condition
+            while (state.timer && state.tickFrom <= state.tickTo) {
+                if (hasTimer(clock, state.timer.id)) {
+                    state.tickFrom = state.timer.callAt;
+                    clock.now = state.timer.callAt;
+                    state.oldNow = clock.now;
+                    try {
+                        runJobs(clock);
+                        callTimer(clock, state.timer);
+                    } catch (e) {
+                        state.firstException = state.firstException || e;
+                    }
+
+                    if (isAsync) {
+                        // finish up after native setImmediate callback to allow
+                        // all native es6 promises to process their callbacks after
+                        // each timer fires.
+                        originalSetTimeout(nextPromiseTick);
+                        return true;
+                    }
+
+                    compensationCheck();
+                }
+
+                selectNextTimerInRange(state);
+            }
+            return false;
+        }
+
+        /**
+         * @param {object} state mutable tick state
+         * @param {boolean} isAsync whether this is an async tick
+         * @param {Function} resolve promise resolve function
+         * @returns {number|undefined} the new clock.now or nothing for async
+         */
+        function finalizeTick(state, isAsync, resolve) {
+            // corner case: during runJobs new timers were scheduled which could be in the range [clock.now, tickTo]
+            state.timer = firstTimerInRange(
+                clock,
+                state.tickFrom,
+                state.tickTo,
+            );
+            if (state.timer) {
+                try {
+                    clock.tick(state.tickTo - clock.now); // do it all again - for the remainder of the requested range
+                } catch (e) {
+                    state.firstException = state.firstException || e;
+                }
+            } else {
+                // no timers remaining in the requested range: move the clock all the way to the end
+                clock.now = state.tickTo;
+
+                // update nanos
+                nanos = state.nanosTotal;
+            }
+            if (state.firstException) {
+                throw state.firstException;
+            }
+
+            if (isAsync) {
+                resolve(clock.now);
+            } else {
+                return clock.now;
+            }
+        }
+
+        /**
+         * @param {number|string} tickValue milliseconds or a string parseable by parseTime
+         * @param {boolean} isAsync whether this is an async tick
+         * @param {Function} [resolve] promise resolve function
+         * @param {Function} [reject] promise reject function
+         * @returns {number|undefined} the new clock.now or nothing for async
+         */
+        function doTick(tickValue, isAsync, resolve, reject) {
+            const state = createTickState(tickValue);
+
+            nanos = state.nanosTotal;
             clock.duringTick = true;
 
-            // perform microtasks
-            oldNow = clock.now;
-            runJobs(clock);
-            if (oldNow !== clock.now) {
-                // compensate for any setSystemTime() call during microtask callback
-                tickFrom += clock.now - oldNow;
-                tickTo += clock.now - oldNow;
-            }
+            runInitialJobs(state);
 
-            //eslint-disable-next-line jsdoc/require-jsdoc
-            function doTickInner() {
-                // perform each timer in the requested range
-                timer = firstTimerInRange(clock, tickFrom, tickTo);
-                // eslint-disable-next-line no-unmodified-loop-condition
-                while (timer && tickFrom <= tickTo) {
-                    if (clock.timers[timer.id]) {
-                        tickFrom = timer.callAt;
-                        clock.now = timer.callAt;
-                        oldNow = clock.now;
-                        try {
-                            runJobs(clock);
-                            callTimer(clock, timer);
-                        } catch (e) {
-                            firstException = firstException || e;
-                        }
+            const compensationCheck = function () {
+                applyClockChangeCompensation(state, state.oldNow, {
+                    includePrevious: true,
+                });
+            };
 
-                        if (isAsync) {
-                            // finish up after native setImmediate callback to allow
-                            // all native es6 promises to process their callbacks after
-                            // each timer fires.
-                            originalSetTimeout(nextPromiseTick);
-                            return;
-                        }
-
-                        compensationCheck();
-                    }
-
-                    postTimerCall();
-                }
-
-                // perform process.nextTick()s again
-                oldNow = clock.now;
-                runJobs(clock);
-                if (oldNow !== clock.now) {
-                    // compensate for any setSystemTime() call during process.nextTick() callback
-                    tickFrom += clock.now - oldNow;
-                    tickTo += clock.now - oldNow;
-                }
-                clock.duringTick = false;
-
-                // corner case: during runJobs new timers were scheduled which could be in the range [clock.now, tickTo]
-                timer = firstTimerInRange(clock, tickFrom, tickTo);
-                if (timer) {
-                    try {
-                        clock.tick(tickTo - clock.now); // do it all again - for the remainder of the requested range
-                    } catch (e) {
-                        firstException = firstException || e;
-                    }
-                } else {
-                    // no timers remaining in the requested range: move the clock all the way to the end
-                    clock.now = tickTo;
-
-                    // update nanos
-                    nanos = nanosTotal;
-                }
-                if (firstException) {
-                    throw firstException;
-                }
-
-                if (isAsync) {
-                    resolve(clock.now);
-                } else {
-                    return clock.now;
-                }
-            }
-
-            nextPromiseTick =
+            const nextPromiseTick =
                 isAsync &&
                 function () {
                     try {
                         compensationCheck();
-                        postTimerCall();
+                        selectNextTimerInRange(state);
                         doTickInner();
                     } catch (e) {
                         reject(e);
                     }
                 };
 
-            compensationCheck = function () {
-                // compensate for any setSystemTime() call during timer callback
-                if (oldNow !== clock.now) {
-                    tickFrom += clock.now - oldNow;
-                    tickTo += clock.now - oldNow;
-                    previous += clock.now - oldNow;
+            //eslint-disable-next-line jsdoc/require-jsdoc
+            function doTickInner() {
+                if (
+                    runTimersInRange(
+                        state,
+                        isAsync,
+                        nextPromiseTick,
+                        compensationCheck,
+                    )
+                ) {
+                    return;
                 }
-            };
 
-            postTimerCall = function () {
-                timer = firstTimerInRange(clock, previous, tickTo);
-                previous = tickFrom;
-            };
+                runPostLoopJobs(state);
+                clock.duringTick = false;
+
+                return finalizeTick(state, isAsync, resolve);
+            }
 
             return doTickInner();
         }
@@ -1846,26 +1974,6 @@ function withGlobal(_global) {
         clock.tick = function tick(tickValue) {
             return doTick(tickValue, false);
         };
-
-        if (typeof _global.Promise !== "undefined") {
-            /**
-             * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
-             * @returns {Promise}
-             */
-            clock.tickAsync = function tickAsync(tickValue) {
-                return pauseAutoTickUntilFinished(
-                    new _global.Promise(function (resolve, reject) {
-                        originalSetTimeout(function () {
-                            try {
-                                doTick(tickValue, true, resolve, reject);
-                            } catch (e) {
-                                reject(e);
-                            }
-                        });
-                    }),
-                );
-            };
-        }
 
         clock.next = function next() {
             runJobs(clock);
@@ -1885,54 +1993,33 @@ function withGlobal(_global) {
             }
         };
 
-        if (typeof _global.Promise !== "undefined") {
-            clock.nextAsync = function nextAsync() {
-                return pauseAutoTickUntilFinished(
-                    new _global.Promise(function (resolve, reject) {
-                        originalSetTimeout(function () {
-                            try {
-                                const timer = firstTimer(clock);
-                                if (!timer) {
-                                    resolve(clock.now);
-                                    return;
-                                }
-
-                                let err;
-                                clock.duringTick = true;
-                                clock.now = timer.callAt;
-                                try {
-                                    callTimer(clock, timer);
-                                } catch (e) {
-                                    err = e;
-                                }
-                                clock.duringTick = false;
-
-                                originalSetTimeout(function () {
-                                    if (err) {
-                                        reject(err);
-                                    } else {
-                                        resolve(clock.now);
-                                    }
-                                });
-                            } catch (e) {
-                                reject(e);
-                            }
-                        });
-                    }),
-                );
-            };
+        /**
+         * @param {Function} callback function to run inside native setTimeout
+         * @returns {Promise}
+         */
+        function runAsyncWithNativeTimeout(callback) {
+            return pauseAutoTickUntilFinished(
+                new _global.Promise(function (resolve, reject) {
+                    originalSetTimeout(function () {
+                        try {
+                            callback(resolve, reject);
+                        } catch (e) {
+                            reject(e);
+                        }
+                    });
+                }),
+            );
         }
 
         clock.runAll = function runAll() {
-            let numTimers, i;
             runJobs(clock);
-            for (i = 0; i < clock.loopLimit; i++) {
+            for (let i = 0; i < clock.loopLimit; i++) {
                 if (!clock.timers) {
                     resetIsNearInfiniteLimit();
                     return clock.now;
                 }
 
-                numTimers = clock.timerHeap.timers.length;
+                const numTimers = clock.timerHeap.timers.length;
                 if (numTimers === 0) {
                     resetIsNearInfiniteLimit();
                     return clock.now;
@@ -1950,59 +2037,6 @@ function withGlobal(_global) {
             return clock.tick(getTimeToNextFrame());
         };
 
-        if (typeof _global.Promise !== "undefined") {
-            clock.runAllAsync = function runAllAsync() {
-                return pauseAutoTickUntilFinished(
-                    new _global.Promise(function (resolve, reject) {
-                        let i = 0;
-                        /**
-                         *
-                         */
-                        function doRun() {
-                            originalSetTimeout(function () {
-                                try {
-                                    runJobs(clock);
-
-                                    let numTimers;
-                                    if (i < clock.loopLimit) {
-                                        if (!clock.timerHeap) {
-                                            resetIsNearInfiniteLimit();
-                                            resolve(clock.now);
-                                            return;
-                                        }
-
-                                        numTimers =
-                                            clock.timerHeap.timers.length;
-                                        if (numTimers === 0) {
-                                            resetIsNearInfiniteLimit();
-                                            resolve(clock.now);
-                                            return;
-                                        }
-
-                                        clock.next();
-
-                                        i++;
-
-                                        doRun();
-                                        checkIsNearInfiniteLimit(clock, i);
-                                        return;
-                                    }
-
-                                    const excessJob = firstTimer(clock);
-                                    reject(
-                                        getInfiniteLoopError(clock, excessJob),
-                                    );
-                                } catch (e) {
-                                    reject(e);
-                                }
-                            });
-                        }
-                        doRun();
-                    }),
-                );
-            };
-        }
-
         clock.runToLast = function runToLast() {
             const timer = lastTimer(clock);
             if (!timer) {
@@ -2014,32 +2048,109 @@ function withGlobal(_global) {
         };
 
         if (typeof _global.Promise !== "undefined") {
-            clock.runToLastAsync = function runToLastAsync() {
-                return pauseAutoTickUntilFinished(
-                    new _global.Promise(function (resolve, reject) {
-                        originalSetTimeout(function () {
-                            try {
-                                const timer = lastTimer(clock);
-                                if (!timer) {
-                                    runJobs(clock);
-                                    resolve(clock.now);
-                                }
+            /**
+             * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
+             * @returns {Promise}
+             */
+            clock.tickAsync = function tickAsync(tickValue) {
+                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                    doTick(tickValue, true, resolve, reject);
+                });
+            };
 
-                                resolve(
-                                    clock.tickAsync(timer.callAt - clock.now),
-                                );
-                            } catch (e) {
-                                reject(e);
+            clock.nextAsync = function nextAsync() {
+                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                    const timer = firstTimer(clock);
+                    if (!timer) {
+                        resolve(clock.now);
+                        return;
+                    }
+
+                    let err;
+                    clock.duringTick = true;
+                    clock.now = timer.callAt;
+                    try {
+                        callTimer(clock, timer);
+                    } catch (e) {
+                        err = e;
+                    }
+                    clock.duringTick = false;
+
+                    originalSetTimeout(function () {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(clock.now);
+                        }
+                    });
+                });
+            };
+
+            clock.runAllAsync = function runAllAsync() {
+                let i = 0;
+                /**
+                 * @param {Function} resolve promise resolve function
+                 * @param {Function} reject promise reject function
+                 */
+                function doRun(resolve, reject) {
+                    try {
+                        runJobs(clock);
+
+                        let numTimers;
+                        if (i < clock.loopLimit) {
+                            if (!clock.timerHeap) {
+                                resetIsNearInfiniteLimit();
+                                resolve(clock.now);
+                                return;
                             }
-                        });
-                    }),
-                );
+
+                            numTimers = clock.timerHeap.timers.length;
+                            if (numTimers === 0) {
+                                resetIsNearInfiniteLimit();
+                                resolve(clock.now);
+                                return;
+                            }
+
+                            clock.next();
+
+                            i++;
+
+                            originalSetTimeout(function () {
+                                doRun(resolve, reject);
+                            });
+                            checkIsNearInfiniteLimit(clock, i);
+                            return;
+                        }
+
+                        const excessJob = firstTimer(clock);
+                        reject(getInfiniteLoopError(clock, excessJob));
+                    } catch (e) {
+                        reject(e);
+                    }
+                }
+
+                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                    doRun(resolve, reject);
+                });
+            };
+
+            clock.runToLastAsync = function runToLastAsync() {
+                return runAsyncWithNativeTimeout(function (resolve) {
+                    const timer = lastTimer(clock);
+                    if (!timer) {
+                        runJobs(clock);
+                        resolve(clock.now);
+                        return;
+                    }
+
+                    resolve(clock.tickAsync(timer.callAt - clock.now));
+                });
             };
         }
 
         clock.reset = function reset() {
             nanos = 0;
-            clock.timers = {};
+            clock.timers = new Map();
             clock.timerHeap = new TimerHeap();
             clock.jobs = [];
             clock.now = start;
@@ -2049,7 +2160,6 @@ function withGlobal(_global) {
             // determine time difference
             const newNow = getEpoch(systemTime);
             const difference = newNow - clock.now;
-            let id, timer;
 
             adjustedSystemTime[0] = adjustedSystemTime[0] + difference;
             adjustedSystemTime[1] = adjustedSystemTime[1] + nanos;
@@ -2058,13 +2168,10 @@ function withGlobal(_global) {
             nanos = 0;
 
             // update timers and intervals to keep them stable
-            for (id in clock.timers) {
-                if (Object.prototype.hasOwnProperty.call(clock.timers, id)) {
-                    timer = clock.timers[id];
-                    timer.createdAt += difference;
-                    timer.callAt += difference;
-                }
-            }
+            forEachActiveTimer(clock, (timer) => {
+                timer.createdAt += difference;
+                timer.callAt += difference;
+            });
         };
 
         /**
@@ -2078,18 +2185,15 @@ function withGlobal(_global) {
                     : parseTime(tickValue);
             const ms = Math.floor(msFloat);
 
-            if (clock.timers) {
-                for (const timer of Object.values(clock.timers)) {
-                    if (clock.now + ms > timer.callAt) {
-                        timer.callAt = clock.now + ms;
-                    }
+            forEachActiveTimer(clock, (timer) => {
+                if (clock.now + ms > timer.callAt) {
+                    timer.callAt = clock.now + ms;
                 }
-                // Rebuild heap as order might have changed
-                clock.timerHeap = new TimerHeap();
-                for (const timer of Object.values(clock.timers)) {
-                    clock.timerHeap.push(timer);
-                }
-            }
+            });
+
+            // Rebuild heap as order might have changed
+            rebuildTimerHeap(clock);
+
             clock.tick(ms);
             return clock.now;
         };
