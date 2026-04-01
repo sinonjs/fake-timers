@@ -1976,15 +1976,14 @@ function withGlobal(_global) {
         }
 
         clock.runAll = function runAll() {
-            let numTimers, i;
             runJobs(clock);
-            for (i = 0; i < clock.loopLimit; i++) {
+            for (let i = 0; i < clock.loopLimit; i++) {
                 if (!clock.timers) {
                     resetIsNearInfiniteLimit();
                     return clock.now;
                 }
 
-                numTimers = clock.timerHeap.timers.length;
+                const numTimers = clock.timerHeap.timers.length;
                 if (numTimers === 0) {
                     resetIsNearInfiniteLimit();
                     return clock.now;
@@ -2126,15 +2125,15 @@ function withGlobal(_global) {
                     : parseTime(tickValue);
             const ms = Math.floor(msFloat);
 
-            if (clock.timers) {
-                forEachActiveTimer(clock, (timer) => {
-                    if (clock.now + ms > timer.callAt) {
-                        timer.callAt = clock.now + ms;
-                    }
-                });
-                // Rebuild heap as order might have changed
-                rebuildTimerHeap(clock);
-            }
+            forEachActiveTimer(clock, (timer) => {
+                if (clock.now + ms > timer.callAt) {
+                    timer.callAt = clock.now + ms;
+                }
+            });
+
+            // Rebuild heap as order might have changed
+            rebuildTimerHeap(clock);
+
             clock.tick(ms);
             return clock.now;
         };

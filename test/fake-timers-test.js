@@ -2939,6 +2939,12 @@ describe("FakeTimers", function () {
 
             assert.equals(this.clock.countTimers(), 1);
         });
+
+        it("stores timers in a Map once timer state is initialized", function () {
+            this.clock.setTimeout(NOOP, 50);
+
+            assert.equals(this.clock.timers instanceof Map, true);
+        });
     });
 
     describe("reset", function () {
