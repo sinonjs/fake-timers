@@ -770,6 +770,17 @@ function withGlobal(_global) {
     /**
      * Ensure timer storage and heap stay in sync even if a clear path touches
      * timer state before anything has been scheduled.
+     *
+     * Why do we need two data structures to keep tabs on timers?
+     * 1. Fast ID Lookup (clock.timers): This is a simple object mapping timer IDs to their respective timer objects. It allows clearTimeout(id) and
+     * clearInterval(id) to be $O(1)$ operations. Without this map, finding a specific timer in the heap to remove it would require a linear
+     * $O(n)$ search, which would significantly degrade performance as the number of active timers grows.
+     * 2. Efficient Scheduling (clock.timerHeap): This is a priority queue (min-heap) that keeps timers ordered by their execution time (callAt). It
+     * allows the library to instantly find the next timer to run (peek() in $O(1)$) and efficiently update the schedule when timers are added or
+     * removed ($O(\log n)$).
+     *
+     * In short: clock.timers provides fast access by ID, while clock.timerHeap provides fast access by Time. Removing either one would make common
+     * operations (like clearing or finding the next timer) much slower.
      * @param {Clock} clock
      */
     function ensureTimerState(clock) {
