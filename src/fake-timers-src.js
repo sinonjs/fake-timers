@@ -1856,6 +1856,37 @@ function withGlobal(_global) {
             return false;
         }
 
+        function finalizeTick(state, isAsync, resolve) {
+            // corner case: during runJobs new timers were scheduled which could be in the range [clock.now, tickTo]
+            state.timer = firstTimerInRange(
+                clock,
+                state.tickFrom,
+                state.tickTo,
+            );
+            if (state.timer) {
+                try {
+                    clock.tick(state.tickTo - clock.now); // do it all again - for the remainder of the requested range
+                } catch (e) {
+                    state.firstException = state.firstException || e;
+                }
+            } else {
+                // no timers remaining in the requested range: move the clock all the way to the end
+                clock.now = state.tickTo;
+
+                // update nanos
+                nanos = state.nanosTotal;
+            }
+            if (state.firstException) {
+                throw state.firstException;
+            }
+
+            if (isAsync) {
+                resolve(clock.now);
+            } else {
+                return clock.now;
+            }
+        }
+
         function doTick(tickValue, isAsync, resolve, reject) {
             const state = createTickState(tickValue);
 
@@ -1885,34 +1916,7 @@ function withGlobal(_global) {
                 runPostLoopJobs(state);
                 clock.duringTick = false;
 
-                // corner case: during runJobs new timers were scheduled which could be in the range [clock.now, tickTo]
-                state.timer = firstTimerInRange(
-                    clock,
-                    state.tickFrom,
-                    state.tickTo,
-                );
-                if (state.timer) {
-                    try {
-                        clock.tick(state.tickTo - clock.now); // do it all again - for the remainder of the requested range
-                    } catch (e) {
-                        state.firstException = state.firstException || e;
-                    }
-                } else {
-                    // no timers remaining in the requested range: move the clock all the way to the end
-                    clock.now = state.tickTo;
-
-                    // update nanos
-                    nanos = state.nanosTotal;
-                }
-                if (state.firstException) {
-                    throw state.firstException;
-                }
-
-                if (isAsync) {
-                    resolve(clock.now);
-                } else {
-                    return clock.now;
-                }
+                return finalizeTick(state, isAsync, resolve);
             }
 
             nextPromiseTick =
