@@ -21,13 +21,7 @@ the [same runtimes](https://sinonjs.org/releases/latest#compatibility-and-suppor
 
 ## Autocomplete, IntelliSense and TypeScript definitions
 
-Version 7 introduced JSDoc to the codebase. This should provide autocomplete and type suggestions in supporting IDEs. If
-you need more elaborate type support, TypeScript definitions for the Sinon projects are independently maintained by the
-Definitely Types community:
-
-```
-npm install -D @types/sinonjs__fake-timers
-```
+`@sinonjs/fake-timers` ships with built-in type definitions generated from JSDoc. This provides autocomplete and type suggestions in supporting IDEs and TypeScript projects without requiring external `@types` packages.
 
 ## Installation
 
@@ -422,3 +416,13 @@ npm test-headless
 ## License
 
 BSD 3-clause "New" or "Revised" License (see LICENSE file)
+
+## Contributing
+
+`@sinonjs/fake-timers` uses JSDoc in `src/fake-timers-src.js` as the source of truth for its public types.
+TypeScript declarations are automatically generated from this file. When contributing changes:
+
+- Update JSDoc annotations in `src/fake-timers-src.js` if the public API changes.
+- Run `npm run types:build` to regenerate the declarations in `types/`.
+- Ensure `npm run types:smoke` still passes to validate the generated types.
+- `tsgo` is used as a parallel validation lane to ensure compatibility with future TypeScript versions.
