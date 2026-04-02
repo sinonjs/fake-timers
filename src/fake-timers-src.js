@@ -381,6 +381,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {Map<number, Timer>} [timers] - internal timer storage
  * @property {any} [timerHeap] - internal timer heap
  * @property {boolean} [duringTick] - internal flag
+ * @property {boolean} isNearInfiniteLimit - internal flag indicating the loop limit is nearly reached
  * @property {any} [attachedInterval] - internal flag
  * @property {any} [tickMode] - internal flag
  * @property {Timer[]} [jobs] - internal flag
