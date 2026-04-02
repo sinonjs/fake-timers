@@ -6186,8 +6186,12 @@ describe("loop limit stack trace", function () {
 
     describe("setInterval", function () {
         beforeEach(function () {
+            let id;
             function recursiveCreateTimer() {
-                setInterval(function recursiveCreateTimerTimeout() {
+                if (id) {
+                    clearInterval(id);
+                }
+                id = setInterval(function recursiveCreateTimerTimeout() {
                     recursiveCreateTimer();
                 }, 10);
             }
@@ -6211,6 +6215,7 @@ describe("loop limit stack trace", function () {
                             `Error: ${expectedMessage}\\s+Interval - recursiveCreateTimerTimeout`,
                         ),
                     );
+                    assert.match(err.stack, /recursiveCreateTimer/);
                 });
         });
 
@@ -6228,6 +6233,7 @@ describe("loop limit stack trace", function () {
                         `Error: ${expectedMessage}\\s+Interval - recursiveCreateTimerTimeout`,
                     ),
                 );
+                assert.match(err.stack, /recursiveCreateTimer/);
             }
             assert.equals(caughtError, true);
         });
