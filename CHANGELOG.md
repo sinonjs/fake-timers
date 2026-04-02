@@ -1,4 +1,9 @@
 
+15.3.0 / 2026-04-02
+==================
+
+  * Fix interval loop-limit stack traces and clock-local isolation (#555)
+
 15.2.2 / 2026-04-01
 ==================
 
