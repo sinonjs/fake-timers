@@ -162,6 +162,7 @@ export type Clock = {
     timers?: Map<number, Timer>;
     timerHeap?: any;
     duringTick?: boolean;
+    isNearInfiniteLimit: boolean;
     attachedInterval?: any;
     tickMode?: any;
     jobs?: Timer[];
@@ -502,6 +503,7 @@ export type NodeImmediate = {
  * @property {Map<number, Timer>} [timers] - internal timer storage
  * @property {any} [timerHeap] - internal timer heap
  * @property {boolean} [duringTick] - internal flag
+ * @property {boolean} isNearInfiniteLimit - internal flag indicating the loop limit is nearly reached
  * @property {any} [attachedInterval] - internal flag
  * @property {any} [tickMode] - internal flag
  * @property {Timer[]} [jobs] - internal flag
