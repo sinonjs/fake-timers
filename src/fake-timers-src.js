@@ -639,7 +639,7 @@ function withGlobal(_global) {
         if (!epoch) {
             return 0;
         }
-        if (epoch instanceof Date) {
+        if (typeof epoch.getTime === "function") {
             return epoch.getTime();
         }
         if (typeof epoch === "number") {
