@@ -40,12 +40,12 @@ const isRunningInWatchMode = ++globalThis.__runs > 1;
 if (typeof require === "function" && typeof module === "object") {
     try {
         timersModule = require("timers");
-    } catch (e) {
+    } catch {
         // ignored
     }
     try {
         timersPromisesModule = require("timers/promises");
-    } catch (e) {
+    } catch {
         // ignored
     }
 }
@@ -3344,7 +3344,6 @@ describe("FakeTimers", function () {
 
         it("creates real Date objects when Date constructor is gone", function () {
             const realDate = new Date();
-            Date = NOOP; // eslint-disable-line no-global-assign
             globalThis.Date = NOOP;
 
             const date = new this.clock.Date();
@@ -3355,7 +3354,6 @@ describe("FakeTimers", function () {
         // issue #510
         it("creates Date objects where the constructor prop matches the original", function () {
             const realDate = new Date();
-            Date = NOOP; // eslint-disable-line no-global-assign
             globalThis.Date = NOOP;
 
             const date = new this.clock.Date();
@@ -4827,21 +4825,21 @@ describe("FakeTimers", function () {
         it("should start at 0n", function () {
             const clock = FakeTimers.createClock(1001);
             const result = clock.hrtime.bigint();
-            assert.same(result, BigInt(0)); // eslint-disable-line
+            assert.same(result, BigInt(0));
         });
 
         it("should run along with clock.tick", function () {
             const clock = FakeTimers.createClock(0);
             clock.tick(5001);
             const result = clock.hrtime.bigint();
-            assert.same(result, BigInt(5.001e9)); // eslint-disable-line
+            assert.same(result, BigInt(5.001e9));
         });
 
         it("should run along with clock.tick when timers set", function () {
             const clock = FakeTimers.createClock(0);
             clock.setTimeout(function () {
                 const result = clock.hrtime.bigint();
-                assert.same(result, BigInt(2.5e9)); // eslint-disable-line
+                assert.same(result, BigInt(2.5e9));
             }, 2500);
             clock.tick(5000);
         });
@@ -4850,17 +4848,17 @@ describe("FakeTimers", function () {
             const clock = FakeTimers.createClock(0);
             clock.setSystemTime(50000);
             const result = clock.hrtime.bigint();
-            assert.same(result, BigInt(0)); // eslint-disable-line
+            assert.same(result, BigInt(0));
         });
 
         it("should move with timeouts", function () {
             const clock = FakeTimers.createClock();
             const result = clock.hrtime.bigint();
-            assert.same(result, BigInt(0)); // eslint-disable-line
+            assert.same(result, BigInt(0));
             clock.setTimeout(function () {}, 1000);
             clock.runAll();
             const result2 = clock.hrtime.bigint();
-            assert.same(result2, BigInt(1e9)); // eslint-disable-line
+            assert.same(result2, BigInt(1e9));
         });
     });
 
@@ -5220,7 +5218,7 @@ describe("FakeTimers", function () {
          * Get property names and original values from timers module.
          * @function
          * @param {string[]} [toFake] timer or API names to inspect
-         * @returns {{propertyName: string, originalValue: any}[]} the original values for each requested property
+         * @returns {{propertyName: string, originalValue: unknown}[]} the original values for each requested property
          */
         function getOriginals(toFake) {
             return toFake.map((propertyName) => ({
@@ -6539,7 +6537,6 @@ describe("missing timers", function () {
         "someWeirdlyNamedFutureTimer",
     ];
 
-    // eslint-disable-next-line mocha/no-setup-in-describe
     timers.forEach((timer) => {
         it(`should throw on encountering timers in toFake not present in "global": [${timer}]`, function () {
             assert.exception(

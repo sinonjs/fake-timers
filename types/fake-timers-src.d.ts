@@ -10,6 +10,15 @@ export type IntervalTickMode = {
     delta?: number;
 };
 export type TimerTickMode = IntervalTickMode | NextAsyncTickMode | ManualTickMode;
+export type FakeTimersFunction = (...args: unknown[]) => unknown;
+export type VoidVarArgsFunc = (...args: unknown[]) => void;
+export type NextTick = (callback: VoidVarArgsFunc, ...args: unknown[]) => void;
+export type SetImmediate = (callback: VoidVarArgsFunc, ...args: unknown[]) => NodeImmediate;
+export type SetTimeout = (callback: VoidVarArgsFunc, delay?: number, ...args: unknown[]) => TimerId;
+export type ClearTimeout = (id?: TimerId) => void;
+export type SetInterval = (callback: VoidVarArgsFunc, delay?: number, ...args: unknown[]) => TimerId;
+export type ClearInterval = (id?: TimerId) => void;
+export type QueueMicrotask = (callback: VoidVarArgsFunc) => void;
 export type TimeRemaining = () => number;
 export type IdleDeadline = {
     didTimeout: boolean;
@@ -17,34 +26,17 @@ export type IdleDeadline = {
 };
 export type RequestIdleCallbackCallback = (deadline: IdleDeadline) => any;
 export type RequestIdleCallback = (callback: RequestIdleCallbackCallback, options?: {
-    timeout: number;
+    timeout?: number;
 }) => number;
-export type FakeMethod = "setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask";
-export type TimerId = number | NodeImmediate | Timer;
-export type NextTick = (callback: VoidVarArgsFunc, ...args: any) => void;
-export type SetImmediate = (callback: VoidVarArgsFunc, ...args: any) => NodeImmediate;
-export type SetTimeout = (callback: VoidVarArgsFunc, delay?: number, ...args: any) => TimerId;
-export type ClearTimeout = (id?: TimerId) => void;
-export type SetInterval = (callback: VoidVarArgsFunc, delay?: number, ...args: any) => TimerId;
-export type ClearInterval = (id?: TimerId) => void;
-export type QueueMicrotask = (callback: VoidVarArgsFunc) => void;
-export type VoidVarArgsFunc = (...args: any) => void;
-export type PerformanceNow = () => number;
-export type Performance = {
-    now: PerformanceNow;
-    mark?: (name: string) => void;
-    measure?: (name: string, start?: string, end?: string) => void;
-    timeOrigin?: number;
-};
-export type AnimationFrameCallback = (time: number) => void;
+export type AnimationFrameCallback = (timestamp: number) => any;
 export type RequestAnimationFrame = (callback: AnimationFrameCallback) => TimerId;
 export type CancelAnimationFrame = (id: TimerId) => void;
 export type CancelIdleCallback = (id: TimerId) => void;
 export type ClearImmediate = (id: NodeImmediate) => void;
 export type CountTimers = () => number;
 export type RunMicrotasks = () => void;
-export type Tick = (tickValue: string | number) => number;
-export type TickAsync = (tickValue: string | number) => Promise<number>;
+export type Tick = (tickValue: number | string) => number;
+export type TickAsync = (tickValue: number | string) => Promise<number>;
 export type Next = () => number;
 export type NextAsync = () => Promise<number>;
 export type RunAll = () => number;
@@ -53,18 +45,62 @@ export type RunAllAsync = () => Promise<number>;
 export type RunToLast = () => number;
 export type RunToLastAsync = () => Promise<number>;
 export type Reset = () => void;
-export type SetSystemTime = (systemTime?: number | Date) => void;
-export type Jump = (ms: number) => number;
+export type SetSystemTime = (now?: number | Date) => void;
+export type Jump = (tickValue: number | string) => number;
 export type Uninstall = () => void;
-export type SetTickMode = (mode: TimerTickMode) => void;
-export type Hrtime = (prevTime?: number[]) => number[];
-export type WithGlobal = (globalObject: any) => FakeTimers;
+export type SetTickMode = (tickModeConfig: SetTickModeConfig) => void;
+export type Hrtime = (prev?: Array<number>) => Array<number>;
+export type WithGlobal = (_global: object) => FakeTimers;
+export type FakeMethod = "setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask";
+export type TimerId = number | NodeImmediate | Timer;
+export type GlobalObject = Record<string, any> & {
+    setTimeout?: SetTimeout;
+    clearTimeout?: ClearTimeout;
+    setInterval?: SetInterval;
+    clearInterval?: ClearInterval;
+    setImmediate?: SetImmediate;
+    clearImmediate?: ClearImmediate;
+    queueMicrotask?: QueueMicrotask;
+    requestAnimationFrame?: RequestAnimationFrame;
+    cancelAnimationFrame?: CancelAnimationFrame;
+    requestIdleCallback?: RequestIdleCallback;
+    cancelIdleCallback?: CancelIdleCallback;
+    process?: any;
+    performance?: any;
+    Performance?: any;
+    Intl?: any;
+    Promise?: typeof Promise;
+    Date: typeof Date & {
+        isFake?: boolean;
+        toSource?: () => string;
+        clock?: any;
+    };
+};
+export type TimerHeap = {
+    timers: Timer[];
+    peek: () => Timer | undefined;
+    push: (timer: Timer) => void;
+    pop: () => Timer | undefined;
+    remove: (timer: Timer) => void;
+};
+export type ClockTickMode = {
+    mode: TickMode;
+    counter: number;
+    delta?: number;
+};
+export type SetTickModeConfig = {
+    mode: TickMode;
+    delta?: number;
+};
+export type IntlWithClock = Record<string, any> & {
+    clock: Clock;
+};
 export type Timers = {
     setTimeout: SetTimeout;
     clearTimeout: ClearTimeout;
     setInterval: SetInterval;
     clearInterval: ClearInterval;
-    Date: Date;
+    Date: typeof Date;
     Intl?: typeof Intl;
     setImmediate?: SetImmediate;
     clearImmediate?: ClearImmediate;
@@ -83,14 +119,14 @@ export type ClockState = {
     previous?: number;
     oldNow?: number | null;
     timer?: Timer;
-    firstException?: any;
+    firstException?: unknown;
     nanosTotal?: number;
     msFloat?: number;
     ms?: number;
 };
 export type TimerInitialProps = {
     func: VoidVarArgsFunc;
-    args?: any[];
+    args?: unknown[];
     type?: 'Timeout' | 'Interval' | 'Immediate' | 'AnimationFrame' | 'IdleCallback';
     delay?: number;
     callAt?: number;
@@ -116,6 +152,8 @@ export type Clock = {
     now: number;
     Date: typeof Date & {
         clock?: Clock;
+        isFake?: boolean;
+        toSource?: () => string;
     };
     loopLimit: number;
     requestIdleCallback: RequestIdleCallback;
@@ -144,29 +182,29 @@ export type Clock = {
     reset: Reset;
     setSystemTime: SetSystemTime;
     jump: Jump;
-    performance: Performance;
+    performance: any;
     hrtime: Hrtime;
     uninstall: Uninstall;
     methods: string[];
     shouldClearNativeTimers?: boolean;
     timersModuleMethods: {
         methodName: string;
-        original: any;
+        original: unknown;
     }[] | undefined;
     timersPromisesModuleMethods: {
         methodName: string;
-        original: any;
+        original: unknown;
     }[] | undefined;
     abortListenerMap: Map<VoidVarArgsFunc, AbortSignal>;
     setTickMode: SetTickMode;
     timers?: Map<number, Timer>;
-    timerHeap?: any;
+    timerHeap?: TimerHeap;
     duringTick?: boolean;
     isNearInfiniteLimit: boolean;
-    attachedInterval?: any;
-    tickMode?: any;
+    attachedInterval?: TimerId;
+    tickMode?: ClockTickMode;
     jobs?: Timer[];
-    Intl?: any;
+    Intl?: IntlWithClock;
 };
 export type Config = {
     now?: number | Date;
@@ -177,7 +215,7 @@ export type Config = {
     advanceTimeDelta?: number;
     shouldClearNativeTimers?: boolean;
     ignoreMissingTimers?: boolean;
-    target?: object;
+    target?: GlobalObject;
 };
 export type Timer = TimerInitialProps;
 export type NodeImmediateHasRef = () => boolean;

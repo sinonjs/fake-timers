@@ -5,7 +5,7 @@ let jsdom;
 if (typeof require === "function" && typeof module === "object") {
     try {
         jsdom = require("jsdom");
-    } catch (e) {
+    } catch {
         // ignored
     }
 }
