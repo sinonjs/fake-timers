@@ -83,6 +83,7 @@
     ]
   },
   "browser": {
+    "vm": false,
     "node:timers": false,
     "node:timers/promises": false,
     "timers": false,
