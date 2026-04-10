@@ -1,4 +1,14 @@
 
+15.3.1 / 2026-04-10
+==================
+
+  * fix: type generation and ensure types are always built
+  * chore(deps): bump basic-ftp from 5.2.0 to 5.2.1 (#560)
+  * Add missing regression test for #561
+  * fix: restore cross-realm Date support in setSystemTime (#561)
+  * fix: correct generated typescript types (#559)
+  * fix: include missing type
+
 15.3.0 / 2026-04-02
 ==================
 
