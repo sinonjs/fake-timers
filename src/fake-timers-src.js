@@ -2925,4 +2925,5 @@ const defaultImplementation = withGlobal(globalObject);
 exports.timers = defaultImplementation.timers;
 exports.createClock = defaultImplementation.createClock;
 exports.install = defaultImplementation.install;
+/** @type {WithGlobal} */
 exports.withGlobal = withGlobal;
