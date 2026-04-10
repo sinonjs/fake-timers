@@ -639,11 +639,11 @@ function withGlobal(_global) {
         if (!epoch) {
             return 0;
         }
-        if (typeof epoch.getTime === "function") {
-            return epoch.getTime();
-        }
         if (typeof epoch === "number") {
             return epoch;
+        }
+        if (typeof epoch.getTime === "function") {
+            return epoch.getTime();
         }
         throw new TypeError("now should be milliseconds since UNIX epoch");
     }
