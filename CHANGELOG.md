@@ -1,4 +1,10 @@
 
+15.3.2 / 2026-04-11
+==================
+This actually changes some typings, so worth pushing
+
+  * upgrade eslint-config (#565)
+
 15.3.1 / 2026-04-10
 ==================
 
