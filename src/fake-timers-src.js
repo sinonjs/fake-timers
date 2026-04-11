@@ -257,6 +257,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @typedef {number | NodeImmediate | Timer} TimerId
  */
 
+/* eslint-disable jsdoc/reject-any-type */
 /**
  * @typedef {Record<string, any> & {
  *   setTimeout?: SetTimeout,
@@ -426,6 +427,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {Timer[]} [jobs] - internal flag
  * @property {IntlWithClock} [Intl] - fake Intl object
  */
+/* eslint-enable jsdoc/reject-any-type */
 
 /**
  * Configuration object for the `install` method.
