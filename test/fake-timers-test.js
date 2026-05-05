@@ -6637,6 +6637,16 @@ describe("missing timers", function () {
             assert.isUndefined(clock.Temporal);
             clock.uninstall();
         });
+
+        it("tick() accepts a TemporalDuration-shaped object even when Temporal is absent from the global", function () {
+            const clock = FakeTimers.createClock(0);
+            // duck-typed Duration: total("millisecond") returns ms, no native Temporal required
+            const duration = {
+                total: ({ unit }) => (unit === "millisecond" ? 5000 : 5),
+            };
+            clock.tick(duration);
+            assert.equals(clock.now, 5000);
+        });
     });
 
     describe("Temporal.Now", function () {

@@ -2085,10 +2085,18 @@ function withGlobal(_global) {
         function durationToMs(duration) {
             // relativeTo uses the real system timezone — fake-timers fakes time, not place.
             // Calendar-unit durations (months, years) will resolve DST/length using the host tz.
-            const relativeTo = NativeTemporal.Instant.fromEpochMilliseconds(
-                clock.now,
-            ).toZonedDateTimeISO(NativeTemporal.Now.timeZoneId());
-            return duration.total({ unit: "millisecond", relativeTo });
+            // When NativeTemporal is absent (duck-typed duration in a Temporal-free env),
+            // omit relativeTo; calendar-unit durations will throw from within .total() itself.
+            const opts =
+                /** @type {{ unit: string, relativeTo?: unknown }} */ ({
+                    unit: "millisecond",
+                });
+            if (NativeTemporal) {
+                opts.relativeTo = NativeTemporal.Instant.fromEpochMilliseconds(
+                    clock.now,
+                ).toZonedDateTimeISO(NativeTemporal.Now.timeZoneId());
+            }
+            return duration.total(opts);
         }
 
         /**
@@ -2100,7 +2108,6 @@ function withGlobal(_global) {
                 return tickValue;
             }
             if (
-                isPresent.Temporal &&
                 tickValue !== null &&
                 typeof tickValue === "object" &&
                 typeof (/** @type {TemporalDuration} */ (tickValue).total) ===
