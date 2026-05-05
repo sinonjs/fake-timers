@@ -6823,7 +6823,7 @@ describe("missing timers", function () {
                     toFake: ["Temporal"],
                     ignoreMissingTimers: true,
                 });
-                refute.defined(clock.Temporal);
+                assert.isUndefined(clock.Temporal);
                 clock.uninstall();
             });
         });
