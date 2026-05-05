@@ -286,9 +286,10 @@ Only available in browser environments, mimicks performance.now().
 ### `clock.tick(time)` / `await clock.tickAsync(time)`
 
 Advance the clock, firing callbacks if necessary. `time` may be the number of
-milliseconds to advance the clock by or a human-readable string. Valid string
-formats are `"08"` for eight seconds, `"01:00"` for one minute and `"02:34:10"`
-for two hours, 34 minutes and ten seconds.
+milliseconds to advance the clock by, a human-readable string, or a
+`Temporal.Duration` (requires Node 26+ or an environment with native Temporal
+support). Valid string formats are `"08"` for eight seconds, `"01:00"` for one
+minute and `"02:34:10"` for two hours, 34 minutes and ten seconds.
 
 The `tickAsync()` will also break the event loop, allowing any scheduled promise
 callbacks to execute _before_ running the timers.

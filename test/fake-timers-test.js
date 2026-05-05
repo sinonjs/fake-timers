@@ -6785,9 +6785,6 @@ describe("missing timers", function () {
                 const customGlobal = {
                     Temporal: globalThis.Temporal,
                     Date: globalThis.Date,
-                    process: globalThis.process,
-                    setTimeout: globalThis.setTimeout,
-                    clearTimeout: globalThis.clearTimeout,
                 };
                 const FT = FakeTimers.withGlobal(customGlobal);
                 const clock = FT.install({

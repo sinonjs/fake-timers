@@ -35,8 +35,8 @@ export type CancelIdleCallback = (id: TimerId) => void;
 export type ClearImmediate = (id: NodeImmediate) => void;
 export type CountTimers = () => number;
 export type RunMicrotasks = () => void;
-export type Tick = (tickValue: number | string) => number;
-export type TickAsync = (tickValue: number | string) => Promise<number>;
+export type Tick = (tickValue: number | string | object) => number;
+export type TickAsync = (tickValue: number | string | object) => Promise<number>;
 export type Next = () => number;
 export type NextAsync = () => Promise<number>;
 export type RunAll = () => number;
@@ -46,12 +46,12 @@ export type RunToLast = () => number;
 export type RunToLastAsync = () => Promise<number>;
 export type Reset = () => void;
 export type SetSystemTime = (now?: number | Date) => void;
-export type Jump = (tickValue: number | string) => number;
+export type Jump = (tickValue: number | string | object) => number;
 export type Uninstall = () => void;
 export type SetTickMode = (tickModeConfig: SetTickModeConfig) => void;
 export type Hrtime = (prev?: Array<number>) => Array<number>;
 export type WithGlobal = (_global: object) => FakeTimers;
-export type FakeMethod = "setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask";
+export type FakeMethod = "setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Temporal";
 export type TimerId = number | NodeImmediate | Timer;
 export type GlobalObject = Record<string, any> & {
     setTimeout?: SetTimeout;
@@ -69,6 +69,7 @@ export type GlobalObject = Record<string, any> & {
     performance?: any;
     Performance?: any;
     Intl?: any;
+    Temporal?: any;
     Promise?: typeof Promise;
     Date: typeof Date & {
         isFake?: boolean;
@@ -102,6 +103,7 @@ export type Timers = {
     clearInterval: ClearInterval;
     Date: typeof Date;
     Intl?: typeof Intl;
+    Temporal?: any;
     setImmediate?: SetImmediate;
     clearImmediate?: ClearImmediate;
     hrtime?: Hrtime;
@@ -205,6 +207,7 @@ export type Clock = {
     tickMode?: ClockTickMode;
     jobs?: Timer[];
     Intl?: IntlWithClock;
+    Temporal?: any;
 };
 export type Config = {
     now?: number | Date;
