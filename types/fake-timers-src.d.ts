@@ -95,6 +95,9 @@ export type SetTickModeConfig = {
 export type IntlWithClock = Record<string, any> & {
     clock: Clock;
 };
+export type PerformanceLike = Record<string, any> & {
+    now: () => number;
+};
 export type Timers = {
     setTimeout: SetTimeout;
     clearTimeout: ClearTimeout;
@@ -106,7 +109,7 @@ export type Timers = {
     clearImmediate?: ClearImmediate;
     hrtime?: Hrtime;
     nextTick?: NextTick;
-    performance?: Performance;
+    performance?: PerformanceLike;
     requestAnimationFrame?: RequestAnimationFrame;
     queueMicrotask?: QueueMicrotask;
     cancelAnimationFrame?: CancelAnimationFrame;

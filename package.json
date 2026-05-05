@@ -33,7 +33,7 @@
     "prepare": "husky",
     "types:build": "tsgo -p tsconfig.types.json",
     "types:check": "tsgo -p tsconfig.types.json --noEmit",
-    "types:smoke": "tsgo -p test/typescript-consumer/tsconfig.json --noEmit"
+    "types:smoke": "tsgo -p test/typescript-consumer/tsconfig.json --noEmit && tsgo -p test/typescript-no-dom-consumer/tsconfig.json --noEmit"
   },
   "types": "./types/fake-timers-src.d.ts",
   "lint-staged": {

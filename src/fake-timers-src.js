@@ -307,6 +307,10 @@ if (typeof require === "function" && typeof module === "object") {
  */
 
 /**
+ * @typedef {Record<string, any> & { now: () => number }} PerformanceLike
+ */
+
+/**
  * @typedef {object} Timers
  * @property {SetTimeout} setTimeout - native `setTimeout`
  * @property {ClearTimeout} clearTimeout - native `clearTimeout`
@@ -318,7 +322,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {ClearImmediate} [clearImmediate] - native `clearImmediate`, if available
  * @property {Hrtime} [hrtime] - native `process.hrtime`, if available
  * @property {NextTick} [nextTick] - native `process.nextTick`, if available
- * @property {Performance} [performance] - native `performance`, if available
+ * @property {PerformanceLike} [performance] - native `performance`, if available
  * @property {RequestAnimationFrame} [requestAnimationFrame] - native `requestAnimationFrame`, if available
  * @property {QueueMicrotask} [queueMicrotask] - whether `queueMicrotask` exists
  * @property {CancelAnimationFrame} [cancelAnimationFrame] - native `cancelAnimationFrame`, if available
