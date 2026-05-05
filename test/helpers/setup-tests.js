@@ -35,7 +35,8 @@ const performanceMarkPresent =
     globalThis.performance && typeof globalThis.performance.mark === "function";
 const temporalPresent =
     typeof globalThis.Temporal !== "undefined" &&
-    typeof globalThis.Temporal.Now !== "undefined";
+    typeof globalThis.Temporal.Now !== "undefined" &&
+    typeof globalThis.Temporal.Instant !== "undefined";
 const setImmediatePresent =
     globalThis.setImmediate && typeof globalThis.setImmediate === "function";
 const utilPromisify = globalThis.process && require("util").promisify;

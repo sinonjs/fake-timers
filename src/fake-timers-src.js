@@ -955,8 +955,13 @@ function withGlobal(_global) {
             },
         };
 
-        const TemporalWithClock = Object.create(null);
-        Object.getOwnPropertyNames(NativeTemporal).forEach((prop) => {
+        const TemporalWithClock = Object.create(
+            Object.getPrototypeOf(NativeTemporal),
+        );
+        [
+            ...Object.getOwnPropertyNames(NativeTemporal),
+            ...Object.getOwnPropertySymbols(NativeTemporal),
+        ].forEach((prop) => {
             Object.defineProperty(
                 TemporalWithClock,
                 prop,
