@@ -35,9 +35,6 @@ export type CancelIdleCallback = (id: TimerId) => void;
 export type ClearImmediate = (id: NodeImmediate) => void;
 export type CountTimers = () => number;
 export type RunMicrotasks = () => void;
-export type TemporalTimelike = {
-    epochMilliseconds: number;
-};
 export type TemporalDuration = {
     years: number;
     months: number;
@@ -49,7 +46,13 @@ export type TemporalDuration = {
     milliseconds: number;
     microseconds: number;
     nanoseconds: number;
-    total(options: { unit: string; relativeTo?: unknown }): number;
+    total: (options: {
+        unit: string;
+        relativeTo?: unknown;
+    }) => number;
+};
+export type TemporalTimelike = {
+    epochMilliseconds: number;
 };
 export type Tick = (tickValue: number | string | TemporalDuration) => number;
 export type TickAsync = (tickValue: number | string | TemporalDuration) => Promise<number>;
