@@ -64,6 +64,26 @@ jobs:
               run: |
                   npm run lint
 
+    types:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: "lts/*"
+                  cache: npm
+            - name: Install dependencies
+              run: |
+                  npm ci
+              env:
+                  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1
+            - name: Type Check
+              run: |
+                  npm run types:check
+            - name: Type Smoke Tests
+              run: |
+                  npm run types:smoke
+
     chromium:
         runs-on: ubuntu-latest
         steps:
