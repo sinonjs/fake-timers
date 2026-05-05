@@ -174,7 +174,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {number} milliseconds - milliseconds component
  * @property {number} microseconds - microseconds component
  * @property {number} nanoseconds - nanoseconds component
- * @property {function({unit: string, relativeTo?: unknown}): number} total - converts to a single unit
+ * @property {(options: {unit: string, relativeTo?: unknown}) => number} total - converts to a single unit
  */
 
 /**
@@ -339,6 +339,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {ClearInterval} clearInterval - native `clearInterval`
  * @property {typeof Date} Date - native `Date`
  * @property {typeof Intl} [Intl] - native `Intl`
+ * @property {any} [Temporal] - native `Temporal`
  * @property {SetImmediate} [setImmediate] - native `setImmediate`, if available
  * @property {ClearImmediate} [clearImmediate] - native `clearImmediate`, if available
  * @property {Hrtime} [hrtime] - native `process.hrtime`, if available
@@ -712,12 +713,16 @@ function withGlobal(_global) {
         if (typeof epoch === "number") {
             return epoch;
         }
-        if (typeof epoch.getTime === "function") {
-            return epoch.getTime();
+        if (typeof (/** @type {Date} */ (epoch).getTime) === "function") {
+            return /** @type {Date} */ (epoch).getTime();
         }
-        if (typeof epoch.epochMilliseconds === "number") {
+        if (
+            typeof (
+                /** @type {TemporalTimelike} */ (epoch).epochMilliseconds
+            ) === "number"
+        ) {
             // Temporal.Instant and Temporal.ZonedDateTime both have epochMilliseconds
-            return epoch.epochMilliseconds;
+            return /** @type {TemporalTimelike} */ (epoch).epochMilliseconds;
         }
         throw new TypeError("now should be milliseconds since UNIX epoch");
     }
@@ -1824,7 +1829,7 @@ function withGlobal(_global) {
     const originalSetInterval = _global.setInterval;
 
     /**
-     * @param {Date|number} [start] the system time - non-integer values are floored
+     * @param {Date|number|TemporalTimelike} [start] the system time - non-integer values are floored
      * @param {number} [loopLimit] maximum number of timers that will be run when calling runAll()
      * @returns {Clock}
      */
@@ -2174,11 +2179,14 @@ function withGlobal(_global) {
                 isPresent.Temporal &&
                 tickValue !== null &&
                 typeof tickValue === "object" &&
-                typeof tickValue.total === "function"
+                typeof (/** @type {TemporalDuration} */ (tickValue).total) ===
+                    "function"
             ) {
-                return durationToMs(tickValue);
+                return durationToMs(
+                    /** @type {TemporalDuration} */ (tickValue),
+                );
             }
-            return parseTime(tickValue);
+            return parseTime(/** @type {string} */ (tickValue));
         }
 
         /**
@@ -2347,7 +2355,7 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {number|string} tickValue milliseconds or a string parseable by parseTime
+         * @param {number|string|TemporalDuration} tickValue milliseconds or a string parseable by parseTime
          * @param {boolean} isAsync whether this is an async tick
          * @param {FakeTimersFunction} [resolve] promise resolve function
          * @param {FakeTimersFunction} [reject] promise reject function
