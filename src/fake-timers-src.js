@@ -162,15 +162,32 @@ if (typeof require === "function" && typeof module === "object") {
  * @returns {void}
  */
 
+/* eslint-disable jsdoc/require-property-description */
+/**
+ * @typedef {object} TemporalDuration
+ * @property {number} years
+ * @property {number} months
+ * @property {number} weeks
+ * @property {number} days
+ * @property {number} hours
+ * @property {number} minutes
+ * @property {number} seconds
+ * @property {number} milliseconds
+ * @property {number} microseconds
+ * @property {number} nanoseconds
+ * @property {function({unit: string, relativeTo?: unknown}): number} total
+ */
+/* eslint-enable jsdoc/require-property-description */
+
 /**
  * @callback Tick
- * @param {number|string|object} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
+ * @param {number|string|TemporalDuration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
  * @returns {number} will return the new `now` value
  */
 
 /**
  * @callback TickAsync
- * @param {number|string|object} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
+ * @param {number|string|TemporalDuration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
  * @returns {Promise<number>}
  */
 
@@ -222,7 +239,7 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * @callback Jump
- * @param {number|string|object} tickValue milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
+ * @param {number|string|TemporalDuration} tickValue milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
  * @returns {number}
  */
 
@@ -905,10 +922,12 @@ function withGlobal(_global) {
     }
 
     //eslint-disable-next-line jsdoc/require-jsdoc
-    function createTemporal(clock) {
+    function createTemporal(clock, getNanos) {
         const fakeNow = {
             instant() {
-                return NativeTemporal.Instant.fromEpochMilliseconds(clock.now);
+                return NativeTemporal.Instant.fromEpochNanoseconds(
+                    BigInt(clock.now) * 1_000_000n + BigInt(getNanos()),
+                );
             },
             timeZoneId() {
                 return NativeTemporal.Now.timeZoneId();
@@ -1872,7 +1891,7 @@ function withGlobal(_global) {
         }
 
         if (isPresent.Temporal) {
-            clock.Temporal = createTemporal(clock);
+            clock.Temporal = createTemporal(clock, () => nanos);
         }
 
         /**
@@ -2118,7 +2137,7 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {number|string|object} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
+         * @param {number|string|TemporalDuration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
          * @returns {ClockState} a mutable state object for the tick execution
          */
         function createTickState(tickValue) {
@@ -2349,7 +2368,7 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {string|number|object} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
+         * @param {string|number|TemporalDuration} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
          * @returns {number} will return the new `now` value
          */
         clock.tick = function tick(tickValue) {
@@ -2430,7 +2449,7 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             /**
-             * @param {string|number|object} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
+             * @param {string|number|TemporalDuration} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
              * @returns {Promise}
              */
             clock.tickAsync = function tickAsync(tickValue) {
@@ -2556,7 +2575,7 @@ function withGlobal(_global) {
         };
 
         /**
-         * @param {string|number|object} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
+         * @param {string|number|TemporalDuration} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
          * @returns {number} the new `now` value
          */
         clock.jump = function jump(tickValue) {
