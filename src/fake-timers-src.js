@@ -2153,7 +2153,9 @@ function withGlobal(_global) {
                 msFloat = tickValue;
             } else if (
                 isPresent.Temporal &&
-                tickValue instanceof NativeTemporal.Duration
+                tickValue !== null &&
+                typeof tickValue === "object" &&
+                typeof tickValue.total === "function"
             ) {
                 msFloat = durationToMs(tickValue);
             } else {
@@ -2591,7 +2593,9 @@ function withGlobal(_global) {
                 msFloat = tickValue;
             } else if (
                 isPresent.Temporal &&
-                tickValue instanceof NativeTemporal.Duration
+                tickValue !== null &&
+                typeof tickValue === "object" &&
+                typeof tickValue.total === "function"
             ) {
                 msFloat = durationToMs(tickValue);
             } else {

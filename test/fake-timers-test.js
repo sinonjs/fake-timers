@@ -6809,6 +6809,19 @@ describe("missing timers", function () {
                 );
             });
 
+            it("clock.tick resolves calendar units (months) using relativeTo", function () {
+                // February has 28 days in 2025; a 1-month duration from 2025-01-31
+                // should land on 2025-02-28, not 2025-03-03
+                const clock = FakeTimers.createClock(
+                    new Date("2025-01-31T00:00:00Z"),
+                );
+                clock.tick(new Temporal.Duration(0, 1)); // 1 month
+                const pdt = clock.Temporal.Now.plainDateISO("UTC");
+                assert.equals(pdt.year, 2025);
+                assert.equals(pdt.month, 2);
+                assert.equals(pdt.day, 28);
+            });
+
             it("clock.tickAsync accepts a Temporal.Duration", async function () {
                 const clock = FakeTimers.install({
                     now: new Date("2025-01-01T00:00:00Z"),
