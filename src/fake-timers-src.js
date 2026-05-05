@@ -162,22 +162,25 @@ if (typeof require === "function" && typeof module === "object") {
  * @returns {void}
  */
 
-/* eslint-disable jsdoc/require-property-description */
 /**
  * @typedef {object} TemporalDuration
- * @property {number} years
- * @property {number} months
- * @property {number} weeks
- * @property {number} days
- * @property {number} hours
- * @property {number} minutes
- * @property {number} seconds
- * @property {number} milliseconds
- * @property {number} microseconds
- * @property {number} nanoseconds
- * @property {function({unit: string, relativeTo?: unknown}): number} total
+ * @property {number} years - years component
+ * @property {number} months - months component
+ * @property {number} weeks - weeks component
+ * @property {number} days - days component
+ * @property {number} hours - hours component
+ * @property {number} minutes - minutes component
+ * @property {number} seconds - seconds component
+ * @property {number} milliseconds - milliseconds component
+ * @property {number} microseconds - microseconds component
+ * @property {number} nanoseconds - nanoseconds component
+ * @property {function({unit: string, relativeTo?: unknown}): number} total - converts to a single unit
  */
-/* eslint-enable jsdoc/require-property-description */
+
+/**
+ * @typedef {object} TemporalTimelike
+ * @property {number} epochMilliseconds - milliseconds since the Unix epoch (present on Temporal.Instant and Temporal.ZonedDateTime)
+ */
 
 /**
  * @callback Tick
@@ -233,7 +236,7 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * @callback SetSystemTime
- * @param {number|Date} [now] initial mocked time, as milliseconds since epoch or a Date
+ * @param {number|Date|TemporalTimelike} [now] initial mocked time, as milliseconds since epoch, a Date, a Temporal.Instant, or a Temporal.ZonedDateTime
  * @returns {void}
  */
 
@@ -377,7 +380,7 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * @callback CreateClockCallback
- * @param {number|Date} [start] initial mocked time, as milliseconds since epoch or a Date
+ * @param {number|Date|TemporalTimelike} [start] initial mocked time, as milliseconds since epoch, a Date, a Temporal.Instant, or a Temporal.ZonedDateTime
  * @param {number} [loopLimit] maximum number of timers run before aborting with an infinite-loop error
  * @returns {Clock}
  */
@@ -451,7 +454,7 @@ if (typeof require === "function" && typeof module === "object") {
 /**
  * Configuration object for the `install` method.
  * @typedef {object} Config
- * @property {number|Date} [now] initial mocked time, as milliseconds since epoch or a Date
+ * @property {number|Date|TemporalTimelike} [now] initial mocked time, as milliseconds since epoch, a Date, a Temporal.Instant, or a Temporal.ZonedDateTime
  * @property {FakeMethod[]} [toFake] method names that should be faked
  * @property {FakeMethod[]} [toNotFake] method names that should remain native
  * @property {number} [loopLimit] maximum number of timers run before aborting with an infinite-loop error
@@ -693,7 +696,7 @@ function withGlobal(_global) {
 
     /**
      * Used to grok the `now` parameter to createClock.
-     * @param {Date|number} epoch the system time
+     * @param {Date|number|TemporalTimelike} epoch the system time
      * @returns {number}
      */
     function getEpoch(epoch) {
@@ -705,6 +708,10 @@ function withGlobal(_global) {
         }
         if (typeof epoch.getTime === "function") {
             return epoch.getTime();
+        }
+        if (typeof epoch.epochMilliseconds === "number") {
+            // Temporal.Instant and Temporal.ZonedDateTime both have epochMilliseconds
+            return epoch.epochMilliseconds;
         }
         throw new TypeError("now should be milliseconds since UNIX epoch");
     }

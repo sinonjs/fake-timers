@@ -6650,6 +6650,34 @@ describe("missing timers", function () {
                 const pd = new clock.Temporal.PlainDate(2025, 1, 1);
                 assert.equals(pd.year, 2025);
             });
+
+            it("createClock accepts a Temporal.Instant as start", function () {
+                const instant = Temporal.Now.instant();
+                const clock = FakeTimers.createClock(instant);
+                assert.equals(clock.now, instant.epochMilliseconds);
+            });
+
+            it("setSystemTime accepts a Temporal.Instant", function () {
+                const clock = FakeTimers.createClock(0);
+                const instant = Temporal.Instant.fromEpochMilliseconds(
+                    new Date("2030-06-01T00:00:00Z").getTime(),
+                );
+                clock.setSystemTime(instant);
+                assert.equals(
+                    clock.Temporal.Now.instant().epochMilliseconds,
+                    instant.epochMilliseconds,
+                );
+            });
+
+            it("setSystemTime accepts a Temporal.ZonedDateTime", function () {
+                const clock = FakeTimers.createClock(0);
+                const zdt = Temporal.Now.zonedDateTimeISO("UTC");
+                clock.setSystemTime(zdt);
+                assert.equals(
+                    clock.Temporal.Now.instant().epochMilliseconds,
+                    zdt.epochMilliseconds,
+                );
+            });
         });
 
         describe("with install/uninstall", function () {

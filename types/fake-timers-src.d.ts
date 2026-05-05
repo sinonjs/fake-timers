@@ -35,6 +35,9 @@ export type CancelIdleCallback = (id: TimerId) => void;
 export type ClearImmediate = (id: NodeImmediate) => void;
 export type CountTimers = () => number;
 export type RunMicrotasks = () => void;
+export type TemporalTimelike = {
+    epochMilliseconds: number;
+};
 export type TemporalDuration = {
     years: number;
     months: number;
@@ -58,7 +61,7 @@ export type RunAllAsync = () => Promise<number>;
 export type RunToLast = () => number;
 export type RunToLastAsync = () => Promise<number>;
 export type Reset = () => void;
-export type SetSystemTime = (now?: number | Date) => void;
+export type SetSystemTime = (now?: number | Date | TemporalTimelike) => void;
 export type Jump = (tickValue: number | string | TemporalDuration) => number;
 export type Uninstall = () => void;
 export type SetTickMode = (tickModeConfig: SetTickModeConfig) => void;
@@ -155,7 +158,7 @@ export type TimerInitialProps = {
     order?: number;
     heapIndex?: number;
 };
-export type CreateClockCallback = (start?: number | Date, loopLimit?: number) => Clock;
+export type CreateClockCallback = (start?: number | Date | TemporalTimelike, loopLimit?: number) => Clock;
 export type InstallCallback = (config?: Config) => Clock;
 export type FakeTimers = {
     timers: Timers;
@@ -223,7 +226,7 @@ export type Clock = {
     Temporal?: any;
 };
 export type Config = {
-    now?: number | Date;
+    now?: number | Date | TemporalTimelike;
     toFake?: FakeMethod[];
     toNotFake?: FakeMethod[];
     loopLimit?: number;
