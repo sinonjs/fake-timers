@@ -3371,6 +3371,17 @@ describe("FakeTimers", function () {
             assert.equals(Object.keys(date).length, 0);
         });
 
+        it("creates Date objects where the constructor prop is not an own property", function () {
+            const date = new this.clock.Date();
+            const date2 = new this.clock.Date();
+
+            assert(
+                Object.getPrototypeOf(date) === Object.getPrototypeOf(date2),
+            );
+
+            assert.equals(Object.getOwnPropertyNames(date).length, 0);
+        });
+
         it("creates Date objects representing clock time", function () {
             const date = new this.clock.Date();
 
