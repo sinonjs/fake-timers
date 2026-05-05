@@ -33,6 +33,9 @@ const performanceNowPresent =
     globalThis.performance && typeof globalThis.performance.now === "function";
 const performanceMarkPresent =
     globalThis.performance && typeof globalThis.performance.mark === "function";
+const temporalPresent =
+    typeof globalThis.Temporal !== "undefined" &&
+    typeof globalThis.Temporal.Now !== "undefined";
 const setImmediatePresent =
     globalThis.setImmediate && typeof globalThis.setImmediate === "function";
 const utilPromisify = globalThis.process && require("util").promisify;
@@ -61,6 +64,7 @@ module.exports = {
     hrtimeBigintPresent,
     performanceNowPresent,
     performanceMarkPresent,
+    temporalPresent,
     setImmediatePresent,
     utilPromisify,
     promisePresent,

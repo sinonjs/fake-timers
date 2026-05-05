@@ -164,13 +164,13 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * @callback Tick
- * @param {number|string} tickValue milliseconds or a string parseable by parseTime
+ * @param {number|string|Temporal.Duration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
  * @returns {number} will return the new `now` value
  */
 
 /**
  * @callback TickAsync
- * @param {number|string} tickValue milliseconds or a string parseable by parseTime
+ * @param {number|string|Temporal.Duration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
  * @returns {Promise<number>}
  */
 
@@ -222,7 +222,7 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * @callback Jump
- * @param {number|string} tickValue milliseconds or a human-readable value like "01:11:15"
+ * @param {number|string|Temporal.Duration} tickValue milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
  * @returns {number}
  */
 
@@ -250,7 +250,7 @@ if (typeof require === "function" && typeof module === "object") {
  */
 
 /**
- * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask"} FakeMethod
+ * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Temporal"} FakeMethod
  */
 
 /**
@@ -275,6 +275,7 @@ if (typeof require === "function" && typeof module === "object") {
  *   performance?: any,
  *   Performance?: any,
  *   Intl?: any,
+ *   Temporal?: any,
  *   Promise?: typeof Promise,
  *   Date: typeof Date & { isFake?: boolean, toSource?: () => string, clock?: any }
  * }} GlobalObject
@@ -426,6 +427,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {ClockTickMode} [tickMode] - internal flag
  * @property {Timer[]} [jobs] - internal flag
  * @property {IntlWithClock} [Intl] - fake Intl object
+ * @property {any} [Temporal] - fake Temporal object
  */
 /* eslint-enable jsdoc/reject-any-type */
 
@@ -541,6 +543,9 @@ function withGlobal(_global) {
     isPresent.clearImmediate =
         _global.clearImmediate && typeof _global.clearImmediate === "function";
     isPresent.Intl = _global.Intl && typeof _global.Intl === "object";
+    isPresent.Temporal =
+        typeof _global.Temporal !== "undefined" &&
+        typeof _global.Temporal.Now !== "undefined";
 
     if (_global.clearTimeout) {
         _global.clearTimeout(timeoutResult);
@@ -553,6 +558,7 @@ function withGlobal(_global) {
               Object.getOwnPropertyDescriptors(_global.Intl),
           )
         : undefined;
+    const NativeTemporal = isPresent.Temporal ? _global.Temporal : undefined;
     let uniqueTimerId = idCounterStart;
     /** @type {number} */
     let uniqueTimerOrder = 0;
@@ -896,6 +902,43 @@ function withGlobal(_global) {
             NativeIntl.DateTimeFormat.supportedLocalesOf;
 
         return IntlWithClock;
+    }
+
+    //eslint-disable-next-line jsdoc/require-jsdoc
+    function createTemporal(clock) {
+        const fakeNow = {
+            instant() {
+                return NativeTemporal.Instant.fromEpochMilliseconds(clock.now);
+            },
+            timeZoneId() {
+                return NativeTemporal.Now.timeZoneId();
+            },
+            zonedDateTimeISO(timeZone) {
+                const tz = timeZone ?? NativeTemporal.Now.timeZoneId();
+                return fakeNow.instant().toZonedDateTimeISO(tz);
+            },
+            plainDateTimeISO(timeZone) {
+                return fakeNow.zonedDateTimeISO(timeZone).toPlainDateTime();
+            },
+            plainDateISO(timeZone) {
+                return fakeNow.zonedDateTimeISO(timeZone).toPlainDate();
+            },
+            plainTimeISO(timeZone) {
+                return fakeNow.zonedDateTimeISO(timeZone).toPlainTime();
+            },
+        };
+
+        const TemporalWithClock = Object.create(null);
+        Object.getOwnPropertyNames(NativeTemporal).forEach((prop) => {
+            Object.defineProperty(
+                TemporalWithClock,
+                prop,
+                Object.getOwnPropertyDescriptor(NativeTemporal, prop),
+            );
+        });
+        TemporalWithClock.Now = fakeNow;
+
+        return TemporalWithClock;
     }
 
     //eslint-disable-next-line jsdoc/require-jsdoc
@@ -1627,6 +1670,8 @@ function withGlobal(_global) {
             target[method] = clock[method];
         } else if (method === "Intl") {
             target[method] = clock[method];
+        } else if (method === "Temporal") {
+            target[method] = clock[method];
         } else if (method === "performance") {
             const originalPerfDescriptor = Object.getOwnPropertyDescriptor(
                 target,
@@ -1727,6 +1772,10 @@ function withGlobal(_global) {
         timers.Intl = NativeIntl;
     }
 
+    if (isPresent.Temporal) {
+        timers.Temporal = NativeTemporal;
+    }
+
     const originalSetTimeout = _global.setImmediate || _global.setTimeout;
     const originalClearInterval = _global.clearInterval;
     const originalSetInterval = _global.setInterval;
@@ -1820,6 +1869,10 @@ function withGlobal(_global) {
         if (isPresent.Intl) {
             clock.Intl = createIntl(clock);
             clock.Intl.clock = clock;
+        }
+
+        if (isPresent.Temporal) {
+            clock.Temporal = createTemporal(clock);
         }
 
         /**
@@ -2056,15 +2109,26 @@ function withGlobal(_global) {
             runJobs(clock);
         };
 
+        //eslint-disable-next-line jsdoc/require-jsdoc
+        function durationToMs(duration) {
+            const relativeTo = NativeTemporal.Instant.fromEpochMilliseconds(
+                clock.now,
+            ).toZonedDateTimeISO(NativeTemporal.Now.timeZoneId());
+            return duration.total({ unit: "millisecond", relativeTo });
+        }
+
         /**
-         * @param {number|string} tickValue milliseconds or a string parseable by parseTime
+         * @param {number|string|Temporal.Duration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
          * @returns {ClockState} a mutable state object for the tick execution
          */
         function createTickState(tickValue) {
             const msFloat =
                 typeof tickValue === "number"
                     ? tickValue
-                    : parseTime(tickValue);
+                    : isPresent.Temporal &&
+                        tickValue instanceof NativeTemporal.Duration
+                      ? durationToMs(tickValue)
+                      : parseTime(tickValue);
             const ms = Math.floor(msFloat);
             const remainder = nanoRemainder(msFloat);
             let nanosTotal = nanos + remainder;
@@ -2281,7 +2345,7 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
+         * @param {string|number|Temporal.Duration} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
          * @returns {number} will return the new `now` value
          */
         clock.tick = function tick(tickValue) {
@@ -2362,7 +2426,7 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             /**
-             * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
+             * @param {string|number|Temporal.Duration} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
              * @returns {Promise}
              */
             clock.tickAsync = function tickAsync(tickValue) {
@@ -2488,14 +2552,17 @@ function withGlobal(_global) {
         };
 
         /**
-         * @param {string|number} tickValue number of milliseconds or a human-readable value like "01:11:15"
+         * @param {string|number|Temporal.Duration} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
          * @returns {number} the new `now` value
          */
         clock.jump = function jump(tickValue) {
             const msFloat =
                 typeof tickValue === "number"
                     ? tickValue
-                    : parseTime(tickValue);
+                    : isPresent.Temporal &&
+                        tickValue instanceof NativeTemporal.Duration
+                      ? durationToMs(tickValue)
+                      : parseTime(tickValue);
             const ms = Math.floor(msFloat);
 
             forEachActiveTimer(clock, (timer) => {
