@@ -6736,6 +6736,21 @@ describe("missing timers", function () {
                     clock.uninstall();
                 }
             });
+
+            it("timeZoneId() returns a string", function () {
+                const clock = FakeTimers.createClock(0);
+                assert.equals(typeof clock.Temporal.Now.timeZoneId(), "string");
+            });
+
+            it("plainTimeISO() reflects the faked clock", function () {
+                const clock = FakeTimers.createClock(
+                    new Date("2025-01-01T14:30:45Z"),
+                );
+                const pt = clock.Temporal.Now.plainTimeISO("UTC");
+                assert.equals(pt.hour, 14);
+                assert.equals(pt.minute, 30);
+                assert.equals(pt.second, 45);
+            });
         });
 
         describe("with install/uninstall", function () {

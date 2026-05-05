@@ -270,7 +270,7 @@ if (typeof require === "function" && typeof module === "object") {
  */
 
 /**
- * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Temporal"} FakeMethod
+ * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal"} FakeMethod
  */
 
 /**
@@ -2149,6 +2149,8 @@ function withGlobal(_global) {
 
         //eslint-disable-next-line jsdoc/require-jsdoc
         function durationToMs(duration) {
+            // relativeTo uses the real system timezone — fake-timers fakes time, not place.
+            // Calendar-unit durations (months, years) will resolve DST/length using the host tz.
             const relativeTo = NativeTemporal.Instant.fromEpochMilliseconds(
                 clock.now,
             ).toZonedDateTimeISO(NativeTemporal.Now.timeZoneId());

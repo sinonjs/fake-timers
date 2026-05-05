@@ -67,7 +67,7 @@ export type Uninstall = () => void;
 export type SetTickMode = (tickModeConfig: SetTickModeConfig) => void;
 export type Hrtime = (prev?: Array<number>) => Array<number>;
 export type WithGlobal = (_global: object) => FakeTimers;
-export type FakeMethod = "setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Temporal";
+export type FakeMethod = "setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal";
 export type TimerId = number | NodeImmediate | Timer;
 export type GlobalObject = Record<string, any> & {
     setTimeout?: SetTimeout;
