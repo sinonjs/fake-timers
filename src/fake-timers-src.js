@@ -565,7 +565,8 @@ function withGlobal(_global) {
     isPresent.Intl = _global.Intl && typeof _global.Intl === "object";
     isPresent.Temporal =
         typeof _global.Temporal !== "undefined" &&
-        typeof _global.Temporal.Now !== "undefined";
+        typeof _global.Temporal.Now !== "undefined" &&
+        typeof _global.Temporal.Instant !== "undefined";
 
     if (_global.clearTimeout) {
         _global.clearTimeout(timeoutResult);
@@ -962,7 +963,13 @@ function withGlobal(_global) {
                 Object.getOwnPropertyDescriptor(NativeTemporal, prop),
             );
         });
-        TemporalWithClock.Now = fakeNow;
+        // Temporal.Now is writable:false in the spec so we must use defineProperty
+        Object.defineProperty(TemporalWithClock, "Now", {
+            value: fakeNow,
+            writable: true,
+            enumerable: false,
+            configurable: true,
+        });
 
         return TemporalWithClock;
     }

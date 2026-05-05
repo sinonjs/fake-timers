@@ -6698,6 +6698,44 @@ describe("missing timers", function () {
                     zdt.epochMilliseconds,
                 );
             });
+
+            it("setSystemTime accepts a Temporal.Instant even when Temporal is not faked", function () {
+                // getEpoch handles epochMilliseconds independently of toFake
+                const clock = FakeTimers.install({
+                    now: 0,
+                    toFake: ["Date"],
+                });
+                try {
+                    const instant = Temporal.Instant.fromEpochMilliseconds(
+                        new Date("2030-01-01T00:00:00Z").getTime(),
+                    );
+                    clock.setSystemTime(instant);
+                    assert.equals(
+                        clock.now,
+                        new Date("2030-01-01T00:00:00Z").getTime(),
+                    );
+                } finally {
+                    clock.uninstall();
+                }
+            });
+
+            it("install accepts a Temporal.Instant as now", function () {
+                const instant = Temporal.Instant.fromEpochMilliseconds(
+                    new Date("2025-07-04T12:00:00Z").getTime(),
+                );
+                const clock = FakeTimers.install({
+                    now: instant,
+                    toFake: ["Temporal"],
+                });
+                try {
+                    assert.equals(
+                        Temporal.Now.instant().epochMilliseconds,
+                        instant.epochMilliseconds,
+                    );
+                } finally {
+                    clock.uninstall();
+                }
+            });
         });
 
         describe("with install/uninstall", function () {
