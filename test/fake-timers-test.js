@@ -6603,6 +6603,26 @@ describe("missing timers", function () {
         });
     });
 
+    describe("Temporal (without Temporal in the global)", function () {
+        it("throws when toFake includes Temporal and it is absent", function () {
+            const FT = FakeTimers.withGlobal({ Date: globalThis.Date });
+            assert.exception(
+                () => FT.install({ toFake: ["Temporal"] }),
+                /non-existent timers/,
+            );
+        });
+
+        it("silently skips Temporal when ignoreMissingTimers is set", function () {
+            const FT = FakeTimers.withGlobal({ Date: globalThis.Date });
+            const clock = FT.install({
+                toFake: ["Temporal"],
+                ignoreMissingTimers: true,
+            });
+            assert.isUndefined(clock.Temporal);
+            clock.uninstall();
+        });
+    });
+
     describe("Temporal.Now", function () {
         before(function () {
             if (!temporalPresent) {
@@ -6805,26 +6825,6 @@ describe("missing timers", function () {
                 } finally {
                     clock.uninstall();
                 }
-            });
-        });
-
-        describe("without Temporal in the global", function () {
-            it("throws when toFake includes Temporal and it is absent", function () {
-                const FT = FakeTimers.withGlobal({ Date: globalThis.Date });
-                assert.exception(
-                    () => FT.install({ toFake: ["Temporal"] }),
-                    /non-existent timers/,
-                );
-            });
-
-            it("silently skips Temporal when ignoreMissingTimers is set", function () {
-                const FT = FakeTimers.withGlobal({ Date: globalThis.Date });
-                const clock = FT.install({
-                    toFake: ["Temporal"],
-                    ignoreMissingTimers: true,
-                });
-                assert.isUndefined(clock.Temporal);
-                clock.uninstall();
             });
         });
 
