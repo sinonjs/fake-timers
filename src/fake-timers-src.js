@@ -2159,23 +2159,30 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {number|string|TemporalDuration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
-         * @returns {ClockState} a mutable state object for the tick execution
+         * @param {number|string|TemporalDuration} tickValue
+         * @returns {number} milliseconds as a float
          */
-        function createTickState(tickValue) {
-            let msFloat;
+        function tickValueToMs(tickValue) {
             if (typeof tickValue === "number") {
-                msFloat = tickValue;
-            } else if (
+                return tickValue;
+            }
+            if (
                 isPresent.Temporal &&
                 tickValue !== null &&
                 typeof tickValue === "object" &&
                 typeof tickValue.total === "function"
             ) {
-                msFloat = durationToMs(tickValue);
-            } else {
-                msFloat = parseTime(tickValue);
+                return durationToMs(tickValue);
             }
+            return parseTime(tickValue);
+        }
+
+        /**
+         * @param {number|string|TemporalDuration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
+         * @returns {ClockState} a mutable state object for the tick execution
+         */
+        function createTickState(tickValue) {
+            const msFloat = tickValueToMs(tickValue);
             const ms = Math.floor(msFloat);
             const remainder = nanoRemainder(msFloat);
             let nanosTotal = nanos + remainder;
@@ -2603,19 +2610,7 @@ function withGlobal(_global) {
          * @returns {number} the new `now` value
          */
         clock.jump = function jump(tickValue) {
-            let msFloat;
-            if (typeof tickValue === "number") {
-                msFloat = tickValue;
-            } else if (
-                isPresent.Temporal &&
-                tickValue !== null &&
-                typeof tickValue === "object" &&
-                typeof tickValue.total === "function"
-            ) {
-                msFloat = durationToMs(tickValue);
-            } else {
-                msFloat = parseTime(tickValue);
-            }
+            const msFloat = tickValueToMs(tickValue);
             const ms = Math.floor(msFloat);
 
             forEachActiveTimer(clock, (timer) => {
