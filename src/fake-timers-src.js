@@ -1680,6 +1680,7 @@ function withGlobal(_global) {
             }
         }
 
+        clock.uninstalled = true;
         clock.setTickMode({ mode: "manual" });
 
         // Prevent multiple executions which will completely remove these props
@@ -1996,7 +1997,9 @@ function withGlobal(_global) {
             }
             clock.setTickMode({ mode: "manual" });
             return promise.finally(() => {
-                clock.setTickMode({ mode: "nextAsync" });
+                if (!clock.uninstalled) {
+                    clock.setTickMode({ mode: "nextAsync" });
+                }
             });
         }
 
