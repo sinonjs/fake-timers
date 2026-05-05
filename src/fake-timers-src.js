@@ -1619,86 +1619,6 @@ function withGlobal(_global) {
     }
 
     /**
-     * @param {Clock} clock
-     * @returns {Timer[]}
-     */
-    function uninstall(clock) {
-        let method, i, l;
-        const installedHrTime = "_hrtime";
-        const installedNextTick = "_nextTick";
-
-        for (i = 0, l = clock.methods.length; i < l; i++) {
-            method = clock.methods[i];
-            if (method === "hrtime" && _global.process) {
-                _global.process.hrtime = clock[installedHrTime];
-            } else if (method === "nextTick" && _global.process) {
-                _global.process.nextTick = clock[installedNextTick];
-            } else if (method === "performance") {
-                const originalPerfDescriptor = Object.getOwnPropertyDescriptor(
-                    clock,
-                    `_${method}`,
-                );
-                if (
-                    originalPerfDescriptor &&
-                    originalPerfDescriptor.get &&
-                    !originalPerfDescriptor.set
-                ) {
-                    Object.defineProperty(
-                        _global,
-                        method,
-                        originalPerfDescriptor,
-                    );
-                } else if (originalPerfDescriptor.configurable) {
-                    _global[method] = clock[`_${method}`];
-                }
-            } else {
-                if (clock[method] && clock[method].hasOwnProperty) {
-                    _global[method] = clock[`_${method}`];
-                } else {
-                    try {
-                        delete _global[method];
-                    } catch {
-                        /* eslint no-empty: "off" */
-                    }
-                }
-            }
-            if (clock.timersModuleMethods !== undefined) {
-                for (let j = 0; j < clock.timersModuleMethods.length; j++) {
-                    const entry = clock.timersModuleMethods[j];
-                    timersModule[entry.methodName] = entry.original;
-                }
-            }
-            if (clock.timersPromisesModuleMethods !== undefined) {
-                for (
-                    let j = 0;
-                    j < clock.timersPromisesModuleMethods.length;
-                    j++
-                ) {
-                    const entry = clock.timersPromisesModuleMethods[j];
-                    timersPromisesModule[entry.methodName] = entry.original;
-                }
-            }
-        }
-
-        clock.uninstalled = true;
-        clock.setTickMode({ mode: "manual" });
-
-        // Prevent multiple executions which will completely remove these props
-        clock.methods = [];
-
-        for (const [listener, signal] of clock.abortListenerMap.entries()) {
-            signal.removeEventListener("abort", listener);
-            clock.abortListenerMap.delete(listener);
-        }
-
-        // return pending timers, to enable checking what timers remained on uninstall
-        if (!clock.timerHeap) {
-            return [];
-        }
-        return clock.timerHeap.timers.slice();
-    }
-
-    /**
      * @param {object} target the target containing the method to replace
      * @param {string} method the keyname of the method on the target
      * @param {Clock} clock
@@ -1838,6 +1758,7 @@ function withGlobal(_global) {
         loopLimit = loopLimit || 1000;
         /** @type {number} */
         let nanos = 0;
+        let uninstalled = false;
         /** @type {number[]} */
         const adjustedSystemTime = [0, 0]; // [millis, nanoremainder]
 
@@ -1997,7 +1918,7 @@ function withGlobal(_global) {
             }
             clock.setTickMode({ mode: "manual" });
             return promise.finally(() => {
-                if (!clock.uninstalled) {
+                if (!uninstalled) {
                     clock.setTickMode({ mode: "nextAsync" });
                 }
             });
@@ -2642,6 +2563,97 @@ function withGlobal(_global) {
             clock.hrtime = hrtime;
         }
 
+        /**
+         * @returns {Timer[]}
+         */
+        clock.uninstall = function () {
+            uninstalled = true;
+            clock.setTickMode({ mode: "manual" });
+
+            if (clock.methods) {
+                const installedHrTime = "_hrtime";
+                const installedNextTick = "_nextTick";
+                let method, i, l;
+                for (i = 0, l = clock.methods.length; i < l; i++) {
+                    method = clock.methods[i];
+                    if (method === "hrtime" && _global.process) {
+                        _global.process.hrtime = clock[installedHrTime];
+                    } else if (method === "nextTick" && _global.process) {
+                        _global.process.nextTick = clock[installedNextTick];
+                    } else if (method === "performance") {
+                        const originalPerfDescriptor =
+                            Object.getOwnPropertyDescriptor(
+                                clock,
+                                `_${method}`,
+                            );
+                        if (
+                            originalPerfDescriptor &&
+                            originalPerfDescriptor.get &&
+                            !originalPerfDescriptor.set
+                        ) {
+                            Object.defineProperty(
+                                _global,
+                                method,
+                                originalPerfDescriptor,
+                            );
+                        } else if (originalPerfDescriptor.configurable) {
+                            _global[method] = clock[`_${method}`];
+                        }
+                    } else {
+                        if (clock[method] && clock[method].hasOwnProperty) {
+                            _global[method] = clock[`_${method}`];
+                        } else {
+                            try {
+                                delete _global[method];
+                            } catch {
+                                /* eslint no-empty: "off" */
+                            }
+                        }
+                    }
+                    if (clock.timersModuleMethods !== undefined) {
+                        for (
+                            let j = 0;
+                            j < clock.timersModuleMethods.length;
+                            j++
+                        ) {
+                            const entry = clock.timersModuleMethods[j];
+                            timersModule[entry.methodName] = entry.original;
+                        }
+                    }
+                    if (clock.timersPromisesModuleMethods !== undefined) {
+                        for (
+                            let j = 0;
+                            j < clock.timersPromisesModuleMethods.length;
+                            j++
+                        ) {
+                            const entry = clock.timersPromisesModuleMethods[j];
+                            timersPromisesModule[entry.methodName] =
+                                entry.original;
+                        }
+                    }
+                }
+
+                // Prevent multiple executions which will completely remove these props
+                clock.methods = [];
+            }
+
+            if (clock.abortListenerMap) {
+                for (const [
+                    listener,
+                    signal,
+                ] of clock.abortListenerMap.entries()) {
+                    signal.removeEventListener("abort", listener);
+                    clock.abortListenerMap.delete(listener);
+                }
+            }
+
+            // return pending timers, to enable checking what timers remained on uninstall
+            if (!clock.timerHeap) {
+                return [];
+            }
+            return clock.timerHeap.timers.slice();
+        };
+
         return clock;
     }
 
@@ -2729,10 +2741,6 @@ function withGlobal(_global) {
         let i, l;
         const clock = createClock(config.now, config.loopLimit);
         clock.shouldClearNativeTimers = config.shouldClearNativeTimers;
-
-        clock.uninstall = function () {
-            return uninstall(clock);
-        };
 
         clock.abortListenerMap = new Map();
 
