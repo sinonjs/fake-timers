@@ -1,0 +1,1 @@
+npm run types:check && npm run types:build && npm run types:smoke
