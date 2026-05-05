@@ -153,7 +153,7 @@ callbacks to execute _before_ running the next one.
 Creates a clock. The default
 [epoch](https://en.wikipedia.org/wiki/Epoch_%28reference_date%29) is `0`.
 
-The `now` argument may be a number (in milliseconds) or a Date object.
+The `now` argument may be a number (in milliseconds), a `Date` object, a `Temporal.Instant`, or a `Temporal.ZonedDateTime`.
 
 The `loopLimit` argument sets the maximum number of timers that will be run when calling `runAll()` before assuming that
 we have an infinite loop and throwing an error. The default is `1000`.
@@ -357,7 +357,8 @@ callbacks to execute _before_ running the timers.
 This simulates a user changing the system clock while your program is running.
 It affects the current time but it does not in itself cause e.g. timers to fire;
 they will fire exactly as they would have done without the call to
-setSystemTime().
+setSystemTime(). The `now` argument may be a number (in milliseconds), a `Date`
+object, a `Temporal.Instant`, or a `Temporal.ZonedDateTime`.
 
 ### `clock.uninstall()`
 

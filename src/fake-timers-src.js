@@ -564,7 +564,8 @@ function withGlobal(_global) {
         _global.clearImmediate && typeof _global.clearImmediate === "function";
     isPresent.Intl = _global.Intl && typeof _global.Intl === "object";
     isPresent.Temporal =
-        typeof _global.Temporal !== "undefined" &&
+        _global.Temporal !== null &&
+        typeof _global.Temporal === "object" &&
         typeof _global.Temporal.Now !== "undefined" &&
         typeof _global.Temporal.Instant !== "undefined";
 

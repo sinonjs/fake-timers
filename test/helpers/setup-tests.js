@@ -34,7 +34,8 @@ const performanceNowPresent =
 const performanceMarkPresent =
     globalThis.performance && typeof globalThis.performance.mark === "function";
 const temporalPresent =
-    typeof globalThis.Temporal !== "undefined" &&
+    globalThis.Temporal !== null &&
+    typeof globalThis.Temporal === "object" &&
     typeof globalThis.Temporal.Now !== "undefined" &&
     typeof globalThis.Temporal.Instant !== "undefined";
 const setImmediatePresent =
