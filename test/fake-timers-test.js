@@ -1,5 +1,7 @@
 "use strict";
 
+/* global Temporal */
+
 const {
     addTimerReturnsObject,
     assert,

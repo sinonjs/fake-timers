@@ -164,13 +164,13 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * @callback Tick
- * @param {number|string|Temporal.Duration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
+ * @param {number|string|object} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
  * @returns {number} will return the new `now` value
  */
 
 /**
  * @callback TickAsync
- * @param {number|string|Temporal.Duration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
+ * @param {number|string|object} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
  * @returns {Promise<number>}
  */
 
@@ -222,7 +222,7 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * @callback Jump
- * @param {number|string|Temporal.Duration} tickValue milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
+ * @param {number|string|object} tickValue milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
  * @returns {number}
  */
 
@@ -2118,17 +2118,21 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {number|string|Temporal.Duration} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
+         * @param {number|string|object} tickValue milliseconds, a string parseable by parseTime, or a Temporal.Duration
          * @returns {ClockState} a mutable state object for the tick execution
          */
         function createTickState(tickValue) {
-            const msFloat =
-                typeof tickValue === "number"
-                    ? tickValue
-                    : isPresent.Temporal &&
-                        tickValue instanceof NativeTemporal.Duration
-                      ? durationToMs(tickValue)
-                      : parseTime(tickValue);
+            let msFloat;
+            if (typeof tickValue === "number") {
+                msFloat = tickValue;
+            } else if (
+                isPresent.Temporal &&
+                tickValue instanceof NativeTemporal.Duration
+            ) {
+                msFloat = durationToMs(tickValue);
+            } else {
+                msFloat = parseTime(tickValue);
+            }
             const ms = Math.floor(msFloat);
             const remainder = nanoRemainder(msFloat);
             let nanosTotal = nanos + remainder;
@@ -2345,7 +2349,7 @@ function withGlobal(_global) {
         }
 
         /**
-         * @param {string|number|Temporal.Duration} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
+         * @param {string|number|object} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
          * @returns {number} will return the new `now` value
          */
         clock.tick = function tick(tickValue) {
@@ -2426,7 +2430,7 @@ function withGlobal(_global) {
 
         if (typeof _global.Promise !== "undefined") {
             /**
-             * @param {string|number|Temporal.Duration} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
+             * @param {string|number|object} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
              * @returns {Promise}
              */
             clock.tickAsync = function tickAsync(tickValue) {
@@ -2552,17 +2556,21 @@ function withGlobal(_global) {
         };
 
         /**
-         * @param {string|number|Temporal.Duration} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
+         * @param {string|number|object} tickValue number of milliseconds, a human-readable value like "01:11:15", or a Temporal.Duration
          * @returns {number} the new `now` value
          */
         clock.jump = function jump(tickValue) {
-            const msFloat =
-                typeof tickValue === "number"
-                    ? tickValue
-                    : isPresent.Temporal &&
-                        tickValue instanceof NativeTemporal.Duration
-                      ? durationToMs(tickValue)
-                      : parseTime(tickValue);
+            let msFloat;
+            if (typeof tickValue === "number") {
+                msFloat = tickValue;
+            } else if (
+                isPresent.Temporal &&
+                tickValue instanceof NativeTemporal.Duration
+            ) {
+                msFloat = durationToMs(tickValue);
+            } else {
+                msFloat = parseTime(tickValue);
+            }
             const ms = Math.floor(msFloat);
 
             forEachActiveTimer(clock, (timer) => {
