@@ -4212,8 +4212,9 @@ describe("FakeTimers", function () {
 
             it("does not create an infinite loop when uninstalled while a tickAsync is in flight", function (done) {
                 // Regression test for https://github.com/sinonjs/fake-timers/issues/564.
-                // tickAsync() pauses nextAsync mode, then its .finally() restores it.
-                // If uninstall() runs before .finally() fires, the restore must be a no-op.
+                // tickAsync() pauses nextAsync mode; the restore runs via a native
+                // macrotask (setImmediate/setTimeout). If uninstall() runs before that fires, the restore
+                // must be a no-op.
                 setTimeout(done, 100);
                 clock.tickAsync(100); // intentionally NOT awaited
                 // afterEach will call clock.uninstall() while tickAsync is still in flight
@@ -4310,6 +4311,7 @@ describe("FakeTimers", function () {
                 });
 
                 afterEach(async function () {
+                    clock.setTickMode({ mode: "nextAsync" });
                     await allTimersDone;
                     assert.equals(timerLog, [1, 2, 3, 4, 5]);
                 });
@@ -4321,10 +4323,13 @@ describe("FakeTimers", function () {
                 });
 
                 it("runToLastAsync", async function () {
-                    clock.setTickMode({ mode: "nextAsync" });
+                    // Do not enable nextAsync before this call: pauseAutoTickUntilFinished
+                    // restores it in .finally(), and in some engines AUMC can fire
+                    // clock.next() before the post-await assertion runs.
                     await clock.runToLastAsync();
                     // 5 should not resolve because it wasn't queued when we called "only pending timers"
                     assert.equals(timerLog, [1, 2, 3, 4]);
+                    // afterEach re-enables nextAsync to drain remaining timers
                 });
 
                 it("nextAsync", async function () {
@@ -6639,8 +6644,11 @@ describe("missing timers", function () {
         });
 
         it("tick() accepts a TemporalDuration-shaped object even when Temporal is absent from the global", function () {
-            const clock = FakeTimers.createClock(0);
-            // duck-typed Duration: total("millisecond") returns ms, no native Temporal required
+            // Use a custom global without Temporal so isPresent.Temporal is false
+            const clock = FakeTimers.withGlobal({
+                Date: globalThis.Date,
+            }).createClock(0);
+            // duck-typed Duration: total({ unit: "millisecond" }) returns ms, no native Temporal required
             const duration = {
                 total: ({ unit }) => (unit === "millisecond" ? 5000 : 5),
             };
