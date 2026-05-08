@@ -19,7 +19,7 @@ installedClock.setTickMode({ mode: "interval", delta: 50 });
 
 installedClock.uninstall();
 
-const withGlobal = FakeTimers.withGlobal({});
+const withGlobal = FakeTimers.withGlobal({ Date });
 const anotherClock = withGlobal.createClock(1000);
 anotherClock.next();
 anotherClock.nextAsync().then((now: number) => console.log(now));

@@ -1629,7 +1629,11 @@ function withGlobal(_global) {
      * @param {Clock} clock
      */
     function hijackMethod(target, method, clock) {
-        clock[method].hasOwnProperty = Object.prototype.hasOwnProperty.call(
+        // Intentional non-conflicting key: storing this flag under
+        // `hasOwnProperty` would shadow the inherited Object.prototype
+        // method on the fake function and break callers that run
+        // `setTimeout.hasOwnProperty(name)` on the installed global.
+        clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(
             target,
             method,
         );
@@ -2615,7 +2619,7 @@ function withGlobal(_global) {
                             _global[method] = clock[`_${method}`];
                         }
                     } else {
-                        if (clock[method] && clock[method].hasOwnProperty) {
+                        if (clock[method] && clock[method].hadOwnProperty) {
                             _global[method] = clock[`_${method}`];
                         } else {
                             try {
