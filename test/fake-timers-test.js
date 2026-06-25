@@ -3207,6 +3207,16 @@ describe("FakeTimers", function () {
             assert.equals(stub.callCount, 9);
         });
 
+        it("keeps recurring when the interval is not finite", function () {
+            // Node and browsers clamp a non-finite interval to 1ms and keep
+            // repeating; the timer must not fire only once and then die.
+            const stub = sinon.stub();
+            this.clock.setInterval(stub, NaN);
+            this.clock.tick(5);
+
+            assert.equals(stub.callCount, 6);
+        });
+
         it("is not influenced by forward system clock changes", function () {
             const stub = sinon.stub();
             this.clock.setInterval(stub, 10);

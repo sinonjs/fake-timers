@@ -1296,6 +1296,9 @@ function withGlobal(_global) {
 
         if (Object.prototype.hasOwnProperty.call(timer, "interval")) {
             timer.type = "Interval";
+            if (!isNumberFinite(timer.interval)) {
+                timer.interval = 1;
+            }
             timer.interval = timer.interval > maxTimeout ? 1 : timer.interval;
         }
 
