@@ -147,6 +147,13 @@ if (typeof require === "function" && typeof module === "object") {
  */
 
 /**
+ * @callback SchedulerPostTask
+ * @param {VoidVarArgsFunc} callback - the callback to run
+ * @param {{delay?: number, priority?: string, signal?: AbortSignal}} [options] - scheduling options
+ * @returns {Promise<unknown>}
+ */
+
+/**
  * @callback ClearImmediate
  * @param {NodeImmediate} id - faked `clearImmediate`
  * @returns {void}
@@ -270,7 +277,7 @@ if (typeof require === "function" && typeof module === "object") {
  */
 
 /**
- * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal"} FakeMethod
+ * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal" | "scheduler"} FakeMethod
  */
 
 /**
@@ -296,6 +303,7 @@ if (typeof require === "function" && typeof module === "object") {
  *   Performance?: any,
  *   Intl?: any,
  *   Temporal?: any,
+ *   scheduler?: any,
  *   Promise?: typeof Promise,
  *   Date: typeof Date & { isFake?: boolean, toSource?: () => string, clock?: any }
  * }} GlobalObject
@@ -350,6 +358,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {CancelAnimationFrame} [cancelAnimationFrame] - native `cancelAnimationFrame`, if available
  * @property {RequestIdleCallback} [requestIdleCallback] - native `requestIdleCallback`, if available
  * @property {CancelIdleCallback} [cancelIdleCallback] - native `cancelIdleCallback`, if available
+ * @property {{postTask: SchedulerPostTask}} [scheduler] - native `scheduler`, if available
  */
 
 /**
@@ -453,6 +462,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {Timer[]} [jobs] - internal flag
  * @property {IntlWithClock} [Intl] - fake Intl object
  * @property {any} [Temporal] - fake Temporal object
+ * @property {{postTask: SchedulerPostTask}} [scheduler] - fake scheduler object
  */
 /* eslint-enable jsdoc/reject-any-type */
 
@@ -573,6 +583,10 @@ function withGlobal(_global) {
         typeof _global.Temporal === "object" &&
         typeof _global.Temporal.Now !== "undefined" &&
         typeof _global.Temporal.Instant !== "undefined";
+    isPresent.scheduler =
+        _global.scheduler &&
+        typeof _global.scheduler === "object" &&
+        typeof _global.scheduler.postTask === "function";
 
     if (_global.clearTimeout) {
         _global.clearTimeout(timeoutResult);
@@ -1641,6 +1655,8 @@ function withGlobal(_global) {
             target[method] = clock[method];
         } else if (method === "Temporal") {
             target[method] = clock[method];
+        } else if (method === "scheduler") {
+            target[method] = clock[method];
         } else if (method === "performance") {
             const originalPerfDescriptor = Object.getOwnPropertyDescriptor(
                 target,
@@ -1743,6 +1759,10 @@ function withGlobal(_global) {
 
     if (isPresent.Temporal) {
         timers.Temporal = NativeTemporal;
+    }
+
+    if (isPresent.scheduler) {
+        timers.scheduler = _global.scheduler;
     }
 
     const originalSetTimeout = _global.setImmediate || _global.setTimeout;
@@ -2006,6 +2026,57 @@ function withGlobal(_global) {
         clock.queueMicrotask = function queueMicrotask(func) {
             return clock.nextTick(func); // explicitly drop additional arguments
         };
+
+        if (isPresent.scheduler) {
+            clock.scheduler = {
+                postTask: function postTask(callback, options = {}) {
+                    return new _global.Promise((resolve, reject) => {
+                        const { delay, signal } = options;
+
+                        /**
+                         * Removes the active abort listener.
+                         */
+                        function cleanup() {
+                            if (signal) {
+                                signal.removeEventListener("abort", abort);
+                                clock.abortListenerMap.delete(abort);
+                            }
+                        }
+
+                        /**
+                         * Rejects the task when its signal aborts.
+                         */
+                        function abort() {
+                            cleanup();
+                            // This is safe: abort listeners are not attached until after handle is assigned.
+                            // eslint-disable-next-line no-use-before-define
+                            clock.clearTimeout(handle);
+                            reject(signal.reason);
+                        }
+
+                        if (signal && signal.aborted) {
+                            reject(signal.reason);
+                            return;
+                        }
+
+                        const handle = clock.setTimeout(() => {
+                            cleanup();
+
+                            try {
+                                resolve(callback());
+                            } catch (error) {
+                                reject(error);
+                            }
+                        }, delay);
+
+                        if (signal) {
+                            signal.addEventListener("abort", abort);
+                            clock.abortListenerMap.set(abort, signal);
+                        }
+                    });
+                },
+            };
+        }
 
         clock.setInterval = function setInterval(func, timeout) {
             // eslint-disable-next-line no-param-reassign
