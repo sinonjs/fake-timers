@@ -32,6 +32,11 @@ export type AnimationFrameCallback = (timestamp: number) => any;
 export type RequestAnimationFrame = (callback: AnimationFrameCallback) => TimerId;
 export type CancelAnimationFrame = (id: TimerId) => void;
 export type CancelIdleCallback = (id: TimerId) => void;
+export type SchedulerPostTask = (callback: VoidVarArgsFunc, options?: {
+    delay?: number;
+    priority?: string;
+    signal?: AbortSignal;
+}) => Promise<unknown>;
 export type ClearImmediate = (id: NodeImmediate) => void;
 export type CountTimers = () => number;
 export type RunMicrotasks = () => void;
@@ -70,7 +75,7 @@ export type Uninstall = () => void;
 export type SetTickMode = (tickModeConfig: SetTickModeConfig) => void;
 export type Hrtime = (prev?: Array<number>) => Array<number>;
 export type WithGlobal = (_global: object) => FakeTimers;
-export type FakeMethod = "setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal";
+export type FakeMethod = "setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal" | "scheduler";
 export type TimerId = number | NodeImmediate | Timer;
 export type GlobalObject = Record<string, any> & {
     setTimeout?: SetTimeout;
@@ -89,6 +94,7 @@ export type GlobalObject = Record<string, any> & {
     Performance?: any;
     Intl?: any;
     Temporal?: any;
+    scheduler?: any;
     Promise?: typeof Promise;
     Date: typeof Date & {
         isFake?: boolean;
@@ -136,6 +142,9 @@ export type Timers = {
     cancelAnimationFrame?: CancelAnimationFrame;
     requestIdleCallback?: RequestIdleCallback;
     cancelIdleCallback?: CancelIdleCallback;
+    scheduler?: {
+        postTask: SchedulerPostTask;
+    };
 };
 export type ClockState = {
     tickFrom: number;
@@ -230,6 +239,9 @@ export type Clock = {
     jobs?: Timer[];
     Intl?: IntlWithClock;
     Temporal?: any;
+    scheduler?: {
+        postTask: SchedulerPostTask;
+    };
 };
 export type Config = {
     now?: number | Date | TemporalTimelike;
