@@ -1656,7 +1656,29 @@ function withGlobal(_global) {
         } else if (method === "Temporal") {
             target[method] = clock[method];
         } else if (method === "scheduler") {
-            target[method] = clock[method];
+            const originalSchedulerDescriptor = Object.getOwnPropertyDescriptor(
+                target,
+                method,
+            );
+            if (
+                originalSchedulerDescriptor &&
+                originalSchedulerDescriptor.get &&
+                !originalSchedulerDescriptor.set
+            ) {
+                Object.defineProperty(
+                    clock,
+                    `_${method}`,
+                    originalSchedulerDescriptor,
+                );
+
+                const schedulerDescriptor = Object.getOwnPropertyDescriptor(
+                    clock,
+                    method,
+                );
+                Object.defineProperty(target, method, schedulerDescriptor);
+            } else {
+                target[method] = clock[method];
+            }
         } else if (method === "performance") {
             const originalPerfDescriptor = Object.getOwnPropertyDescriptor(
                 target,
@@ -1693,7 +1715,12 @@ function withGlobal(_global) {
             );
         }
 
-        target[method].clock = clock;
+        if (method === "scheduler") {
+            const scheduler = /** @type {{ clock?: Clock }} */ (clock[method]);
+            scheduler.clock = clock;
+        } else {
+            target[method].clock = clock;
+        }
     }
 
     /**
@@ -2029,9 +2056,15 @@ function withGlobal(_global) {
 
         if (isPresent.scheduler) {
             clock.scheduler = {
-                postTask: function postTask(callback, options = {}) {
+                postTask: function postTask(callback, options) {
+                    if (typeof callback !== "function") {
+                        throw new TypeError("callback must be a function");
+                    }
+
+                    const postTaskOptions = options ?? {};
+
                     return new _global.Promise((resolve, reject) => {
-                        const { delay, signal } = options;
+                        const { delay, signal } = postTaskOptions;
 
                         /**
                          * Removes the active abort listener.
@@ -2666,6 +2699,34 @@ function withGlobal(_global) {
                         _global.process.hrtime = clock[installedHrTime];
                     } else if (method === "nextTick" && _global.process) {
                         _global.process.nextTick = clock[installedNextTick];
+                    } else if (method === "scheduler") {
+                        const originalSchedulerDescriptor =
+                            Object.getOwnPropertyDescriptor(
+                                clock,
+                                `_${method}`,
+                            );
+                        if (
+                            originalSchedulerDescriptor &&
+                            originalSchedulerDescriptor.get &&
+                            !originalSchedulerDescriptor.set
+                        ) {
+                            Object.defineProperty(
+                                _global,
+                                method,
+                                originalSchedulerDescriptor,
+                            );
+                        } else if (
+                            clock[method] &&
+                            clock[method].hasOwnProperty
+                        ) {
+                            _global[method] = clock[`_${method}`];
+                        } else {
+                            try {
+                                delete _global[method];
+                            } catch {
+                                // Non-configurable globals may reject deletion.
+                            }
+                        }
                     } else if (method === "performance") {
                         const originalPerfDescriptor =
                             Object.getOwnPropertyDescriptor(

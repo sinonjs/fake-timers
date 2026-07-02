@@ -51,6 +51,72 @@ describe("issue #418", function () {
         assert.same(target.scheduler, originalScheduler);
     });
 
+    it("installs and uninstalls a getter-only scheduler descriptor", function () {
+        const target = createGlobal();
+        const nativeScheduler = target.scheduler;
+        delete target.scheduler;
+
+        Object.defineProperty(target, "scheduler", {
+            configurable: true,
+            enumerable: true,
+            get: function getScheduler() {
+                return nativeScheduler;
+            },
+        });
+        const originalDescriptor = Object.getOwnPropertyDescriptor(
+            target,
+            "scheduler",
+        );
+
+        clock = FakeTimers.withGlobal(target).install();
+
+        refute.same(target.scheduler, nativeScheduler);
+        assert.isFunction(target.scheduler.postTask);
+        assert.isFalse(
+            Object.prototype.hasOwnProperty.call(nativeScheduler, "clock"),
+        );
+
+        clock.uninstall();
+        clock = undefined;
+
+        assert.equals(
+            Object.getOwnPropertyDescriptor(target, "scheduler"),
+            originalDescriptor,
+        );
+        assert.same(target.scheduler, nativeScheduler);
+        assert.isFalse(
+            Object.prototype.hasOwnProperty.call(nativeScheduler, "clock"),
+        );
+    });
+
+    it("throws synchronously for non-callable postTask callbacks", function () {
+        const target = createGlobal();
+        clock = FakeTimers.withGlobal(target).install();
+
+        assert.exception(
+            function () {
+                target.scheduler.postTask("not a function");
+            },
+            {
+                name: "TypeError",
+                message: "callback must be a function",
+            },
+        );
+    });
+
+    it("treats null postTask options as an empty dictionary", async function () {
+        const target = createGlobal();
+        clock = FakeTimers.withGlobal(target).install();
+
+        const promise = target.scheduler.postTask(function () {
+            return "result";
+        }, null);
+
+        clock.tick(0);
+
+        assert.equals(await promise, "result");
+    });
+
     it("runs postTask after its delay on the fake clock", async function () {
         const target = createGlobal();
         const callback = sinon.stub().returns("result");
