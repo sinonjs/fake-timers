@@ -1515,7 +1515,13 @@ function withGlobal(_global) {
             if (clock.isNearInfiniteLimit) {
                 timer.error = new Error();
             }
-            clock.timerHeap.push(timer);
+            // Only reschedule a timer that is still registered. Pushing back one that has been
+            // cleared would leave the heap holding a timer `clock.timers` no longer has, and
+            // `firstTimerInRange` would keep handing it to `runTimersInRange`, which skips it
+            // because `hasTimer` reports it gone - a loop that never advances the clock.
+            if (hasTimer(clock, timer.id)) {
+                clock.timerHeap.push(timer);
+            }
         } else {
             deleteTimer(clock, timer.id);
             clock.timerHeap.remove(timer);
@@ -2227,7 +2233,12 @@ function withGlobal(_global) {
                     state.oldNow = clock.now;
                     try {
                         runJobs(clock);
-                        callTimer(clock, state.timer);
+                        // A job may have cleared this timer, e.g. a microtask calling
+                        // clearInterval() for the very timer that is up next. A cleared timer
+                        // must not fire, so re-check before calling it.
+                        if (hasTimer(clock, state.timer.id)) {
+                            callTimer(clock, state.timer);
+                        }
                     } catch (e) {
                         state.firstException = state.firstException || e;
                     }

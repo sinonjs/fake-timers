@@ -3080,6 +3080,22 @@ describe("FakeTimers", function () {
             assert.isFalse(stub.called);
         });
 
+        it("does not fire a timeout cleared from a microtask mid-tick", function () {
+            const clock = this.clock;
+            const stub = sinon.stub();
+            const id = clock.setTimeout(stub, 100);
+
+            clock.setTimeout(function () {
+                clock.queueMicrotask(function () {
+                    clock.clearTimeout(id);
+                });
+            }, 50);
+
+            clock.tick(100);
+
+            assert.isFalse(stub.called);
+        });
+
         it("removes interval with undefined interval", function () {
             const stub = sinon.stub();
             const id = this.clock.setInterval(stub);
@@ -3271,6 +3287,25 @@ describe("FakeTimers", function () {
             this.clock.tick(50);
 
             assert.isFalse(stub.called);
+        });
+
+        it("does not fire or reschedule an interval cleared from a microtask mid-tick", function () {
+            const clock = this.clock;
+            const stub = sinon.stub();
+            const id = clock.setInterval(stub, 100);
+
+            // The job runs inside the same tick, after the interval has been picked as the next
+            // timer to fire but before its callback is invoked.
+            clock.setTimeout(function () {
+                clock.queueMicrotask(function () {
+                    clock.clearInterval(id);
+                });
+            }, 50);
+
+            clock.tick(100);
+
+            assert.isFalse(stub.called);
+            assert.equals(clock.countTimers(), 0);
         });
 
         it("removes interval with undefined interval", function () {
