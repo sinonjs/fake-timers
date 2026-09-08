@@ -442,6 +442,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {boolean} [shouldClearNativeTimers] - inherited from config
  * @property {{methodName:string, original:unknown}[] | undefined} timersModuleMethods - saved Node timers module methods
  * @property {{methodName:string, original:unknown}[] | undefined} timersPromisesModuleMethods - saved Node timers/promises methods
+ * @property {{methodName:string, original:unknown}[] | undefined} abortSignalMethods - saved AbortSignal methods
  * @property {Map<VoidVarArgsFunc, AbortSignal>} abortListenerMap - active abort listeners
  * @property {SetTickMode} setTickMode - switches the auto-tick mode
  * @property {Map<number, Timer>} [timers] - internal timer storage
@@ -2646,6 +2647,17 @@ function withGlobal(_global) {
                                 entry.original;
                         }
                     }
+                    if (clock.abortSignalMethods !== undefined) {
+                        for (
+                            let j = 0;
+                            j < clock.abortSignalMethods.length;
+                            j++
+                        ) {
+                            const entry = clock.abortSignalMethods[j];
+                            _global.AbortSignal[entry.methodName] =
+                                entry.original;
+                        }
+                    }
                 }
 
                 // Prevent multiple executions which will completely remove these props
@@ -2821,6 +2833,12 @@ function withGlobal(_global) {
         }
         if (_global === globalObject && timersPromisesModule) {
             clock.timersPromisesModuleMethods = [];
+        }
+        if (
+            _global.AbortSignal &&
+            typeof _global.AbortSignal.timeout === "function"
+        ) {
+            clock.abortSignalMethods = [];
         }
         for (i = 0, l = clock.methods.length; i < l; i++) {
             const nameOfMethodToReplace = clock.methods[i];
@@ -3095,6 +3113,45 @@ function withGlobal(_global) {
                         },
                     });
                 }
+            }
+            if (
+                clock.abortSignalMethods !== undefined &&
+                nameOfMethodToReplace === "setTimeout"
+            ) {
+                const original = _global.AbortSignal.timeout;
+                clock.abortSignalMethods.push({
+                    methodName: "timeout",
+                    original: original,
+                });
+
+                _global.AbortSignal.timeout = (delay) => {
+                    if (
+                        typeof delay !== "number" ||
+                        !Number.isInteger(delay) ||
+                        delay < 0 ||
+                        delay > 4294967295
+                    ) {
+                        return original.call(_global.AbortSignal, delay);
+                    }
+
+                    const controller = new _global.AbortController();
+                    clock.setTimeout(() => {
+                        let reason;
+                        if (typeof _global.DOMException !== "undefined") {
+                            reason = new _global.DOMException(
+                                "The operation was aborted due to timeout",
+                                "TimeoutError",
+                            );
+                        } else {
+                            reason = new Error(
+                                "The operation was aborted due to timeout",
+                            );
+                            reason.name = "TimeoutError";
+                        }
+                        controller.abort(reason);
+                    }, delay);
+                    return controller.signal;
+                };
             }
         }
 
