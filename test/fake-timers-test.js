@@ -6028,6 +6028,91 @@ describe("FakeTimers", function () {
             });
         });
     });
+
+    describe("AbortSignal.timeout", function () {
+        let clock;
+
+        before(function () {
+            if (
+                typeof AbortSignal === "undefined" ||
+                typeof AbortSignal.timeout !== "function"
+            ) {
+                this.skip();
+            }
+        });
+
+        afterEach(function () {
+            if (clock) {
+                clock.uninstall();
+                clock = undefined;
+            }
+        });
+
+        it("should fake AbortSignal.timeout on install", function () {
+            const original = AbortSignal.timeout;
+            clock = FakeTimers.install();
+            refute.equals(AbortSignal.timeout, original);
+        });
+
+        it("should restore AbortSignal.timeout on uninstall", function () {
+            const original = AbortSignal.timeout;
+            clock = FakeTimers.install();
+            clock.uninstall();
+            clock = undefined;
+            assert.equals(AbortSignal.timeout, original);
+        });
+
+        it("should abort after specified time with TimeoutError", function () {
+            clock = FakeTimers.install();
+            const signal = AbortSignal.timeout(100);
+
+            assert.isFalse(signal.aborted);
+            assert.isUndefined(signal.reason);
+
+            clock.tick(50);
+            assert.isFalse(signal.aborted);
+
+            clock.tick(50);
+            assert.isTrue(signal.aborted);
+            assert.equals(signal.reason.name, "TimeoutError");
+        });
+
+        it("should trigger abort event listener after specified time", function () {
+            clock = FakeTimers.install();
+            const signal = AbortSignal.timeout(100);
+            const onAbort = sinon.spy();
+            signal.addEventListener("abort", onAbort);
+
+            clock.tick(99);
+            assert.isFalse(onAbort.called);
+
+            clock.tick(1);
+            assert.isTrue(onAbort.calledOnce);
+        });
+
+        it("should delegate validation of invalid delay to native implementation", function () {
+            clock = FakeTimers.install();
+            assert.exception(
+                function () {
+                    AbortSignal.timeout(-1);
+                },
+                { name: "RangeError" },
+            );
+
+            assert.exception(
+                function () {
+                    AbortSignal.timeout(NaN);
+                },
+                { name: "RangeError" },
+            );
+        });
+
+        it("should not fake AbortSignal.timeout when setTimeout is not in toFake", function () {
+            const original = AbortSignal.timeout;
+            clock = FakeTimers.install({ toFake: ["Date"] });
+            assert.equals(AbortSignal.timeout, original);
+        });
+    });
 });
 
 describe("loop limit stack trace", function () {
