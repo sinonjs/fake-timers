@@ -5925,6 +5925,32 @@ describe("FakeTimers", function () {
                 await assert.rejects(promise);
             });
 
+            it("should not leave timers when the signal is already aborted", async function () {
+                clock = FakeTimers.install();
+                const abortController = new AbortController();
+                const reason = new Error("aborted");
+                abortController.abort(reason);
+                const iterable = timersPromisesModule.setInterval(100, null, {
+                    signal: abortController.signal,
+                });
+                const iter = iterable[Symbol.asyncIterator]();
+
+                assert.equals(clock.countTimers(), 0);
+                await assert.rejects(iter.next(), reason);
+
+                assert.equals(await iter.next(), {
+                    done: true,
+                    value: undefined,
+                });
+                assert.equals(await iter.return(), {
+                    done: true,
+                    value: undefined,
+                });
+                assert.equals(clock.countTimers(), 0);
+                assert.equals(clock.runAll(), 0);
+                assert.equals(await clock.runAllAsync(), 0);
+            });
+
             it("should resolve as done after initial reject when aborting", async function () {
                 clock = FakeTimers.install();
                 const abortController = new AbortController();
