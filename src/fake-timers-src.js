@@ -1780,7 +1780,9 @@ function withGlobal(_global) {
 
         //eslint-disable-next-line jsdoc/require-jsdoc
         function getTimeToNextFrame() {
-            return 16 - ((clock.now - startTimestamp) % 16);
+            const millisSinceStart =
+                clock.now - adjustedSystemTime[0] - startTimestamp;
+            return 16 - (millisSinceStart % 16);
         }
 
         //eslint-disable-next-line jsdoc/require-jsdoc

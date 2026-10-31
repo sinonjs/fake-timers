@@ -6363,6 +6363,33 @@ describe("loop limit stack trace", function () {
     });
 });
 
+describe("requestAnimationFrame scheduling", function () {
+    it("keeps frame scheduling monotonic when system time changes", function () {
+        const clock = FakeTimers.createClock(0);
+        clock.setSystemTime(1000);
+        let frameTimestamp;
+
+        clock.requestAnimationFrame(function (timestamp) {
+            frameTimestamp = timestamp;
+        });
+
+        clock.tick(15);
+        assert.isUndefined(frameTimestamp);
+        clock.tick(1);
+        assert.equals(frameTimestamp, 16);
+        assert.equals(clock.now, 1016);
+    });
+
+    it("runs to the next monotonic frame after system time changes", function () {
+        const clock = FakeTimers.createClock(0);
+        clock.setSystemTime(1000);
+
+        clock.runToFrame();
+
+        assert.equals(clock.now, 1016);
+    });
+});
+
 describe("Node Timer: ref(), unref(),hasRef()", function () {
     let clock;
 
