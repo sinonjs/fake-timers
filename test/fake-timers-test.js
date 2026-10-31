@@ -3167,6 +3167,18 @@ describe("FakeTimers", function () {
             clock.reset();
             assert.equals(clock.hrtime(), [0, 0]);
         });
+
+        it("resets hrTime after system time changes", function () {
+            if (!hrtimePresent) {
+                return this.skip();
+            }
+
+            this.clock.tick(0.5);
+            this.clock.setSystemTime(1000);
+            this.clock.reset();
+
+            assert.equals(this.clock.hrtime(), [0, 0]);
+        });
     });
 
     describe("setInterval", function () {
@@ -6387,6 +6399,24 @@ describe("requestAnimationFrame scheduling", function () {
         clock.runToFrame();
 
         assert.equals(clock.now, 1016);
+    });
+
+    [1000, -1000].forEach(function (systemTime) {
+        it(`resets frame scheduling after changing system time to ${systemTime}`, function () {
+            const start = 123;
+            const clock = FakeTimers.createClock(start);
+            clock.setSystemTime(systemTime);
+            clock.reset();
+            let frameTimestamp;
+
+            clock.requestAnimationFrame(function (timestamp) {
+                frameTimestamp = timestamp;
+            });
+            clock.runToFrame();
+
+            assert.equals(clock.now, start + 16);
+            assert.equals(frameTimestamp, 16);
+        });
     });
 });
 

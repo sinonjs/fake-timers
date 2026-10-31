@@ -2526,6 +2526,8 @@ function withGlobal(_global) {
 
         clock.reset = function reset() {
             nanos = 0;
+            adjustedSystemTime[0] = 0;
+            adjustedSystemTime[1] = 0;
             clock.timers = new Map();
             clock.timerHeap = new TimerHeap();
             clock.jobs = [];
