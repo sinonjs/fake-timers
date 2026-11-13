@@ -58,7 +58,7 @@
     "@sinonjs/eslint-config": "^7.0.3",
     "@sinonjs/referee-sinon": "12.0.1",
     "@types/node": "^25.6.0",
-    "@typescript/native-preview": "^7.0.0-dev.20260505.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260707.2",
     "esbuild": "^0.28.0",
     "eslint": "^10.3.0",
     "husky": "^9.1.7",
