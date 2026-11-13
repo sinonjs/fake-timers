@@ -27,7 +27,7 @@ const {
 let timersModule, timersPromisesModule;
 
 /* eslint-disable no-underscore-dangle */
-globalThis.__runs = globalThis.__runs || 0;
+globalThis.__runs ||= 0;
 
 let environmentSupportsCallingBuiltInsOnAlternativeThis = true;
 try {

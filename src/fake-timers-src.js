@@ -642,18 +642,6 @@ function withGlobal(globalNamespace) {
     }
 
     /**
-     * @param {number} num
-     * @returns {boolean}
-     */
-    function isNumberFinite(num) {
-        if (Number.isFinite) {
-            return Number.isFinite(num);
-        }
-
-        return Number.isFinite(num);
-    }
-
-    /**
      * @param {Clock} clock
      * @param {number} i
      */
@@ -1311,7 +1299,7 @@ function withGlobal(globalNamespace) {
                 timer.delay = parseInt(timer.delay, 10);
             }
 
-            if (!isNumberFinite(timer.delay)) {
+            if (!Number.isFinite(timer.delay)) {
                 timer.delay = 0;
             }
             timer.delay = timer.delay > maxTimeout ? 1 : timer.delay;
@@ -1482,12 +1470,12 @@ function withGlobal(globalNamespace) {
          */
         let timer = null;
 
-        for (const timer_ of timers) {
+        for (const candidate of timers) {
             if (
-                inRange(from, to, timer_) &&
-                (!timer || compareTimers(timer, timer_) === 1)
+                inRange(from, to, candidate) &&
+                (!timer || compareTimers(timer, candidate) === 1)
             ) {
-                timer = timer_;
+                timer = candidate;
             }
         }
 
@@ -1516,9 +1504,9 @@ function withGlobal(globalNamespace) {
         const timers = clock.timerHeap.timers;
         let timer = null;
 
-        for (const timer_ of timers) {
-            if (!timer || compareTimers(timer, timer_) === -1) {
-                timer = timer_;
+        for (const candidate of timers) {
+            if (!timer || compareTimers(timer, candidate) === -1) {
+                timer = candidate;
             }
         }
 
@@ -1691,8 +1679,8 @@ function withGlobal(globalNamespace) {
                 target[method] = clock[method];
             }
         } else {
-            target[method] = function () {
-                return clock[method].apply(clock, arguments);
+            target[method] = function (...args) {
+                return clock[method](...args);
             };
 
             Object.defineProperties(
@@ -1995,10 +1983,10 @@ function withGlobal(globalNamespace) {
             return clearTimer(clock, timerId, "IdleCallback");
         };
 
-        clock.setTimeout = function setTimeout(func, timeout) {
+        clock.setTimeout = function setTimeout(func, timeout, ...args) {
             return addTimer(clock, {
                 func,
-                args: Array.prototype.slice.call(arguments, 2),
+                args,
                 delay: timeout,
             });
         };
@@ -2021,10 +2009,10 @@ function withGlobal(globalNamespace) {
             return clearTimer(clock, timerId, "Timeout");
         };
 
-        clock.nextTick = function nextTick(func) {
+        clock.nextTick = function nextTick(func, ...args) {
             return enqueueJob(clock, {
                 func,
-                args: Array.prototype.slice.call(arguments, 1),
+                args,
                 error: clock.isNearInfiniteLimit ? new Error() : null,
             });
         };
@@ -2033,12 +2021,12 @@ function withGlobal(globalNamespace) {
             return clock.nextTick(func); // explicitly drop additional arguments
         };
 
-        clock.setInterval = function setInterval(func, timeout) {
+        clock.setInterval = function setInterval(func, timeout, ...args) {
             // eslint-disable-next-line no-param-reassign
             timeout = parseInt(String(timeout), 10);
             return addTimer(clock, {
                 func,
-                args: Array.prototype.slice.call(arguments, 2),
+                args,
                 delay: timeout,
                 interval: timeout,
             });
@@ -2050,10 +2038,10 @@ function withGlobal(globalNamespace) {
 
         if (isPresent.setImmediate) {
             clock.setImmediate = /** @type {SetImmediate} */ (
-                function setImmediate(func) {
+                function setImmediate(func, ...args) {
                     return addTimer(clock, {
                         func,
-                        args: Array.prototype.slice.call(arguments, 1),
+                        args,
                         immediate: true,
                     });
                 }
@@ -2255,7 +2243,7 @@ function withGlobal(globalNamespace) {
                         runJobs(clock);
                         callTimer(clock, state.timer);
                     } catch (e) {
-                        state.firstException = state.firstException || e;
+                        state.firstException ||= e;
                     }
 
                     if (isAsync) {
@@ -2291,7 +2279,7 @@ function withGlobal(globalNamespace) {
                 try {
                     clock.tick(state.tickTo - clock.now); // do it all again - for the remainder of the requested range
                 } catch (e) {
-                    state.firstException = state.firstException || e;
+                    state.firstException ||= e;
                 }
             } else {
                 // no timers remaining in the requested range: move the clock all the way to the end
@@ -2743,10 +2731,9 @@ function withGlobal(globalNamespace) {
 
         // eslint-disable-next-line no-param-reassign
         config = typeof config !== "undefined" ? config : {};
-        config.shouldAdvanceTime = config.shouldAdvanceTime || false;
-        config.advanceTimeDelta = config.advanceTimeDelta || 20;
-        config.shouldClearNativeTimers =
-            config.shouldClearNativeTimers || false;
+        config.shouldAdvanceTime ||= false;
+        config.advanceTimeDelta ||= 20;
+        config.shouldClearNativeTimers ||= false;
 
         const hasToFake = Object.hasOwn(config, "toFake");
         const hasToNotFake = Object.hasOwn(config, "toNotFake");
@@ -3003,6 +2990,8 @@ function withGlobal(globalNamespace) {
                                 let resolve, reject;
                                 const promise =
                                     /** @type {Promise<unknown> & { resolve: (value: unknown) => void; reject: (reason: unknown) => void }} */ (
+                                        // Promise.withResolvers() needs Node 22; CI still tests Node 20
+                                        // eslint-disable-next-line unicorn/prefer-promise-with-resolvers
                                         new Promise((res, rej) => {
                                             resolve = res;
                                             reject = rej;
