@@ -3030,7 +3030,7 @@ function withGlobal(_global) {
 
                             if (options.signal) {
                                 if (options.signal.aborted) {
-                                    done = true;
+                                    abort();
                                 } else {
                                     options.signal.addEventListener(
                                         "abort",
