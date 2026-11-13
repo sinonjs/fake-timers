@@ -21,6 +21,8 @@ installedClock.uninstall();
 
 const withGlobal = FakeTimers.withGlobal({});
 FakeTimers.withGlobal(globalThis);
+// @ts-expect-error Date must be a Date constructor
+FakeTimers.withGlobal({ Date: 5 });
 const anotherClock = withGlobal.createClock(1000);
 anotherClock.next();
 anotherClock.nextAsync().then((now: number) => console.log(now));

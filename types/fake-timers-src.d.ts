@@ -69,7 +69,7 @@ export type Jump = (tickValue: number | string | TemporalDuration) => number;
 export type Uninstall = () => void;
 export type SetTickMode = (tickModeConfig: SetTickModeConfig) => void;
 export type Hrtime = (prev?: Array<number>) => Array<number>;
-export type WithGlobal = (_global: object) => FakeTimers;
+export type WithGlobal = (_global: GlobalNamespace) => FakeTimers;
 export type FakeMethod = "setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal";
 export type TimerId = number | NodeImmediate | Timer;
 export type GlobalObject = Record<string, any> & {
@@ -95,6 +95,26 @@ export type GlobalObject = Record<string, any> & {
         toSource?: () => string;
         clock?: any;
     };
+};
+export type GlobalNamespace = Record<string, any> & {
+    Date?: typeof Date;
+    setTimeout?: (...args: any[]) => any;
+    clearTimeout?: (...args: any[]) => any;
+    setInterval?: (...args: any[]) => any;
+    clearInterval?: (...args: any[]) => any;
+    setImmediate?: (...args: any[]) => any;
+    clearImmediate?: (...args: any[]) => any;
+    queueMicrotask?: (...args: any[]) => any;
+    requestAnimationFrame?: (...args: any[]) => any;
+    cancelAnimationFrame?: (...args: any[]) => any;
+    requestIdleCallback?: (...args: any[]) => any;
+    cancelIdleCallback?: (...args: any[]) => any;
+    process?: any;
+    performance?: any;
+    Performance?: any;
+    Intl?: any;
+    Temporal?: any;
+    Promise?: typeof Promise;
 };
 export type TimerHeap = {
     timers: Timer[];
@@ -459,7 +479,7 @@ export type NodeImmediate = {
  */
 /**
  * @callback WithGlobal
- * @param {object} _global Namespace to mock (e.g. `window`)
+ * @param {GlobalNamespace} _global Namespace to mock (e.g. `window`)
  * @returns {FakeTimers}
  */
 /**
@@ -489,6 +509,30 @@ export type NodeImmediate = {
  *   Promise?: typeof Promise,
  *   Date: typeof Date & { isFake?: boolean, toSource?: () => string, clock?: any }
  * }} GlobalObject
+ */
+/**
+ * The global namespace passed to `withGlobal`, such as `window` or `globalThis`.
+ * Members use native-compatible signatures so real globals are accepted.
+ * @typedef {Record<string, any> & {
+ *   Date?: typeof Date,
+ *   setTimeout?: (...args: any[]) => any,
+ *   clearTimeout?: (...args: any[]) => any,
+ *   setInterval?: (...args: any[]) => any,
+ *   clearInterval?: (...args: any[]) => any,
+ *   setImmediate?: (...args: any[]) => any,
+ *   clearImmediate?: (...args: any[]) => any,
+ *   queueMicrotask?: (...args: any[]) => any,
+ *   requestAnimationFrame?: (...args: any[]) => any,
+ *   cancelAnimationFrame?: (...args: any[]) => any,
+ *   requestIdleCallback?: (...args: any[]) => any,
+ *   cancelIdleCallback?: (...args: any[]) => any,
+ *   process?: any,
+ *   performance?: any,
+ *   Performance?: any,
+ *   Intl?: any,
+ *   Temporal?: any,
+ *   Promise?: typeof Promise
+ * }} GlobalNamespace
  */
 /**
  * @typedef {object} TimerHeap
@@ -675,10 +719,10 @@ export type NodeImmediate = {
  */
 /**
  * Mocks available features in the specified global namespace.
- * @param {object} globalNamespace Namespace to mock (e.g. `window`)
+ * @param {GlobalNamespace} globalNamespace Namespace to mock (e.g. `window`)
  * @returns {FakeTimers}
  */
-declare function withGlobal(globalNamespace: object): FakeTimers;
+declare function withGlobal(globalNamespace: GlobalNamespace): FakeTimers;
 export declare var timers: Timers;
 export declare var createClock: CreateClockCallback;
 export declare var install: InstallCallback;

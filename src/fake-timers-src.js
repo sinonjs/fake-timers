@@ -265,7 +265,7 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * @callback WithGlobal
- * @param {object} _global Namespace to mock (e.g. `window`)
+ * @param {GlobalNamespace} _global Namespace to mock (e.g. `window`)
  * @returns {FakeTimers}
  */
 
@@ -299,6 +299,31 @@ if (typeof require === "function" && typeof module === "object") {
  *   Promise?: typeof Promise,
  *   Date: typeof Date & { isFake?: boolean, toSource?: () => string, clock?: any }
  * }} GlobalObject
+ */
+
+/**
+ * The global namespace passed to `withGlobal`, such as `window` or `globalThis`.
+ * Members use native-compatible signatures so real globals are accepted.
+ * @typedef {Record<string, any> & {
+ *   Date?: typeof Date,
+ *   setTimeout?: (...args: any[]) => any,
+ *   clearTimeout?: (...args: any[]) => any,
+ *   setInterval?: (...args: any[]) => any,
+ *   clearInterval?: (...args: any[]) => any,
+ *   setImmediate?: (...args: any[]) => any,
+ *   clearImmediate?: (...args: any[]) => any,
+ *   queueMicrotask?: (...args: any[]) => any,
+ *   requestAnimationFrame?: (...args: any[]) => any,
+ *   cancelAnimationFrame?: (...args: any[]) => any,
+ *   requestIdleCallback?: (...args: any[]) => any,
+ *   cancelIdleCallback?: (...args: any[]) => any,
+ *   process?: any,
+ *   performance?: any,
+ *   Performance?: any,
+ *   Intl?: any,
+ *   Temporal?: any,
+ *   Promise?: typeof Promise
+ * }} GlobalNamespace
  */
 
 /**
@@ -507,7 +532,7 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * Mocks available features in the specified global namespace.
- * @param {object} globalNamespace Namespace to mock (e.g. `window`)
+ * @param {GlobalNamespace} globalNamespace Namespace to mock (e.g. `window`)
  * @returns {FakeTimers}
  */
 function withGlobal(globalNamespace) {
