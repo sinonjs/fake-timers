@@ -538,7 +538,7 @@ if (typeof require === "function" && typeof module === "object") {
 function withGlobal(globalNamespace) {
     // eslint-disable-next-line no-underscore-dangle
     const _global = /** @type {GlobalObject} */ (globalNamespace);
-    const maxTimeout = Math.pow(2, 31) - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
+    const maxTimeout = 2 ** 31 - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
     const idCounterStart = 1e12; // arbitrarily large number to avoid collisions with native timer IDs
     const NOOP = function () {
         return undefined;
@@ -574,10 +574,7 @@ function withGlobal(globalNamespace) {
         _global.performance &&
         _global.performance.constructor &&
         _global.performance.constructor.prototype;
-    isPresent.queueMicrotask = Object.prototype.hasOwnProperty.call(
-        _global,
-        "queueMicrotask",
-    );
+    isPresent.queueMicrotask = Object.hasOwn(_global, "queueMicrotask");
     isPresent.requestAnimationFrame =
         _global.requestAnimationFrame &&
         typeof _global.requestAnimationFrame === "function";
@@ -653,7 +650,7 @@ function withGlobal(globalNamespace) {
             return Number.isFinite(num);
         }
 
-        return isFinite(num);
+        return Number.isFinite(num);
     }
 
     /**
@@ -706,7 +703,7 @@ function withGlobal(globalNamespace) {
                 throw new Error(`Invalid time ${str}`);
             }
 
-            ms += parsed * Math.pow(60, l - i - 1);
+            ms += parsed * 60 ** (l - i - 1);
         }
 
         return ms * 1000;
@@ -792,7 +789,7 @@ function withGlobal(globalNamespace) {
         }
 
         let matchedLineIndex = -1;
-        job.error.stack.split("\n").some(function (line, i) {
+        job.error.stack.split("\n").some((line, i) => {
             // If we've matched a computed target line (e.g. setTimeout) then we
             // don't need to look any further. Return true to stop iterating.
             const matchedComputedTarget = line.match(computedTargetPattern);
@@ -925,7 +922,7 @@ function withGlobal(globalNamespace) {
      */
     function createIntl(clock) {
         /** @type {IntlWithClock} */
-        const IntlWithClock = { clock: clock };
+        const IntlWithClock = { clock };
         /*
          * All properties of Intl are non-enumerable, so we need
          * to do a bit of work to get them out.
@@ -1309,7 +1306,7 @@ function withGlobal(globalNamespace) {
 
         timer.type = timer.immediate ? "Immediate" : "Timeout";
 
-        if (Object.prototype.hasOwnProperty.call(timer, "delay")) {
+        if (Object.hasOwn(timer, "delay")) {
             if (typeof timer.delay !== "number") {
                 timer.delay = parseInt(timer.delay, 10);
             }
@@ -1321,19 +1318,17 @@ function withGlobal(globalNamespace) {
             timer.delay = Math.max(0, timer.delay);
         }
 
-        if (Object.prototype.hasOwnProperty.call(timer, "interval")) {
+        if (Object.hasOwn(timer, "interval")) {
             timer.type = "Interval";
             timer.interval = timer.interval > maxTimeout ? 1 : timer.interval;
         }
 
-        if (Object.prototype.hasOwnProperty.call(timer, "animation")) {
+        if (Object.hasOwn(timer, "animation")) {
             timer.type = "AnimationFrame";
             timer.animation = true;
         }
 
-        if (
-            Object.prototype.hasOwnProperty.call(timer, "requestIdleCallback")
-        ) {
+        if (Object.hasOwn(timer, "requestIdleCallback")) {
             // mark timer as IdleCallback type if it has no delay, otherwise it'd be of type timeout
             // this way we are able to sort such that the timer only gets called when there's truly no pending task to run
             if (!timer.delay) {
@@ -1368,18 +1363,18 @@ function withGlobal(globalNamespace) {
         if (addTimerReturnsObject) {
             const res = {
                 refed: true,
-                ref: function () {
+                ref() {
                     this.refed = true;
                     return this;
                 },
-                unref: function () {
+                unref() {
                     this.refed = false;
                     return this;
                 },
-                hasRef: function () {
+                hasRef() {
                     return this.refed;
                 },
-                refresh: function () {
+                refresh() {
                     timer.callAt =
                         clock.now +
                         (parseInt(String(timer.delay)) ||
@@ -1392,7 +1387,7 @@ function withGlobal(globalNamespace) {
 
                     return this;
                 },
-                [Symbol.toPrimitive]: function () {
+                [Symbol.toPrimitive]() {
                     return timer.id;
                 },
             };
@@ -1487,12 +1482,12 @@ function withGlobal(globalNamespace) {
          */
         let timer = null;
 
-        for (let i = 0; i < timers.length; i++) {
+        for (const timer_ of timers) {
             if (
-                inRange(from, to, timers[i]) &&
-                (!timer || compareTimers(timer, timers[i]) === 1)
+                inRange(from, to, timer_) &&
+                (!timer || compareTimers(timer, timer_) === 1)
             ) {
-                timer = timers[i];
+                timer = timer_;
             }
         }
 
@@ -1521,9 +1516,9 @@ function withGlobal(globalNamespace) {
         const timers = clock.timerHeap.timers;
         let timer = null;
 
-        for (let i = 0; i < timers.length; i++) {
-            if (!timer || compareTimers(timer, timers[i]) === -1) {
-                timer = timers[i];
+        for (const timer_ of timers) {
+            if (!timer || compareTimers(timer, timer_) === -1) {
+                timer = timer_;
             }
         }
 
@@ -1661,10 +1656,7 @@ function withGlobal(globalNamespace) {
      * @param {Clock} clock
      */
     function hijackMethod(target, method, clock) {
-        clock[method].hasOwnProperty = Object.prototype.hasOwnProperty.call(
-            target,
-            method,
-        );
+        clock[method].hasOwnProperty = Object.hasOwn(target, method);
         clock[`_${method}`] = target[method];
 
         if (method === "Date") {
@@ -1792,7 +1784,7 @@ function withGlobal(globalNamespace) {
         start = Math.floor(getEpoch(start));
         const startTimestamp = start;
         // eslint-disable-next-line no-param-reassign
-        loopLimit = loopLimit || 1000;
+        loopLimit ||= 1000;
         /** @type {number} */
         let nanos = 0;
         let uninstalled = false;
@@ -1803,7 +1795,7 @@ function withGlobal(globalNamespace) {
         const clock = /** @type {Clock} */ ({
             now: start,
             Date: createDate(),
-            loopLimit: loopLimit,
+            loopLimit,
             isNearInfiniteLimit: false,
             tickMode: { mode: "manual", counter: 0, delta: undefined },
         });
@@ -1990,7 +1982,7 @@ function withGlobal(globalNamespace) {
             };
 
             const result = addTimer(clock, {
-                func: func,
+                func,
                 args: [idleDeadline],
                 delay: timeout,
                 requestIdleCallback: true,
@@ -2005,7 +1997,7 @@ function withGlobal(globalNamespace) {
 
         clock.setTimeout = function setTimeout(func, timeout) {
             return addTimer(clock, {
-                func: func,
+                func,
                 args: Array.prototype.slice.call(arguments, 2),
                 delay: timeout,
             });
@@ -2031,7 +2023,7 @@ function withGlobal(globalNamespace) {
 
         clock.nextTick = function nextTick(func) {
             return enqueueJob(clock, {
-                func: func,
+                func,
                 args: Array.prototype.slice.call(arguments, 1),
                 error: clock.isNearInfiniteLimit ? new Error() : null,
             });
@@ -2045,7 +2037,7 @@ function withGlobal(globalNamespace) {
             // eslint-disable-next-line no-param-reassign
             timeout = parseInt(String(timeout), 10);
             return addTimer(clock, {
-                func: func,
+                func,
                 args: Array.prototype.slice.call(arguments, 2),
                 delay: timeout,
                 interval: timeout,
@@ -2060,7 +2052,7 @@ function withGlobal(globalNamespace) {
             clock.setImmediate = /** @type {SetImmediate} */ (
                 function setImmediate(func) {
                     return addTimer(clock, {
-                        func: func,
+                        func,
                         args: Array.prototype.slice.call(arguments, 1),
                         immediate: true,
                     });
@@ -2096,7 +2088,7 @@ function withGlobal(globalNamespace) {
 
         clock.requestAnimationFrame = function requestAnimationFrame(func) {
             const result = addTimer(clock, {
-                func: func,
+                func,
                 delay: getTimeToNextFrame(),
                 get args() {
                     return [fakePerformanceNow()];
@@ -2176,11 +2168,11 @@ function withGlobal(globalNamespace) {
             }
 
             return /** @type {ClockState} */ ({
-                msFloat: msFloat,
-                ms: ms,
-                nanosTotal: nanosTotal,
+                msFloat,
+                ms,
+                nanosTotal,
                 tickFrom: clock.now,
-                tickTo: tickTo,
+                tickTo,
                 previous: clock.now,
                 timer: null,
                 firstException: null,
@@ -2407,8 +2399,8 @@ function withGlobal(globalNamespace) {
          */
         function runAsyncWithNativeTimeout(callback) {
             return pauseAutoTickUntilFinished(
-                new _global.Promise(function (resolve, reject) {
-                    originalSetTimeout(function () {
+                new _global.Promise((resolve, reject) => {
+                    originalSetTimeout(() => {
                         try {
                             callback(resolve, reject);
                         } catch (e) {
@@ -2461,13 +2453,13 @@ function withGlobal(globalNamespace) {
              * @returns {Promise}
              */
             clock.tickAsync = function tickAsync(tickValue) {
-                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                return runAsyncWithNativeTimeout((resolve, reject) => {
                     doTick(tickValue, true, resolve, reject);
                 });
             };
 
             clock.nextAsync = function nextAsync() {
-                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                return runAsyncWithNativeTimeout((resolve, reject) => {
                     runJobs(clock);
                     const timer = firstTimer(clock);
                     if (!timer) {
@@ -2486,7 +2478,7 @@ function withGlobal(globalNamespace) {
                     }
                     clock.duringTick = false;
 
-                    originalSetTimeout(function () {
+                    originalSetTimeout(() => {
                         if (err) {
                             reject(err);
                         } else {
@@ -2526,7 +2518,7 @@ function withGlobal(globalNamespace) {
 
                             i++;
 
-                            originalSetTimeout(function () {
+                            originalSetTimeout(() => {
                                 doRun(resolve, reject);
                             });
                             return;
@@ -2539,13 +2531,13 @@ function withGlobal(globalNamespace) {
                     }
                 }
 
-                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                return runAsyncWithNativeTimeout((resolve, reject) => {
                     doRun(resolve, reject);
                 });
             };
 
             clock.runToLastAsync = function runToLastAsync() {
-                return runAsyncWithNativeTimeout(function (resolve) {
+                return runAsyncWithNativeTimeout((resolve) => {
                     const timer = lastTimer(clock);
                     if (!timer) {
                         runJobs(clock);
@@ -2756,14 +2748,8 @@ function withGlobal(globalNamespace) {
         config.shouldClearNativeTimers =
             config.shouldClearNativeTimers || false;
 
-        const hasToFake = Object.prototype.hasOwnProperty.call(
-            config,
-            "toFake",
-        );
-        const hasToNotFake = Object.prototype.hasOwnProperty.call(
-            config,
-            "toNotFake",
-        );
+        const hasToFake = Object.hasOwn(config, "toFake");
+        const hasToNotFake = Object.hasOwn(config, "toNotFake");
 
         if (hasToFake && hasToNotFake) {
             throw new TypeError(
@@ -2834,7 +2820,7 @@ function withGlobal(globalNamespace) {
                 }
             })();
             if (proto) {
-                Object.getOwnPropertyNames(proto).forEach(function (name) {
+                Object.getOwnPropertyNames(proto).forEach((name) => {
                     if (name !== "now") {
                         clock.performance[name] =
                             name.indexOf("getEntries") === 0
@@ -2893,7 +2879,7 @@ function withGlobal(globalNamespace) {
                 const original = timersModule[nameOfMethodToReplace];
                 clock.timersModuleMethods.push({
                     methodName: nameOfMethodToReplace,
-                    original: original,
+                    original,
                 });
                 timersModule[nameOfMethodToReplace] =
                     _global[nameOfMethodToReplace];
@@ -3083,7 +3069,7 @@ function withGlobal(globalNamespace) {
 
                                     if (nextAvailable > 0) {
                                         nextAvailable--;
-                                        return { done: false, value: value };
+                                        return { done: false, value };
                                     }
 
                                     const resolvable = createResolvable();
@@ -3104,7 +3090,7 @@ function withGlobal(globalNamespace) {
                                         return { done: true, value: undefined };
                                     }
 
-                                    return { done: false, value: value };
+                                    return { done: false, value };
                                 },
                                 return: async () => {
                                     if (done) {
@@ -3142,10 +3128,10 @@ function withGlobal(globalNamespace) {
     /* eslint-enable complexity */
 
     return {
-        timers: timers,
-        createClock: createClock,
-        install: install,
-        withGlobal: withGlobal,
+        timers,
+        createClock,
+        install,
+        withGlobal,
     };
 }
 

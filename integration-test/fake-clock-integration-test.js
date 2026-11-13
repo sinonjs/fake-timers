@@ -112,7 +112,7 @@ describe("globally configured browser objects", function () {
         const windowDescriptorNames = Object.getOwnPropertyNames(
             globalThis.window,
         );
-        windowDescriptorNames.forEach(function (descriptorName) {
+        windowDescriptorNames.forEach((descriptorName) => {
             if (!originalDescriptorNames.includes(descriptorName)) {
                 delete globalThis[descriptorName];
             }
@@ -148,7 +148,7 @@ describe("globally configured browser objects", function () {
 
             clock.uninstall();
 
-            assert(new Date().valueOf() !== mockNow.valueOf());
+            assert(Date.now() !== mockNow.valueOf());
         } finally {
             tearDownGlobal();
         }
