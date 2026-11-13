@@ -1,12 +1,28 @@
+export declare var timers: Timers;
+export declare var createClock: CreateClockCallback;
+export declare var install: InstallCallback;
+export { withGlobal };
 export type TickMode = "nextAsync" | "manual" | "interval";
 export type NextAsyncTickMode = {
+    /**
+     * - runs timers one macrotask at a time
+     */
     mode: "nextAsync";
 };
 export type ManualTickMode = {
+    /**
+     * - advances only when the caller explicitly ticks
+     */
     mode: "manual";
 };
 export type IntervalTickMode = {
+    /**
+     * - advances automatically on a native interval
+     */
     mode: "interval";
+    /**
+     * - interval duration in milliseconds
+     */
     delta?: number;
 };
 export type TimerTickMode = IntervalTickMode | NextAsyncTickMode | ManualTickMode;
@@ -21,7 +37,13 @@ export type ClearInterval = (id?: TimerId) => void;
 export type QueueMicrotask = (callback: VoidVarArgsFunc) => void;
 export type TimeRemaining = () => number;
 export type IdleDeadline = {
+    /**
+     * - whether or not the callback was called before reaching the optional timeout
+     */
     didTimeout: boolean;
+    /**
+     * - a floating-point value providing an estimate of the number of milliseconds remaining in the current idle period
+     */
     timeRemaining: TimeRemaining;
 };
 export type RequestIdleCallbackCallback = (deadline: IdleDeadline) => any;
@@ -36,22 +58,58 @@ export type ClearImmediate = (id: NodeImmediate) => void;
 export type CountTimers = () => number;
 export type RunMicrotasks = () => void;
 export type TemporalDuration = {
+    /**
+     * - years component
+     */
     years: number;
+    /**
+     * - months component
+     */
     months: number;
+    /**
+     * - weeks component
+     */
     weeks: number;
+    /**
+     * - days component
+     */
     days: number;
+    /**
+     * - hours component
+     */
     hours: number;
+    /**
+     * - minutes component
+     */
     minutes: number;
+    /**
+     * - seconds component
+     */
     seconds: number;
+    /**
+     * - milliseconds component
+     */
     milliseconds: number;
+    /**
+     * - microseconds component
+     */
     microseconds: number;
+    /**
+     * - nanoseconds component
+     */
     nanoseconds: number;
+    /**
+     * - converts to a single unit
+     */
     total: (options: {
         unit: string;
         relativeTo?: unknown;
     }) => number;
 };
 export type TemporalTimelike = {
+    /**
+     * - milliseconds since the Unix epoch (present on Temporal.Instant and Temporal.ZonedDateTime)
+     */
     epochMilliseconds: number;
 };
 export type Tick = (tickValue: number | string | TemporalDuration) => number;
@@ -117,19 +175,49 @@ export type GlobalNamespace = Record<string, any> & {
     Promise?: typeof Promise;
 };
 export type TimerHeap = {
+    /**
+     * - the heap-ordered timers
+     */
     timers: Timer[];
+    /**
+     * - returns the next timer without removing it
+     */
     peek: () => Timer | undefined;
+    /**
+     * - adds a timer to the heap
+     */
     push: (timer: Timer) => void;
+    /**
+     * - removes and returns the next timer
+     */
     pop: () => Timer | undefined;
+    /**
+     * - removes a specific timer
+     */
     remove: (timer: Timer) => void;
 };
 export type ClockTickMode = {
+    /**
+     * - active tick mode
+     */
     mode: TickMode;
+    /**
+     * - increments whenever the mode changes
+     */
     counter: number;
+    /**
+     * - interval length in milliseconds
+     */
     delta?: number;
 };
 export type SetTickModeConfig = {
+    /**
+     * - desired tick mode
+     */
     mode: TickMode;
+    /**
+     * - interval length in milliseconds
+     */
     delta?: number;
 };
 export type IntlWithClock = Record<string, any> & {
@@ -139,127 +227,427 @@ export type PerformanceLike = Record<string, any> & {
     now: () => number;
 };
 export type Timers = {
+    /**
+     * - native `setTimeout`
+     */
     setTimeout: SetTimeout;
+    /**
+     * - native `clearTimeout`
+     */
     clearTimeout: ClearTimeout;
+    /**
+     * - native `setInterval`
+     */
     setInterval: SetInterval;
+    /**
+     * - native `clearInterval`
+     */
     clearInterval: ClearInterval;
+    /**
+     * - native `Date`
+     */
     Date: typeof Date;
+    /**
+     * - native `Intl`
+     */
     Intl?: typeof Intl;
+    /**
+     * - native `Temporal`
+     */
     Temporal?: any;
+    /**
+     * - native `setImmediate`, if available
+     */
     setImmediate?: SetImmediate;
+    /**
+     * - native `clearImmediate`, if available
+     */
     clearImmediate?: ClearImmediate;
+    /**
+     * - native `process.hrtime`, if available
+     */
     hrtime?: Hrtime;
+    /**
+     * - native `process.nextTick`, if available
+     */
     nextTick?: NextTick;
+    /**
+     * - native `performance`, if available
+     */
     performance?: PerformanceLike;
+    /**
+     * - native `requestAnimationFrame`, if available
+     */
     requestAnimationFrame?: RequestAnimationFrame;
+    /**
+     * - whether `queueMicrotask` exists
+     */
     queueMicrotask?: QueueMicrotask;
+    /**
+     * - native `cancelAnimationFrame`, if available
+     */
     cancelAnimationFrame?: CancelAnimationFrame;
+    /**
+     * - native `requestIdleCallback`, if available
+     */
     requestIdleCallback?: RequestIdleCallback;
+    /**
+     * - native `cancelIdleCallback`, if available
+     */
     cancelIdleCallback?: CancelIdleCallback;
 };
 export type ClockState = {
+    /**
+     * - lower bound of the current tick range
+     */
     tickFrom: number;
+    /**
+     * - upper bound of the current tick range
+     */
     tickTo: number;
+    /**
+     * - previous timer time used during ticking
+     */
     previous?: number;
+    /**
+     * - previous value of `now`
+     */
     oldNow?: number | null;
+    /**
+     * - timer currently being processed
+     */
     timer?: Timer;
+    /**
+     * - first exception raised while processing timers
+     */
     firstException?: unknown;
+    /**
+     * - accumulated nanoseconds from fractional ticks
+     */
     nanosTotal?: number;
+    /**
+     * - accumulated fractional milliseconds
+     */
     msFloat?: number;
+    /**
+     * - accumulated whole milliseconds
+     */
     ms?: number;
 };
 export type TimerInitialProps = {
+    /**
+     * - callback or string to execute
+     */
     func: VoidVarArgsFunc;
+    /**
+     * - arguments passed to the callback
+     */
     args?: unknown[];
+    /**
+     * - timer kind
+     */
     type?: 'Timeout' | 'Interval' | 'Immediate' | 'AnimationFrame' | 'IdleCallback';
+    /**
+     * - requested delay in milliseconds
+     */
     delay?: number;
+    /**
+     * - scheduled execution time
+     */
     callAt?: number;
+    /**
+     * - time at which the timer was created
+     */
     createdAt?: number;
+    /**
+     * - whether this timer should run before non-immediate timers at the same time
+     */
     immediate?: boolean;
+    /**
+     * - unique timer identifier
+     */
     id?: number;
+    /**
+     * - captured stack for loop diagnostics
+     */
     error?: Error;
+    /**
+     * - interval for repeated timers
+     */
     interval?: number;
+    /**
+     * - whether this is an animation frame timer
+     */
     animation?: boolean;
+    /**
+     * - whether this is an idle callback timer
+     */
     requestIdleCallback?: boolean;
+    /**
+     * - execution order for timers at the same time
+     */
     order?: number;
+    /**
+     * - index in the timer heap
+     */
     heapIndex?: number;
 };
 export type CreateClockCallback = (start?: number | Date | TemporalTimelike, loopLimit?: number) => Clock;
 export type InstallCallback = (config?: Config) => Clock;
 export type FakeTimers = {
+    /**
+     * - the native timer APIs saved for later restoration
+     */
     timers: Timers;
+    /**
+     * - creates a new fake clock
+     */
     createClock: CreateClockCallback;
+    /**
+     * - installs the fake timers onto the default global object
+     */
     install: InstallCallback;
+    /**
+     * - creates a fake-timers instance for a provided global object
+     */
     withGlobal: WithGlobal;
 };
 export type Clock = {
+    /**
+     * - current mocked time in milliseconds
+     */
     now: number;
+    /**
+     * - fake Date constructor bound to this clock
+     */
     Date: typeof Date & {
         clock?: Clock;
         isFake?: boolean;
         toSource?: () => string;
     };
+    /**
+     * - maximum number of timers before assuming an infinite loop
+     */
     loopLimit: number;
+    /**
+     * - schedules an idle callback
+     */
     requestIdleCallback: RequestIdleCallback;
+    /**
+     * - cancels a scheduled idle callback
+     */
     cancelIdleCallback: CancelIdleCallback;
+    /**
+     * - faked `setTimeout`
+     */
     setTimeout: SetTimeout;
+    /**
+     * - faked `clearTimeout`
+     */
     clearTimeout: ClearTimeout;
+    /**
+     * - faked `process.nextTick`
+     */
     nextTick: NextTick;
+    /**
+     * - faked `queueMicrotask`
+     */
     queueMicrotask: QueueMicrotask;
+    /**
+     * - faked `setInterval`
+     */
     setInterval: SetInterval;
+    /**
+     * - faked `clearInterval`
+     */
     clearInterval: ClearInterval;
+    /**
+     * - faked `setImmediate`
+     */
     setImmediate: SetImmediate;
+    /**
+     * - faked `clearImmediate`
+     */
     clearImmediate: ClearImmediate;
+    /**
+     * - counts scheduled timers
+     */
     countTimers: CountTimers;
+    /**
+     * - schedules a frame callback
+     */
     requestAnimationFrame: RequestAnimationFrame;
+    /**
+     * - cancels a frame callback
+     */
     cancelAnimationFrame: CancelAnimationFrame;
+    /**
+     * - drains microtasks
+     */
     runMicrotasks: RunMicrotasks;
+    /**
+     * - advances fake time synchronously
+     */
     tick: Tick;
+    /**
+     * - advances fake time asynchronously
+     */
     tickAsync: TickAsync;
+    /**
+     * - runs the next scheduled timer
+     */
     next: Next;
+    /**
+     * - runs the next scheduled timer asynchronously
+     */
     nextAsync: NextAsync;
+    /**
+     * - runs all scheduled timers
+     */
     runAll: RunAll;
+    /**
+     * - runs timers up to the next animation frame
+     */
     runToFrame: RunToFrame;
+    /**
+     * - runs all scheduled timers asynchronously
+     */
     runAllAsync: RunAllAsync;
+    /**
+     * - runs timers up to the last scheduled timer
+     */
     runToLast: RunToLast;
+    /**
+     * - runs timers up to the last scheduled timer asynchronously
+     */
     runToLastAsync: RunToLastAsync;
+    /**
+     * - clears all timers and resets the clock
+     */
     reset: Reset;
+    /**
+     * - sets the clock to a specific wall-clock time
+     */
     setSystemTime: SetSystemTime;
+    /**
+     * - advances time and returns the new `now`
+     */
     jump: Jump;
+    /**
+     * - fake performance object
+     */
     performance: any;
+    /**
+     * - faked `process.hrtime`
+     */
     hrtime: Hrtime;
+    /**
+     * - restores native timers
+     */
     uninstall: Uninstall;
+    /**
+     * - names of faked methods
+     */
     methods: string[];
+    /**
+     * - inherited from config
+     */
     shouldClearNativeTimers?: boolean;
+    /**
+     * - saved Node timers module methods
+     */
     timersModuleMethods: {
         methodName: string;
         original: unknown;
     }[] | undefined;
+    /**
+     * - saved Node timers/promises methods
+     */
     timersPromisesModuleMethods: {
         methodName: string;
         original: unknown;
     }[] | undefined;
+    /**
+     * - active abort listeners
+     */
     abortListenerMap: Map<VoidVarArgsFunc, AbortSignal>;
+    /**
+     * - switches the auto-tick mode
+     */
     setTickMode: SetTickMode;
+    /**
+     * - internal timer storage
+     */
     timers?: Map<number, Timer>;
+    /**
+     * - internal timer heap
+     */
     timerHeap?: TimerHeap;
+    /**
+     * - internal flag
+     */
     duringTick?: boolean;
+    /**
+     * - internal flag indicating the loop limit is nearly reached
+     */
     isNearInfiniteLimit: boolean;
+    /**
+     * - internal flag
+     */
     attachedInterval?: TimerId;
+    /**
+     * - internal flag
+     */
     tickMode?: ClockTickMode;
+    /**
+     * - internal flag
+     */
     jobs?: Timer[];
+    /**
+     * - fake Intl object
+     */
     Intl?: IntlWithClock;
+    /**
+     * - fake Temporal object
+     */
     Temporal?: any;
 };
 export type Config = {
+    /**
+     * initial mocked time, as milliseconds since epoch, a Date, a Temporal.Instant, or a Temporal.ZonedDateTime
+     */
     now?: number | Date | TemporalTimelike;
+    /**
+     * method names that should be faked
+     */
     toFake?: FakeMethod[];
+    /**
+     * method names that should remain native
+     */
     toNotFake?: FakeMethod[];
+    /**
+     * maximum number of timers run before aborting with an infinite-loop error
+     */
     loopLimit?: number;
+    /**
+     * automatically increments mocked time while the clock is installed
+     */
     shouldAdvanceTime?: boolean;
+    /**
+     * interval in milliseconds used when `shouldAdvanceTime` is enabled
+     */
     advanceTimeDelta?: number;
+    /**
+     * forwards clear calls to native methods when the timer is not fake
+     */
     shouldClearNativeTimers?: boolean;
+    /**
+     * suppresses errors when a requested timer is missing from the global object
+     */
     ignoreMissingTimers?: boolean;
+    /**
+     * global object to install onto
+     */
     target?: GlobalObject;
 };
 export type Timer = TimerInitialProps;
@@ -267,8 +655,17 @@ export type NodeImmediateHasRef = () => boolean;
 export type NodeImmediateRef = () => NodeImmediate;
 export type NodeImmediateUnref = () => NodeImmediate;
 export type NodeImmediate = {
+    /**
+     * - reports whether the timer keeps the event loop alive
+     */
     hasRef: NodeImmediateHasRef;
+    /**
+     * - marks the timer as referenced
+     */
     ref: NodeImmediateRef;
+    /**
+     * - marks the timer as unreferenced
+     */
     unref: NodeImmediateUnref;
 };
 /**
@@ -723,7 +1120,3 @@ export type NodeImmediate = {
  * @returns {FakeTimers}
  */
 declare function withGlobal(globalNamespace: GlobalNamespace): FakeTimers;
-export declare var timers: Timers;
-export declare var createClock: CreateClockCallback;
-export declare var install: InstallCallback;
-export { withGlobal };
