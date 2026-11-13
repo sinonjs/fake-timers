@@ -4969,6 +4969,37 @@ describe("FakeTimers", function () {
             assert(called);
             assert.equals(last, "timeout");
         });
+
+        it("does not fire timeout cleared by microtask before its turn", function () {
+            let calls = 0;
+            let second;
+            clock.setTimeout(function () {
+                clock.queueMicrotask(function () {
+                    clock.clearTimeout(second);
+                });
+            }, 1000);
+            second = clock.setTimeout(function () {
+                calls += 1;
+            }, 1000);
+            clock.tick(1500);
+            assert.equals(calls, 0);
+            assert.equals(clock.countTimers(), 0);
+        });
+
+        it("does not fire interval cleared by microtask and allows subsequent tick", function () {
+            let calls = 0;
+            const id = clock.setInterval(function () {
+                calls += 1;
+                clock.queueMicrotask(function () {
+                    clock.clearInterval(id);
+                });
+            }, 1000);
+            clock.tick(2500);
+            assert.equals(calls, 1);
+            assert.equals(clock.countTimers(), 0);
+            clock.tick(1000);
+            assert.equals(calls, 1);
+        });
     });
 
     describe("nextTick semantics", function () {

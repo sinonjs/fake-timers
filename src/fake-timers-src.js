@@ -1508,6 +1508,10 @@ function withGlobal(_global) {
      * @param {Timer} timer
      */
     function callTimer(clock, timer) {
+        if (!hasTimer(clock, timer.id)) {
+            return;
+        }
+
         if (typeof timer.interval === "number") {
             clock.timerHeap.remove(timer);
             timer.callAt += timer.interval;
