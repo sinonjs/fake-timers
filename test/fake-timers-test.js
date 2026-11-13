@@ -3380,6 +3380,7 @@ describe("FakeTimers", function () {
         });
 
         it("returns date as string when called as function", function () {
+            // eslint-disable-next-line new-cap -- calling Date as a function returns a string
             const date = this.clock.Date();
 
             assert(typeof date === "string");
@@ -3418,6 +3419,7 @@ describe("FakeTimers", function () {
         });
 
         it("returns date as string representing clock time", function () {
+            // eslint-disable-next-line new-cap -- calling Date as a function returns a string
             const date = this.clock.Date();
 
             assert.equals(date, new Date(this.now).toString());
@@ -3505,12 +3507,14 @@ describe("FakeTimers", function () {
         });
 
         it("returns date as string when calling with arguments", function () {
+            // eslint-disable-next-line new-cap -- calling Date as a function returns a string
             const fakeDateStr = this.clock.Date(2010, 4, 2, 12, 42, 53, 498);
 
             assert.equals(fakeDateStr, new this.clock.Date().toString());
         });
 
         it("returns date as string when calling with timestamp", function () {
+            // eslint-disable-next-line new-cap -- calling Date as a function returns a string
             const fakeDateStr = this.clock.Date(1);
 
             assert.equals(fakeDateStr, new this.clock.Date().toString());
