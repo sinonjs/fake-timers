@@ -2436,6 +2436,7 @@ function withGlobal(_global) {
 
             clock.nextAsync = function nextAsync() {
                 return runAsyncWithNativeTimeout(function (resolve, reject) {
+                    runJobs(clock);
                     const timer = firstTimer(clock);
                     if (!timer) {
                         resolve(clock.now);
@@ -2447,6 +2448,7 @@ function withGlobal(_global) {
                     clock.now = timer.callAt;
                     try {
                         callTimer(clock, timer);
+                        runJobs(clock);
                     } catch (e) {
                         err = e;
                     }

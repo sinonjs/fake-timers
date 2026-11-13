@@ -1949,6 +1949,38 @@ describe("FakeTimers", function () {
             assert.equals(this.clock.now, 10);
         });
 
+        it("runs jobs queued by the fired timer, like next()", async function () {
+            const clock = this.clock;
+            let ran = 0;
+            clock.setTimeout(function () {
+                clock.queueMicrotask(function () {
+                    ran += 1;
+                });
+            }, 10);
+
+            await clock.nextAsync();
+
+            assert.equals(ran, 1);
+            assert.equals(clock.countTimers(), 0);
+        });
+
+        it("does not fire a timer cleared by a job of the previous timer", async function () {
+            const clock = this.clock;
+            const stub = sinon.stub();
+            const second = clock.setTimeout(stub, 20);
+            clock.setTimeout(function () {
+                clock.queueMicrotask(function () {
+                    clock.clearTimeout(second);
+                });
+            }, 10);
+
+            await clock.nextAsync();
+            await clock.nextAsync();
+
+            assert(stub.notCalled);
+            assert.equals(clock.countTimers(), 0);
+        });
+
         it("stays side-effect free when no timers", async function () {
             const now = this.clock.now;
             await this.clock.nextAsync();
