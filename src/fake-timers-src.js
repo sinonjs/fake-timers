@@ -921,7 +921,7 @@ function withGlobal(_global) {
             ["format", "formatToParts"].forEach((method) => {
                 formatter[method] = function (date) {
                     return realFormatter[method](
-                        date || IntlWithClock.clock.now,
+                        date === undefined ? IntlWithClock.clock.now : date,
                     );
                 };
             });
