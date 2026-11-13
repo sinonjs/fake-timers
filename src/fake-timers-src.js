@@ -1383,20 +1383,20 @@ function withGlobal(_global) {
      * @returns {number}
      */
     function compareTimers(a, b) {
-        // Sort IdleCallback timers to the bottom when scheduled for the same time
-        if (a.type === "IdleCallback" && b.type !== "IdleCallback") {
-            return 1;
-        }
-        if (a.type !== "IdleCallback" && b.type === "IdleCallback") {
-            return -1;
-        }
-
         // Sort first by absolute timing
         if (a.callAt < b.callAt) {
             return -1;
         }
         if (a.callAt > b.callAt) {
             return 1;
+        }
+
+        // Sort IdleCallback timers to the bottom when scheduled for the same time
+        if (a.type === "IdleCallback" && b.type !== "IdleCallback") {
+            return 1;
+        }
+        if (a.type !== "IdleCallback" && b.type === "IdleCallback") {
+            return -1;
         }
 
         // Sort next by immediate, immediate timers take precedence
@@ -1608,6 +1608,7 @@ function withGlobal(_global) {
             const timer = getTimer(clock, id);
             if (
                 timer.type === ttype ||
+                (timer.requestIdleCallback && ttype === "IdleCallback") ||
                 (timer.type === "Timeout" && ttype === "Interval") ||
                 (timer.type === "Interval" && ttype === "Timeout")
             ) {

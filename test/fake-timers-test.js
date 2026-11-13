@@ -5239,6 +5239,49 @@ describe("FakeTimers", function () {
 
             assert.isTrue(spy.called);
         });
+
+        it("runs when queued behind several later timers", function () {
+            const clock = this.clock;
+            const calls = [];
+            clock.setTimeout(function () {
+                clock.requestIdleCallback(function () {
+                    calls.push("idle");
+                });
+            }, 10);
+            clock.setTimeout(function () {
+                calls.push("timeout 100");
+            }, 100);
+            clock.setTimeout(function () {
+                calls.push("timeout 150");
+            }, 150);
+            clock.setTimeout(NOOP, 5000);
+            clock.tick(1000);
+
+            assert.equals(calls, ["idle", "timeout 100", "timeout 150"]);
+        });
+
+        it("does not stop runToLast before the last timer", function () {
+            this.clock.setTimeout(NOOP, 50);
+            this.clock.requestIdleCallback(NOOP);
+            this.clock.setTimeout(NOOP, 250);
+            this.clock.runToLast();
+
+            assert.equals(this.clock.now, 250);
+        });
+
+        it("does not make runToLast tick backwards", function () {
+            const clock = this.clock;
+            clock.setTimeout(function () {
+                clock.requestIdleCallback(NOOP);
+            }, 10);
+            clock.setTimeout(NOOP, 100);
+            clock.setTimeout(NOOP, 150);
+            clock.setTimeout(NOOP, 5000);
+            clock.tick(1000);
+            clock.runToLast();
+
+            assert.equals(clock.now, 5000);
+        });
     });
 
     describe("cancelIdleCallback", function () {
@@ -5250,6 +5293,17 @@ describe("FakeTimers", function () {
             const stub = sinon.stub();
             const callbackId = this.clock.requestIdleCallback(stub, {
                 timeout: 0,
+            });
+            this.clock.cancelIdleCallback(callbackId);
+            this.clock.runAll();
+
+            assert.isFalse(stub.called);
+        });
+
+        it("removes idle callback with a timeout", function () {
+            const stub = sinon.stub();
+            const callbackId = this.clock.requestIdleCallback(stub, {
+                timeout: 1000,
             });
             this.clock.cancelIdleCallback(callbackId);
             this.clock.runAll();
