@@ -80,6 +80,10 @@ jobs:
             - name: Type Check
               run: |
                   npm run types:check
+            - name: Committed types are up to date
+              run: |
+                  npm run types:build
+                  git diff --exit-code types/
             - name: Type Smoke Tests
               run: |
                   npm run types:smoke
