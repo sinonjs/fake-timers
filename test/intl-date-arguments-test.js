@@ -2,7 +2,7 @@
 
 const { assert, FakeTimers } = require("./helpers/setup-tests");
 
-["format", "formatToParts"].forEach(function (method) {
+["format", "formatToParts"].forEach((method) => {
     describe(`Intl date arguments: ${method}`, function () {
         let clock;
         let nativeFormatter;
@@ -38,7 +38,7 @@ const { assert, FakeTimers } = require("./helpers/setup-tests");
         });
 
         it("preserves explicit falsy timestamps", function () {
-            [0, -0, null, false, ""].forEach(function (value) {
+            [0, -0, null, false, ""].forEach((value) => {
                 assert.equals(
                     fakeFormatter[method](value),
                     nativeFormatter[method](value),
@@ -47,7 +47,7 @@ const { assert, FakeTimers } = require("./helpers/setup-tests");
         });
 
         it("preserves explicit positive and negative timestamps", function () {
-            [86400000, -86400000].forEach(function (value) {
+            [86400000, -86400000].forEach((value) => {
                 assert.equals(
                     fakeFormatter[method](value),
                     nativeFormatter[method](value),
@@ -56,15 +56,15 @@ const { assert, FakeTimers } = require("./helpers/setup-tests");
         });
 
         it("rejects invalid dates like the native formatter", function () {
-            [NaN, new Date(NaN)].forEach(function (value) {
+            [NaN, new Date(NaN)].forEach((value) => {
                 assert.exception(
-                    function () {
+                    () => {
                         nativeFormatter[method](value);
                     },
                     { name: "RangeError" },
                 );
                 assert.exception(
-                    function () {
+                    () => {
                         fakeFormatter[method](value);
                     },
                     { name: "RangeError" },
@@ -73,15 +73,15 @@ const { assert, FakeTimers } = require("./helpers/setup-tests");
         });
 
         it("rejects BigInt and Symbol dates like the native formatter", function () {
-            [0n, Symbol("date")].forEach(function (value) {
+            [0n, Symbol("date")].forEach((value) => {
                 assert.exception(
-                    function () {
+                    () => {
                         nativeFormatter[method](value);
                     },
                     { name: "TypeError" },
                 );
                 assert.exception(
-                    function () {
+                    () => {
                         fakeFormatter[method](value);
                     },
                     { name: "TypeError" },
