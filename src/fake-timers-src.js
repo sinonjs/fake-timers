@@ -1,7 +1,7 @@
 "use strict";
 
 const globalObject = require("@sinonjs/commons").global;
-let timersModule, timersPromisesModule;
+let timersModule, timersPromisesModule, perfHooksModule;
 if (typeof require === "function" && typeof module === "object") {
     try {
         timersModule = require("timers");
@@ -10,6 +10,11 @@ if (typeof require === "function" && typeof module === "object") {
     }
     try {
         timersPromisesModule = require("timers/promises");
+    } catch {
+        // ignored
+    }
+    try {
+        perfHooksModule = require("perf_hooks");
     } catch {
         // ignored
     }
@@ -547,6 +552,7 @@ function withGlobal(globalNamespace) {
         return [];
     };
     const isPresent = {};
+    const perfHooksNowDescriptors = new WeakMap();
     let timeoutResult,
         addTimerReturnsObject = false;
 
@@ -2614,6 +2620,20 @@ function withGlobal(globalNamespace) {
                     } else if (method === "nextTick" && _global.process) {
                         _global.process.nextTick = clock[installedNextTick];
                     } else if (method === "performance") {
+                        if (perfHooksNowDescriptors.has(clock)) {
+                            const descriptor =
+                                perfHooksNowDescriptors.get(clock);
+                            if (descriptor) {
+                                Object.defineProperty(
+                                    perfHooksModule.performance,
+                                    "now",
+                                    descriptor,
+                                );
+                            } else {
+                                delete perfHooksModule.performance.now;
+                            }
+                            perfHooksNowDescriptors.delete(clock);
+                        }
                         const originalPerfDescriptor =
                             Object.getOwnPropertyDescriptor(
                                 clock,
@@ -2858,6 +2878,24 @@ function withGlobal(globalNamespace) {
                 }
             } else {
                 hijackMethod(_global, nameOfMethodToReplace, clock);
+            }
+            if (
+                nameOfMethodToReplace === "performance" &&
+                _global === globalObject &&
+                perfHooksModule?.performance
+            ) {
+                perfHooksNowDescriptors.set(
+                    clock,
+                    Object.getOwnPropertyDescriptor(
+                        perfHooksModule.performance,
+                        "now",
+                    ),
+                );
+                Object.defineProperty(perfHooksModule.performance, "now", {
+                    configurable: true,
+                    writable: true,
+                    value: clock.performance.now,
+                });
             }
             if (
                 clock.timersModuleMethods !== undefined &&
