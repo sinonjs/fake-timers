@@ -86,6 +86,8 @@
   },
   "browser": {
     "vm": false,
+    "perf_hooks": false,
+    "node:perf_hooks": false,
     "node:timers": false,
     "node:timers/promises": false,
     "timers": false,
