@@ -1314,6 +1314,9 @@ function withGlobal(globalNamespace) {
 
         if (Object.hasOwn(timer, "interval")) {
             timer.type = "Interval";
+            if (!Number.isFinite(timer.interval)) {
+                timer.interval = 1;
+            }
             timer.interval = timer.interval > maxTimeout ? 1 : timer.interval;
         }
 
