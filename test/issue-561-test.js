@@ -25,11 +25,11 @@ describe("issue #561 - cross-realm Date passed to setSystemTime", function () {
             "new Date('2026-04-02T00:00:00.000Z')",
         );
 
-        refute.exception(function () {
+        refute.exception(() => {
             clock.setSystemTime(crossRealmDate);
         });
 
         assert.same(clock.now, crossRealmDate.getTime());
-        assert.same(new Date().getTime(), crossRealmDate.getTime());
+        assert.same(Date.now(), crossRealmDate.getTime());
     });
 });

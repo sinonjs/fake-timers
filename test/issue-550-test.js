@@ -20,9 +20,9 @@ describe("issue #550 - clearTimeout before the first setTimeout", function () {
         console.warn = function () {};
 
         try {
-            refute.exception(function () {
+            refute.exception(() => {
                 clearTimeout(123);
-                setTimeout(function () {}, 100);
+                setTimeout(() => {}, 100);
             });
         } finally {
             console.warn = originalWarn;
