@@ -7,8 +7,8 @@ describe("issue #418", function () {
 
     function createGlobal() {
         return {
-            Date: Date,
-            Promise: Promise,
+            Date,
+            Promise,
             setTimeout: function setTimeoutWrapper(callback, delay) {
                 return setTimeout(callback, delay);
             },
@@ -72,9 +72,7 @@ describe("issue #418", function () {
 
         refute.same(target.scheduler, nativeScheduler);
         assert.isFunction(target.scheduler.postTask);
-        assert.isFalse(
-            Object.prototype.hasOwnProperty.call(nativeScheduler, "clock"),
-        );
+        assert.isFalse(Object.hasOwn(nativeScheduler, "clock"));
 
         clock.uninstall();
         clock = undefined;
@@ -84,9 +82,7 @@ describe("issue #418", function () {
             originalDescriptor,
         );
         assert.same(target.scheduler, nativeScheduler);
-        assert.isFalse(
-            Object.prototype.hasOwnProperty.call(nativeScheduler, "clock"),
-        );
+        assert.isFalse(Object.hasOwn(nativeScheduler, "clock"));
     });
 
     it("throws synchronously for non-callable postTask callbacks", function () {
@@ -94,7 +90,7 @@ describe("issue #418", function () {
         clock = FakeTimers.withGlobal(target).install();
 
         assert.exception(
-            function () {
+            () => {
                 target.scheduler.postTask("not a function");
             },
             {
@@ -108,9 +104,7 @@ describe("issue #418", function () {
         const target = createGlobal();
         clock = FakeTimers.withGlobal(target).install();
 
-        const promise = target.scheduler.postTask(function () {
-            return "result";
-        }, null);
+        const promise = target.scheduler.postTask(() => "result", null);
 
         clock.tick(0);
 
@@ -139,13 +133,11 @@ describe("issue #418", function () {
         const target = createGlobal();
         clock = FakeTimers.withGlobal(target).install();
 
-        const promise = target.scheduler.postTask(function () {
-            return {
-                then: function then(resolve) {
-                    resolve("adopted");
-                },
-            };
-        });
+        const promise = target.scheduler.postTask(() => ({
+            then: function then(resolve) {
+                resolve("adopted");
+            },
+        }));
 
         clock.tick(0);
 
@@ -166,7 +158,7 @@ describe("issue #418", function () {
 
         abortController.abort(reason);
 
-        await promise.catch(function (error) {
+        await promise.catch((error) => {
             assert.same(error, reason);
         });
 
@@ -182,7 +174,7 @@ describe("issue #418", function () {
         abortController.signal.removeEventListener = sinon.stub();
         clock = FakeTimers.withGlobal(target).install();
 
-        target.scheduler.postTask(function () {}, {
+        target.scheduler.postTask(() => {}, {
             delay: 50,
             signal: abortController.signal,
         });
