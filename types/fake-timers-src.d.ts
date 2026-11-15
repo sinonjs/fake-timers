@@ -54,6 +54,11 @@ export type AnimationFrameCallback = (timestamp: number) => any;
 export type RequestAnimationFrame = (callback: AnimationFrameCallback) => TimerId;
 export type CancelAnimationFrame = (id: TimerId) => void;
 export type CancelIdleCallback = (id: TimerId) => void;
+export type SchedulerPostTask = (callback: VoidVarArgsFunc, options?: {
+    delay?: number;
+    priority?: string;
+    signal?: AbortSignal;
+}) => Promise<unknown>;
 export type ClearImmediate = (id: NodeImmediate) => void;
 export type CountTimers = () => number;
 export type RunMicrotasks = () => void;
@@ -128,7 +133,7 @@ export type Uninstall = () => void;
 export type SetTickMode = (tickModeConfig: SetTickModeConfig) => void;
 export type Hrtime = (prev?: Array<number>) => Array<number>;
 export type WithGlobal = (_global: GlobalNamespace) => FakeTimers;
-export type FakeMethod = "setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal";
+export type FakeMethod = "setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal" | "scheduler";
 export type TimerId = number | NodeImmediate | Timer;
 export type GlobalObject = Record<string, any> & {
     setTimeout?: SetTimeout;
@@ -147,6 +152,7 @@ export type GlobalObject = Record<string, any> & {
     Performance?: any;
     Intl?: any;
     Temporal?: any;
+    scheduler?: any;
     Promise?: typeof Promise;
     Date: typeof Date & {
         isFake?: boolean;
@@ -295,6 +301,12 @@ export type Timers = {
      * - native `cancelIdleCallback`, if available
      */
     cancelIdleCallback?: CancelIdleCallback;
+    /**
+     * - native `scheduler`, if available
+     */
+    scheduler?: {
+        postTask: SchedulerPostTask;
+    };
 };
 export type ClockState = {
     /**
@@ -611,6 +623,12 @@ export type Clock = {
      * - fake Temporal object
      */
     Temporal?: any;
+    /**
+     * - fake scheduler object
+     */
+    scheduler?: {
+        postTask: SchedulerPostTask;
+    };
 };
 export type Config = {
     /**
@@ -778,6 +796,12 @@ export type NodeImmediate = {
  * @returns {void}
  */
 /**
+ * @callback SchedulerPostTask
+ * @param {VoidVarArgsFunc} callback - the callback to run
+ * @param {{delay?: number, priority?: string, signal?: AbortSignal}} [options] - scheduling options
+ * @returns {Promise<unknown>}
+ */
+/**
  * @callback ClearImmediate
  * @param {NodeImmediate} id - faked `clearImmediate`
  * @returns {void}
@@ -880,7 +904,7 @@ export type NodeImmediate = {
  * @returns {FakeTimers}
  */
 /**
- * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal"} FakeMethod
+ * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal" | "scheduler"} FakeMethod
  */
 /**
  * @typedef {number | NodeImmediate | Timer} TimerId
@@ -903,6 +927,7 @@ export type NodeImmediate = {
  *   Performance?: any,
  *   Intl?: any,
  *   Temporal?: any,
+ *   scheduler?: any,
  *   Promise?: typeof Promise,
  *   Date: typeof Date & { isFake?: boolean, toSource?: () => string, clock?: any }
  * }} GlobalObject
@@ -975,6 +1000,7 @@ export type NodeImmediate = {
  * @property {CancelAnimationFrame} [cancelAnimationFrame] - native `cancelAnimationFrame`, if available
  * @property {RequestIdleCallback} [requestIdleCallback] - native `requestIdleCallback`, if available
  * @property {CancelIdleCallback} [cancelIdleCallback] - native `cancelIdleCallback`, if available
+ * @property {{postTask: SchedulerPostTask}} [scheduler] - native `scheduler`, if available
  */
 /**
  * @typedef {object} ClockState
@@ -1072,6 +1098,7 @@ export type NodeImmediate = {
  * @property {Timer[]} [jobs] - internal flag
  * @property {IntlWithClock} [Intl] - fake Intl object
  * @property {any} [Temporal] - fake Temporal object
+ * @property {{postTask: SchedulerPostTask}} [scheduler] - fake scheduler object
  */
 /**
  * Configuration object for the `install` method.
