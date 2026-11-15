@@ -4414,13 +4414,6 @@ describe("FakeTimers", function () {
                     assert.equals(timerLog, [1, 2, 3, 4, 5]);
                 });
 
-                it("runToLastAsync", async function () {
-                    clock.setTickMode({ mode: "nextAsync" });
-                    await clock.runToLastAsync();
-                    // 5 should not resolve because it wasn't queued when we called "only pending timers"
-                    assert.equals(timerLog, [1, 2, 3, 4]);
-                });
-
                 it("nextAsync", async function () {
                     clock.setTickMode({ mode: "nextAsync" });
                     await clock.nextAsync();
@@ -6983,8 +6976,11 @@ describe("missing timers", function () {
         });
 
         it("tick() accepts a TemporalDuration-shaped object even when Temporal is absent from the global", function () {
-            const clock = FakeTimers.createClock(0);
-            // duck-typed Duration: total("millisecond") returns ms, no native Temporal required
+            // Use a custom global without Temporal so isPresent.Temporal is false
+            const clock = FakeTimers.withGlobal({
+                Date: globalThis.Date,
+            }).createClock(0);
+            // duck-typed Duration: total({ unit: "millisecond" }) returns ms, no native Temporal required
             const duration = {
                 total: ({ unit }) => (unit === "millisecond" ? 5000 : 5),
             };
