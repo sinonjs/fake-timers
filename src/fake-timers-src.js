@@ -2809,7 +2809,7 @@ function withGlobal(globalNamespace) {
                             try {
                                 delete _global[method];
                             } catch {
-                                /* eslint no-empty: "off" */
+                                // ignored
                             }
                         }
                     }
