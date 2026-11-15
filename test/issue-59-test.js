@@ -6,7 +6,7 @@ describe("issue #59", function () {
     it("should install and uninstall the clock on a custom target", function () {
         const setTimeoutFake = sinon.fake();
         const context = {
-            Date: Date,
+            Date,
             setTimeout: setTimeoutFake,
             clearTimeout: sinon.fake(),
         };
