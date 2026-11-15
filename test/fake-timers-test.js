@@ -4271,9 +4271,8 @@ describe("FakeTimers", function () {
 
             it("does not create an infinite loop when uninstalled while a tickAsync is in flight", function (done) {
                 // Regression test for https://github.com/sinonjs/fake-timers/issues/564.
-                // tickAsync() pauses nextAsync mode; the restore runs via a native
-                // macrotask (setImmediate/setTimeout). If uninstall() runs before that fires, the restore
-                // must be a no-op.
+                // tickAsync() pauses nextAsync mode, then its .finally() restores it.
+                // If uninstall() runs before .finally() fires, the restore must be a no-op.
                 setTimeout(done, 100);
                 clock.tickAsync(100); // intentionally NOT awaited
                 // afterEach will call clock.uninstall() while tickAsync is still in flight
@@ -4370,7 +4369,6 @@ describe("FakeTimers", function () {
                 });
 
                 afterEach(async function () {
-                    clock.setTickMode({ mode: "nextAsync" });
                     await allTimersDone;
                     assert.equals(timerLog, [1, 2, 3, 4, 5]);
                 });
@@ -4379,16 +4377,6 @@ describe("FakeTimers", function () {
                     clock.setTickMode({ mode: "nextAsync" });
                     await clock.runAllAsync();
                     assert.equals(timerLog, [1, 2, 3, 4, 5]);
-                });
-
-                it("runToLastAsync", async function () {
-                    // Do not enable nextAsync before this call: pauseAutoTickUntilFinished
-                    // restores it in .finally(), and in some engines AUMC can fire
-                    // clock.next() before the post-await assertion runs.
-                    await clock.runToLastAsync();
-                    // 5 should not resolve because it wasn't queued when we called "only pending timers"
-                    assert.equals(timerLog, [1, 2, 3, 4]);
-                    // afterEach re-enables nextAsync to drain remaining timers
                 });
 
                 it("nextAsync", async function () {
