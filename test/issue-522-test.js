@@ -14,7 +14,7 @@ describe("issue #522 - setInterval(0) should not starve same-time setTimeout(0)"
 
         const events = [];
         let intervalCount = 0;
-        const intervalId = setInterval(function () {
+        const intervalId = setInterval(() => {
             events.push("interval");
 
             if (++intervalCount > 4) {
@@ -22,7 +22,7 @@ describe("issue #522 - setInterval(0) should not starve same-time setTimeout(0)"
             }
         }, 0);
 
-        setTimeout(function () {
+        setTimeout(() => {
             events.push("timeout");
         }, 0);
 

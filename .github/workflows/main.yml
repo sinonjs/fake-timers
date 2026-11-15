@@ -15,8 +15,8 @@ jobs:
     check-tests-are-watchable:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
               with:
                   node-version: "lts/*"
                   cache: npm
@@ -32,8 +32,8 @@ jobs:
     prettier:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
               with:
                   node-version: "lts/*"
                   cache: npm
@@ -50,8 +50,8 @@ jobs:
     lint:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
               with:
                   node-version: "lts/*"
                   cache: npm
@@ -67,8 +67,8 @@ jobs:
     types:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
               with:
                   node-version: "lts/*"
                   cache: npm
@@ -80,6 +80,10 @@ jobs:
             - name: Type Check
               run: |
                   npm run types:check
+            - name: Committed types are up to date
+              run: |
+                  npm run types:build
+                  git diff --exit-code types/
             - name: Type Smoke Tests
               run: |
                   npm run types:smoke
@@ -87,8 +91,8 @@ jobs:
     chromium:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
               with:
                   node-version: "lts/*"
                   cache: npm
@@ -108,8 +112,8 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
               with:
                   node-version: "lts/*"
                   cache: npm
@@ -128,8 +132,8 @@ jobs:
     coverage:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
               with:
                   node-version: "lts/*"
                   cache: npm
@@ -152,9 +156,9 @@ jobs:
                 node-version: [20, 22, 24, 26]
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v7
             - name: Use Node.js ${{ matrix.node-version }}
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v7
               with:
                   node-version: ${{ matrix.node-version }}
                   cache: npm

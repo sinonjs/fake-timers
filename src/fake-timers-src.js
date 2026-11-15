@@ -1,7 +1,7 @@
 "use strict";
 
 const globalObject = require("@sinonjs/commons").global;
-let timersModule, timersPromisesModule;
+let timersModule, timersPromisesModule, perfHooksModule;
 if (typeof require === "function" && typeof module === "object") {
     try {
         timersModule = require("timers");
@@ -10,6 +10,11 @@ if (typeof require === "function" && typeof module === "object") {
     }
     try {
         timersPromisesModule = require("timers/promises");
+    } catch {
+        // ignored
+    }
+    try {
+        perfHooksModule = require("perf_hooks");
     } catch {
         // ignored
     }
@@ -265,7 +270,7 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * @callback WithGlobal
- * @param {object} _global Namespace to mock (e.g. `window`)
+ * @param {GlobalNamespace} _global Namespace to mock (e.g. `window`)
  * @returns {FakeTimers}
  */
 
@@ -299,6 +304,31 @@ if (typeof require === "function" && typeof module === "object") {
  *   Promise?: typeof Promise,
  *   Date: typeof Date & { isFake?: boolean, toSource?: () => string, clock?: any }
  * }} GlobalObject
+ */
+
+/**
+ * The global namespace passed to `withGlobal`, such as `window` or `globalThis`.
+ * Members use native-compatible signatures so real globals are accepted.
+ * @typedef {Record<string, any> & {
+ *   Date?: typeof Date,
+ *   setTimeout?: (...args: any[]) => any,
+ *   clearTimeout?: (...args: any[]) => any,
+ *   setInterval?: (...args: any[]) => any,
+ *   clearInterval?: (...args: any[]) => any,
+ *   setImmediate?: (...args: any[]) => any,
+ *   clearImmediate?: (...args: any[]) => any,
+ *   queueMicrotask?: (...args: any[]) => any,
+ *   requestAnimationFrame?: (...args: any[]) => any,
+ *   cancelAnimationFrame?: (...args: any[]) => any,
+ *   requestIdleCallback?: (...args: any[]) => any,
+ *   cancelIdleCallback?: (...args: any[]) => any,
+ *   process?: any,
+ *   performance?: any,
+ *   Performance?: any,
+ *   Intl?: any,
+ *   Temporal?: any,
+ *   Promise?: typeof Promise
+ * }} GlobalNamespace
  */
 
 /**
@@ -507,11 +537,13 @@ if (typeof require === "function" && typeof module === "object") {
 
 /**
  * Mocks available features in the specified global namespace.
- * @param {GlobalObject} _global Namespace to mock (e.g. `window`)
+ * @param {GlobalNamespace} globalNamespace Namespace to mock (e.g. `window`)
  * @returns {FakeTimers}
  */
-function withGlobal(_global) {
-    const maxTimeout = Math.pow(2, 31) - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
+function withGlobal(globalNamespace) {
+    // eslint-disable-next-line no-underscore-dangle
+    const _global = /** @type {GlobalObject} */ (globalNamespace);
+    const maxTimeout = 2 ** 31 - 1; //see https://heycam.github.io/webidl/#abstract-opdef-converttoint
     const idCounterStart = 1e12; // arbitrarily large number to avoid collisions with native timer IDs
     const NOOP = function () {
         return undefined;
@@ -520,6 +552,7 @@ function withGlobal(_global) {
         return [];
     };
     const isPresent = {};
+    const perfHooksNowDescriptors = new WeakMap();
     let timeoutResult,
         addTimerReturnsObject = false;
 
@@ -547,10 +580,7 @@ function withGlobal(_global) {
         _global.performance &&
         _global.performance.constructor &&
         _global.performance.constructor.prototype;
-    isPresent.queueMicrotask = Object.prototype.hasOwnProperty.call(
-        _global,
-        "queueMicrotask",
-    );
+    isPresent.queueMicrotask = Object.hasOwn(_global, "queueMicrotask");
     isPresent.requestAnimationFrame =
         _global.requestAnimationFrame &&
         typeof _global.requestAnimationFrame === "function";
@@ -618,18 +648,6 @@ function withGlobal(_global) {
     }
 
     /**
-     * @param {number} num
-     * @returns {boolean}
-     */
-    function isNumberFinite(num) {
-        if (Number.isFinite) {
-            return Number.isFinite(num);
-        }
-
-        return isFinite(num);
-    }
-
-    /**
      * @param {Clock} clock
      * @param {number} i
      */
@@ -679,7 +697,7 @@ function withGlobal(_global) {
                 throw new Error(`Invalid time ${str}`);
             }
 
-            ms += parsed * Math.pow(60, l - i - 1);
+            ms += parsed * 60 ** (l - i - 1);
         }
 
         return ms * 1000;
@@ -765,7 +783,7 @@ function withGlobal(_global) {
         }
 
         let matchedLineIndex = -1;
-        job.error.stack.split("\n").some(function (line, i) {
+        job.error.stack.split("\n").some((line, i) => {
             // If we've matched a computed target line (e.g. setTimeout) then we
             // don't need to look any further. Return true to stop iterating.
             const matchedComputedTarget = line.match(computedTargetPattern);
@@ -898,7 +916,7 @@ function withGlobal(_global) {
      */
     function createIntl(clock) {
         /** @type {IntlWithClock} */
-        const IntlWithClock = { clock: clock };
+        const IntlWithClock = { clock };
         /*
          * All properties of Intl are non-enumerable, so we need
          * to do a bit of work to get them out.
@@ -921,7 +939,7 @@ function withGlobal(_global) {
             ["format", "formatToParts"].forEach((method) => {
                 formatter[method] = function (date) {
                     return realFormatter[method](
-                        date || IntlWithClock.clock.now,
+                        date === undefined ? IntlWithClock.clock.now : date,
                     );
                 };
             });
@@ -1282,31 +1300,32 @@ function withGlobal(_global) {
 
         timer.type = timer.immediate ? "Immediate" : "Timeout";
 
-        if (Object.prototype.hasOwnProperty.call(timer, "delay")) {
+        if (Object.hasOwn(timer, "delay")) {
             if (typeof timer.delay !== "number") {
                 timer.delay = parseInt(timer.delay, 10);
             }
 
-            if (!isNumberFinite(timer.delay)) {
+            if (!Number.isFinite(timer.delay)) {
                 timer.delay = 0;
             }
             timer.delay = timer.delay > maxTimeout ? 1 : timer.delay;
             timer.delay = Math.max(0, timer.delay);
         }
 
-        if (Object.prototype.hasOwnProperty.call(timer, "interval")) {
+        if (Object.hasOwn(timer, "interval")) {
             timer.type = "Interval";
+            if (!Number.isFinite(timer.interval)) {
+                timer.interval = 1;
+            }
             timer.interval = timer.interval > maxTimeout ? 1 : timer.interval;
         }
 
-        if (Object.prototype.hasOwnProperty.call(timer, "animation")) {
+        if (Object.hasOwn(timer, "animation")) {
             timer.type = "AnimationFrame";
             timer.animation = true;
         }
 
-        if (
-            Object.prototype.hasOwnProperty.call(timer, "requestIdleCallback")
-        ) {
+        if (Object.hasOwn(timer, "requestIdleCallback")) {
             // mark timer as IdleCallback type if it has no delay, otherwise it'd be of type timeout
             // this way we are able to sort such that the timer only gets called when there's truly no pending task to run
             if (!timer.delay) {
@@ -1341,18 +1360,18 @@ function withGlobal(_global) {
         if (addTimerReturnsObject) {
             const res = {
                 refed: true,
-                ref: function () {
+                ref() {
                     this.refed = true;
                     return this;
                 },
-                unref: function () {
+                unref() {
                     this.refed = false;
                     return this;
                 },
-                hasRef: function () {
+                hasRef() {
                     return this.refed;
                 },
-                refresh: function () {
+                refresh() {
                     timer.callAt =
                         clock.now +
                         (parseInt(String(timer.delay)) ||
@@ -1365,7 +1384,7 @@ function withGlobal(_global) {
 
                     return this;
                 },
-                [Symbol.toPrimitive]: function () {
+                [Symbol.toPrimitive]() {
                     return timer.id;
                 },
             };
@@ -1383,20 +1402,20 @@ function withGlobal(_global) {
      * @returns {number}
      */
     function compareTimers(a, b) {
-        // Sort IdleCallback timers to the bottom when scheduled for the same time
-        if (a.type === "IdleCallback" && b.type !== "IdleCallback") {
-            return 1;
-        }
-        if (a.type !== "IdleCallback" && b.type === "IdleCallback") {
-            return -1;
-        }
-
         // Sort first by absolute timing
         if (a.callAt < b.callAt) {
             return -1;
         }
         if (a.callAt > b.callAt) {
             return 1;
+        }
+
+        // Sort IdleCallback timers to the bottom when scheduled for the same time
+        if (a.type === "IdleCallback" && b.type !== "IdleCallback") {
+            return 1;
+        }
+        if (a.type !== "IdleCallback" && b.type === "IdleCallback") {
+            return -1;
         }
 
         // Sort next by immediate, immediate timers take precedence
@@ -1460,12 +1479,12 @@ function withGlobal(_global) {
          */
         let timer = null;
 
-        for (let i = 0; i < timers.length; i++) {
+        for (const candidate of timers) {
             if (
-                inRange(from, to, timers[i]) &&
-                (!timer || compareTimers(timer, timers[i]) === 1)
+                inRange(from, to, candidate) &&
+                (!timer || compareTimers(timer, candidate) === 1)
             ) {
-                timer = timers[i];
+                timer = candidate;
             }
         }
 
@@ -1494,9 +1513,9 @@ function withGlobal(_global) {
         const timers = clock.timerHeap.timers;
         let timer = null;
 
-        for (let i = 0; i < timers.length; i++) {
-            if (!timer || compareTimers(timer, timers[i]) === -1) {
-                timer = timers[i];
+        for (const candidate of timers) {
+            if (!timer || compareTimers(timer, candidate) === -1) {
+                timer = candidate;
             }
         }
 
@@ -1508,6 +1527,10 @@ function withGlobal(_global) {
      * @param {Timer} timer
      */
     function callTimer(clock, timer) {
+        if (!hasTimer(clock, timer.id)) {
+            return;
+        }
+
         if (typeof timer.interval === "number") {
             clock.timerHeap.remove(timer);
             timer.callAt += timer.interval;
@@ -1608,6 +1631,7 @@ function withGlobal(_global) {
             const timer = getTimer(clock, id);
             if (
                 timer.type === ttype ||
+                (timer.requestIdleCallback && ttype === "IdleCallback") ||
                 (timer.type === "Timeout" && ttype === "Interval") ||
                 (timer.type === "Interval" && ttype === "Timeout")
             ) {
@@ -1629,10 +1653,7 @@ function withGlobal(_global) {
      * @param {Clock} clock
      */
     function hijackMethod(target, method, clock) {
-        clock[method].hasOwnProperty = Object.prototype.hasOwnProperty.call(
-            target,
-            method,
-        );
+        clock[method].hasOwnProperty = Object.hasOwn(target, method);
         clock[`_${method}`] = target[method];
 
         if (method === "Date") {
@@ -1667,8 +1688,8 @@ function withGlobal(_global) {
                 target[method] = clock[method];
             }
         } else {
-            target[method] = function () {
-                return clock[method].apply(clock, arguments);
+            target[method] = function (...args) {
+                return clock[method](...args);
             };
 
             Object.defineProperties(
@@ -1760,7 +1781,7 @@ function withGlobal(_global) {
         start = Math.floor(getEpoch(start));
         const startTimestamp = start;
         // eslint-disable-next-line no-param-reassign
-        loopLimit = loopLimit || 1000;
+        loopLimit ||= 1000;
         /** @type {number} */
         let nanos = 0;
         let uninstalled = false;
@@ -1771,7 +1792,7 @@ function withGlobal(_global) {
         const clock = /** @type {Clock} */ ({
             now: start,
             Date: createDate(),
-            loopLimit: loopLimit,
+            loopLimit,
             isNearInfiniteLimit: false,
             tickMode: { mode: "manual", counter: 0, delta: undefined },
         });
@@ -1780,7 +1801,9 @@ function withGlobal(_global) {
 
         //eslint-disable-next-line jsdoc/require-jsdoc
         function getTimeToNextFrame() {
-            return 16 - ((clock.now - startTimestamp) % 16);
+            const millisSinceStart =
+                clock.now - adjustedSystemTime[0] - startTimestamp;
+            return 16 - (millisSinceStart % 16);
         }
 
         //eslint-disable-next-line jsdoc/require-jsdoc
@@ -1956,7 +1979,7 @@ function withGlobal(_global) {
             };
 
             const result = addTimer(clock, {
-                func: func,
+                func,
                 args: [idleDeadline],
                 delay: timeout,
                 requestIdleCallback: true,
@@ -1969,10 +1992,10 @@ function withGlobal(_global) {
             return clearTimer(clock, timerId, "IdleCallback");
         };
 
-        clock.setTimeout = function setTimeout(func, timeout) {
+        clock.setTimeout = function setTimeout(func, timeout, ...args) {
             return addTimer(clock, {
-                func: func,
-                args: Array.prototype.slice.call(arguments, 2),
+                func,
+                args,
                 delay: timeout,
             });
         };
@@ -1995,10 +2018,10 @@ function withGlobal(_global) {
             return clearTimer(clock, timerId, "Timeout");
         };
 
-        clock.nextTick = function nextTick(func) {
+        clock.nextTick = function nextTick(func, ...args) {
             return enqueueJob(clock, {
-                func: func,
-                args: Array.prototype.slice.call(arguments, 1),
+                func,
+                args,
                 error: clock.isNearInfiniteLimit ? new Error() : null,
             });
         };
@@ -2007,12 +2030,12 @@ function withGlobal(_global) {
             return clock.nextTick(func); // explicitly drop additional arguments
         };
 
-        clock.setInterval = function setInterval(func, timeout) {
+        clock.setInterval = function setInterval(func, timeout, ...args) {
             // eslint-disable-next-line no-param-reassign
             timeout = parseInt(String(timeout), 10);
             return addTimer(clock, {
-                func: func,
-                args: Array.prototype.slice.call(arguments, 2),
+                func,
+                args,
                 delay: timeout,
                 interval: timeout,
             });
@@ -2024,10 +2047,10 @@ function withGlobal(_global) {
 
         if (isPresent.setImmediate) {
             clock.setImmediate = /** @type {SetImmediate} */ (
-                function setImmediate(func) {
+                function setImmediate(func, ...args) {
                     return addTimer(clock, {
-                        func: func,
-                        args: Array.prototype.slice.call(arguments, 1),
+                        func,
+                        args,
                         immediate: true,
                     });
                 }
@@ -2062,7 +2085,7 @@ function withGlobal(_global) {
 
         clock.requestAnimationFrame = function requestAnimationFrame(func) {
             const result = addTimer(clock, {
-                func: func,
+                func,
                 delay: getTimeToNextFrame(),
                 get args() {
                     return [fakePerformanceNow()];
@@ -2142,11 +2165,11 @@ function withGlobal(_global) {
             }
 
             return /** @type {ClockState} */ ({
-                msFloat: msFloat,
-                ms: ms,
-                nanosTotal: nanosTotal,
+                msFloat,
+                ms,
+                nanosTotal,
                 tickFrom: clock.now,
-                tickTo: tickTo,
+                tickTo,
                 previous: clock.now,
                 timer: null,
                 firstException: null,
@@ -2229,7 +2252,7 @@ function withGlobal(_global) {
                         runJobs(clock);
                         callTimer(clock, state.timer);
                     } catch (e) {
-                        state.firstException = state.firstException || e;
+                        state.firstException ||= e;
                     }
 
                     if (isAsync) {
@@ -2265,7 +2288,7 @@ function withGlobal(_global) {
                 try {
                     clock.tick(state.tickTo - clock.now); // do it all again - for the remainder of the requested range
                 } catch (e) {
-                    state.firstException = state.firstException || e;
+                    state.firstException ||= e;
                 }
             } else {
                 // no timers remaining in the requested range: move the clock all the way to the end
@@ -2373,8 +2396,8 @@ function withGlobal(_global) {
          */
         function runAsyncWithNativeTimeout(callback) {
             return pauseAutoTickUntilFinished(
-                new _global.Promise(function (resolve, reject) {
-                    originalSetTimeout(function () {
+                new _global.Promise((resolve, reject) => {
+                    originalSetTimeout(() => {
                         try {
                             callback(resolve, reject);
                         } catch (e) {
@@ -2427,13 +2450,14 @@ function withGlobal(_global) {
              * @returns {Promise}
              */
             clock.tickAsync = function tickAsync(tickValue) {
-                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                return runAsyncWithNativeTimeout((resolve, reject) => {
                     doTick(tickValue, true, resolve, reject);
                 });
             };
 
             clock.nextAsync = function nextAsync() {
-                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                return runAsyncWithNativeTimeout((resolve, reject) => {
+                    runJobs(clock);
                     const timer = firstTimer(clock);
                     if (!timer) {
                         resolve(clock.now);
@@ -2445,12 +2469,13 @@ function withGlobal(_global) {
                     clock.now = timer.callAt;
                     try {
                         callTimer(clock, timer);
+                        runJobs(clock);
                     } catch (e) {
                         err = e;
                     }
                     clock.duringTick = false;
 
-                    originalSetTimeout(function () {
+                    originalSetTimeout(() => {
                         if (err) {
                             reject(err);
                         } else {
@@ -2490,7 +2515,7 @@ function withGlobal(_global) {
 
                             i++;
 
-                            originalSetTimeout(function () {
+                            originalSetTimeout(() => {
                                 doRun(resolve, reject);
                             });
                             return;
@@ -2503,13 +2528,13 @@ function withGlobal(_global) {
                     }
                 }
 
-                return runAsyncWithNativeTimeout(function (resolve, reject) {
+                return runAsyncWithNativeTimeout((resolve, reject) => {
                     doRun(resolve, reject);
                 });
             };
 
             clock.runToLastAsync = function runToLastAsync() {
-                return runAsyncWithNativeTimeout(function (resolve) {
+                return runAsyncWithNativeTimeout((resolve) => {
                     const timer = lastTimer(clock);
                     if (!timer) {
                         runJobs(clock);
@@ -2524,6 +2549,8 @@ function withGlobal(_global) {
 
         clock.reset = function reset() {
             nanos = 0;
+            adjustedSystemTime[0] = 0;
+            adjustedSystemTime[1] = 0;
             clock.timers = new Map();
             clock.timerHeap = new TimerHeap();
             clock.jobs = [];
@@ -2596,6 +2623,20 @@ function withGlobal(_global) {
                     } else if (method === "nextTick" && _global.process) {
                         _global.process.nextTick = clock[installedNextTick];
                     } else if (method === "performance") {
+                        if (perfHooksNowDescriptors.has(clock)) {
+                            const descriptor =
+                                perfHooksNowDescriptors.get(clock);
+                            if (descriptor) {
+                                Object.defineProperty(
+                                    perfHooksModule.performance,
+                                    "now",
+                                    descriptor,
+                                );
+                            } else {
+                                delete perfHooksModule.performance.now;
+                            }
+                            perfHooksNowDescriptors.delete(clock);
+                        }
                         const originalPerfDescriptor =
                             Object.getOwnPropertyDescriptor(
                                 clock,
@@ -2713,19 +2754,12 @@ function withGlobal(_global) {
 
         // eslint-disable-next-line no-param-reassign
         config = typeof config !== "undefined" ? config : {};
-        config.shouldAdvanceTime = config.shouldAdvanceTime || false;
-        config.advanceTimeDelta = config.advanceTimeDelta || 20;
-        config.shouldClearNativeTimers =
-            config.shouldClearNativeTimers || false;
+        config.shouldAdvanceTime ||= false;
+        config.advanceTimeDelta ||= 20;
+        config.shouldClearNativeTimers ||= false;
 
-        const hasToFake = Object.prototype.hasOwnProperty.call(
-            config,
-            "toFake",
-        );
-        const hasToNotFake = Object.prototype.hasOwnProperty.call(
-            config,
-            "toNotFake",
-        );
+        const hasToFake = Object.hasOwn(config, "toFake");
+        const hasToNotFake = Object.hasOwn(config, "toNotFake");
 
         if (hasToFake && hasToNotFake) {
             throw new TypeError(
@@ -2796,7 +2830,7 @@ function withGlobal(_global) {
                 }
             })();
             if (proto) {
-                Object.getOwnPropertyNames(proto).forEach(function (name) {
+                Object.getOwnPropertyNames(proto).forEach((name) => {
                     if (name !== "now") {
                         clock.performance[name] =
                             name.indexOf("getEntries") === 0
@@ -2849,13 +2883,31 @@ function withGlobal(_global) {
                 hijackMethod(_global, nameOfMethodToReplace, clock);
             }
             if (
+                nameOfMethodToReplace === "performance" &&
+                _global === globalObject &&
+                perfHooksModule?.performance
+            ) {
+                perfHooksNowDescriptors.set(
+                    clock,
+                    Object.getOwnPropertyDescriptor(
+                        perfHooksModule.performance,
+                        "now",
+                    ),
+                );
+                Object.defineProperty(perfHooksModule.performance, "now", {
+                    configurable: true,
+                    writable: true,
+                    value: clock.performance.now,
+                });
+            }
+            if (
                 clock.timersModuleMethods !== undefined &&
                 timersModule[nameOfMethodToReplace]
             ) {
                 const original = timersModule[nameOfMethodToReplace];
                 clock.timersModuleMethods.push({
                     methodName: nameOfMethodToReplace,
-                    original: original,
+                    original,
                 });
                 timersModule[nameOfMethodToReplace] =
                     _global[nameOfMethodToReplace];
@@ -2979,6 +3031,8 @@ function withGlobal(_global) {
                                 let resolve, reject;
                                 const promise =
                                     /** @type {Promise<unknown> & { resolve: (value: unknown) => void; reject: (reason: unknown) => void }} */ (
+                                        // Promise.withResolvers() needs Node 22; CI still tests Node 20
+                                        // eslint-disable-next-line unicorn/prefer-promise-with-resolvers
                                         new Promise((res, rej) => {
                                             resolve = res;
                                             reject = rej;
@@ -3019,7 +3073,7 @@ function withGlobal(_global) {
 
                             if (options.signal) {
                                 if (options.signal.aborted) {
-                                    done = true;
+                                    abort();
                                 } else {
                                     options.signal.addEventListener(
                                         "abort",
@@ -3045,7 +3099,7 @@ function withGlobal(_global) {
 
                                     if (nextAvailable > 0) {
                                         nextAvailable--;
-                                        return { done: false, value: value };
+                                        return { done: false, value };
                                     }
 
                                     const resolvable = createResolvable();
@@ -3066,7 +3120,7 @@ function withGlobal(_global) {
                                         return { done: true, value: undefined };
                                     }
 
-                                    return { done: false, value: value };
+                                    return { done: false, value };
                                 },
                                 return: async () => {
                                     if (done) {
@@ -3104,10 +3158,10 @@ function withGlobal(_global) {
     /* eslint-enable complexity */
 
     return {
-        timers: timers,
-        createClock: createClock,
-        install: install,
-        withGlobal: withGlobal,
+        timers,
+        createClock,
+        install,
+        withGlobal,
     };
 }
 

@@ -25,11 +25,11 @@ describe("#347 - Support util.promisify once installed", function () {
 
     it("setTimeout", function () {
         let resolved = false;
-        utilPromisify(globalThis.setTimeout)(100).then(function () {
+        utilPromisify(globalThis.setTimeout)(100).then(() => {
             resolved = true;
         });
 
-        return this.clock.tickAsync(100).then(function () {
+        return this.clock.tickAsync(100).then(() => {
             assert.isTrue(resolved);
         });
     });
@@ -40,11 +40,11 @@ describe("#347 - Support util.promisify once installed", function () {
         }
 
         let resolved = false;
-        utilPromisify(globalThis.setImmediate)().then(function () {
+        utilPromisify(globalThis.setImmediate)().then(() => {
             resolved = true;
         });
 
-        return this.clock.tickAsync(0).then(function () {
+        return this.clock.tickAsync(0).then(() => {
             assert.isTrue(resolved);
         });
     });
