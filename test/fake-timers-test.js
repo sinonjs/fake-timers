@@ -3113,8 +3113,8 @@ describe("FakeTimers", function () {
             const stub = sinon.stub();
             const id = clock.setTimeout(stub, 100);
 
-            clock.setTimeout(function () {
-                clock.queueMicrotask(function () {
+            clock.setTimeout(() => {
+                clock.queueMicrotask(() => {
                     clock.clearTimeout(id);
                 });
             }, 50);
@@ -3336,8 +3336,8 @@ describe("FakeTimers", function () {
 
             // The job runs inside the same tick, after the interval has been picked as the next
             // timer to fire but before its callback is invoked.
-            clock.setTimeout(function () {
-                clock.queueMicrotask(function () {
+            clock.setTimeout(() => {
+                clock.queueMicrotask(() => {
                     clock.clearInterval(id);
                 });
             }, 50);
