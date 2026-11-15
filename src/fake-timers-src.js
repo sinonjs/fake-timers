@@ -1659,7 +1659,11 @@ function withGlobal(globalNamespace) {
      * @param {Clock} clock
      */
     function hijackMethod(target, method, clock) {
-        clock[method].hasOwnProperty = Object.hasOwn(target, method);
+        // Intentional non-conflicting key: storing this flag under
+        // `hasOwnProperty` would shadow the inherited Object.prototype
+        // method on the fake function and break callers that run
+        // `setTimeout.hasOwnProperty(name)` on the installed global.
+        clock[method].hadOwnProperty = Object.hasOwn(target, method);
         clock[`_${method}`] = target[method];
 
         if (method === "Date") {
@@ -2667,7 +2671,7 @@ function withGlobal(globalNamespace) {
                             _global[method] = clock[`_${method}`];
                         }
                     } else {
-                        if (clock[method] && clock[method].hasOwnProperty) {
+                        if (clock[method] && clock[method].hadOwnProperty) {
                             _global[method] = clock[`_${method}`];
                         } else {
                             try {
