@@ -1,4 +1,38 @@
 
+15.5.0 / 2026-11-15
+==================
+
+  * Remove spurious disable of ESLint (#579)
+  * feat: fake scheduler.postTask (#582)
+  * test: drop racy `runToLastAsync`/`nextAsync` case, fix Temporal-absent `tick()` test (#575)
+  * fix: do not shadow Object.prototype.hasOwnProperty on installed globals (#576)
+  * fix: do not resurrect a timer cleared during the same tick (#585)
+  * fix: keep setInterval recurring when the interval is not finite (#581)
+  * chore(deps): bump actions/setup-node from 3 to 7 (#599)
+  * chore(deps): bump actions/checkout from 3 to 7 (#600)
+  * chore(deps): bump js-yaml (#604)
+  * chore(deps): bump ip-address from 10.2.0 to 10.7.6 (#606)
+  * chore(deps-dev): bump @babel/core from 7.29.0 to 7.29.13 (#608)
+  * chore(deps): bump source-map-js from 1.2.1 to 1.2.2 (#609)
+  * chore(deps-dev): bump brace-expansion from 2.1.0 to 2.1.8 (#610)
+  * Fix perf_hooks.performance.now while fake timers are installed (#617)
+  * chore(deps-dev): bump the npm-patches group across 1 directory with 2 updates (#616)
+  * Ignore the ES2025 syntax codemod in git blame (#618)
+  * Es2025 syntax (#615)
+  * Update lock files
+  * Updated types
+  * Update Webdriver for Node 26 (fixes Sauce Labs crash)
+  * Fix withglobal types (#612)
+  * Group Dependabot minor and patch updates
+  * Group monthly
+  * fix: clean up pre-aborted promise intervals (#590)
+  * fix: skip firing timers cleared during job execution in callTimer (#592)
+  * fix: preserve explicit falsy Intl date arguments (#593)
+  * fix: skipped idle callbacks and cancelIdleCallback with a timeout (#595)
+  * fix: run jobs in nextAsync like next (#597) (#598)
+  * fix: keep requestAnimationFrame scheduling monotonic (#596)
+  * fix: accept duck-typed TemporalDuration when Temporal absent from global (#574)
+
 15.4.0 / 2026-05-05
 ==================
 
