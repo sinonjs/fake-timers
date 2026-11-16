@@ -18,6 +18,7 @@ wait.
 
 `@sinonjs/fake-timers` is an integral part of [Sinon.JS](https://github.com/sinonjs/sinon.js) and targets
 the [same runtimes](https://sinonjs.org/releases/latest#compatibility-and-supported-runtimes).
+Node.js 22 or later is required.
 
 ## Autocomplete, IntelliSense and TypeScript definitions
 
