@@ -13,6 +13,9 @@
     "url": "https://github.com/sinonjs/fake-timers/issues"
   },
   "license": "BSD-3-Clause",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "lint": "eslint .",
     "test-node": "mocha --timeout 200 test/ integration-test/ -R dot --check-leaks",
