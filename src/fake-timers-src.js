@@ -1823,7 +1823,21 @@ function withGlobal(globalNamespace) {
         timers.scheduler = _global.scheduler;
     }
 
-    const originalSetTimeout = _global.setImmediate || _global.setTimeout;
+    // The async tick functions yield to the event loop after every timer. Browsers delay nested
+    // setTimeout(0) calls by at least 4 ms, so without setImmediate, yield through a
+    // MessageChannel task, which isn't delayed.
+    const originalSetTimeout =
+        _global.setImmediate ||
+        (typeof _global.MessageChannel === "function"
+            ? function yieldThroughMessageChannel(callback) {
+                  const channel = new _global.MessageChannel();
+                  channel.port1.onmessage = function () {
+                      channel.port1.close();
+                      callback();
+                  };
+                  channel.port2.postMessage(null);
+              }
+            : _global.setTimeout);
     const originalClearInterval = _global.clearInterval;
     const originalSetInterval = _global.setInterval;
 
