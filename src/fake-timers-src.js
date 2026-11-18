@@ -643,7 +643,7 @@ function withGlobal(globalNamespace) {
     const NativeDOMException = _global.DOMException;
     const nodeAbortSignal = Boolean(
         globalObject.process?.versions?.node &&
-        NativeAbortSignal === NativeGlobalAbortSignal,
+        NativeAbortSignal?.prototype === NativeGlobalAbortSignal?.prototype,
     );
     let uniqueTimerId = idCounterStart;
     /** @type {number} */
@@ -1055,17 +1055,15 @@ function withGlobal(globalNamespace) {
         FakeAbortSignal.timeout = function timeout(delay) {
             let milliseconds = delay;
             if (nodeAbortSignal) {
-                if (typeof milliseconds !== "number") {
-                    throw new TypeError("The delay must be a number");
-                }
                 if (
+                    typeof milliseconds !== "number" ||
                     !Number.isInteger(milliseconds) ||
                     milliseconds < 0 ||
                     milliseconds > 2 ** 32 - 1
                 ) {
-                    throw new RangeError(
-                        "The delay must be an unsigned 32-bit integer",
-                    );
+                    // Native validation throws before scheduling a timer, preserving
+                    // Node's error codes and argument-specific messages.
+                    return NativeAbortSignal.timeout(delay);
                 }
             } else {
                 // Web IDL's [EnforceRange] unsigned long long conversion.

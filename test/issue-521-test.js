@@ -6,6 +6,20 @@ const NativeAbortSignal = globalThis.AbortSignal;
 const nativeTimeout = NativeAbortSignal.timeout;
 const isNode = Boolean(globalThis.process?.versions?.node);
 
+function assertNativeDelayError(timeout, value) {
+    let expected;
+    try {
+        nativeTimeout(value);
+    } catch (error) {
+        expected = error;
+    }
+    assert.exception(() => timeout(value), {
+        name: expected.name,
+        code: expected.code,
+        message: expected.message,
+    });
+}
+
 describe("issue #521: AbortSignal.timeout", function () {
     let clock;
 
@@ -170,6 +184,21 @@ describe("issue #521: AbortSignal.timeout", function () {
         }
     });
 
+    it("keeps native delay conversion when recreating the installed global", function () {
+        clock = FakeTimers.install({ toFake: ["AbortSignal"] });
+        const other = FakeTimers.withGlobal(globalThis).createClock();
+        if (isNode) {
+            assertNativeDelayError(other.AbortSignal.timeout, "1");
+            assert.equals(clock.countTimers(), 0);
+            assert.equals(other.countTimers(), 0);
+        } else {
+            const signal = other.AbortSignal.timeout("1");
+            other.tick(1);
+            assert(signal.aborted);
+            assert.equals(clock.countTimers(), 0);
+        }
+    });
+
     it("does not introduce AbortSignal where it is absent", function () {
         const ft = FakeTimers.withGlobal({ Date });
         assert.isUndefined(ft.createClock().AbortSignal);
@@ -233,7 +262,11 @@ describe("issue #521: AbortSignal.timeout", function () {
             Symbol("delay"),
             1n,
         ]) {
-            assert.exception(() => timeout(value));
+            if (isNode) {
+                assertNativeDelayError(timeout, value);
+            } else {
+                assert.exception(() => timeout(value));
+            }
             assert.equals(clock.countTimers(), 0);
         }
     });
@@ -243,7 +276,7 @@ describe("issue #521: AbortSignal.timeout", function () {
         const timeout = clock.AbortSignal.timeout;
         if (isNode) {
             for (const value of ["10", null, false, {}, 1.5, 2 ** 32]) {
-                assert.exception(() => timeout(value));
+                assertNativeDelayError(timeout, value);
                 assert.equals(clock.countTimers(), 0);
             }
         } else {
