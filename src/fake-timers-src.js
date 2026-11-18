@@ -1,6 +1,7 @@
 "use strict";
 
 const globalObject = require("@sinonjs/commons").global;
+const NativeGlobalAbortSignal = globalObject.AbortSignal;
 let timersModule, timersPromisesModule, perfHooksModule;
 if (typeof require === "function" && typeof module === "object") {
     try {
@@ -282,7 +283,7 @@ if (typeof require === "function" && typeof module === "object") {
  */
 
 /**
- * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal" | "scheduler"} FakeMethod
+ * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal" | "scheduler" | "AbortSignal"} FakeMethod
  */
 
 /**
@@ -389,6 +390,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {RequestIdleCallback} [requestIdleCallback] - native `requestIdleCallback`, if available
  * @property {CancelIdleCallback} [cancelIdleCallback] - native `cancelIdleCallback`, if available
  * @property {{postTask: SchedulerPostTask}} [scheduler] - native `scheduler`, if available
+ * @property {typeof AbortSignal} [AbortSignal] - native `AbortSignal`, if timeout is available
  */
 
 /**
@@ -493,6 +495,7 @@ if (typeof require === "function" && typeof module === "object") {
  * @property {IntlWithClock} [Intl] - fake Intl object
  * @property {any} [Temporal] - fake Temporal object
  * @property {{postTask: SchedulerPostTask}} [scheduler] - fake scheduler object
+ * @property {typeof AbortSignal} [AbortSignal] - native-compatible signals with fake timeout scheduling
  */
 /* eslint-enable jsdoc/reject-any-type */
 
@@ -617,6 +620,11 @@ function withGlobal(globalNamespace) {
         _global.scheduler &&
         typeof _global.scheduler === "object" &&
         typeof _global.scheduler.postTask === "function";
+    isPresent.AbortSignal =
+        typeof _global.AbortSignal === "function" &&
+        typeof _global.AbortSignal.timeout === "function" &&
+        typeof _global.AbortController === "function" &&
+        typeof _global.DOMException === "function";
 
     if (_global.clearTimeout) {
         _global.clearTimeout(timeoutResult);
@@ -630,6 +638,13 @@ function withGlobal(globalNamespace) {
           )
         : undefined;
     const NativeTemporal = isPresent.Temporal ? _global.Temporal : undefined;
+    const NativeAbortSignal = _global.AbortSignal;
+    const NativeAbortController = _global.AbortController;
+    const NativeDOMException = _global.DOMException;
+    const nodeAbortSignal = Boolean(
+        globalObject.process?.versions?.node &&
+        NativeAbortSignal === NativeGlobalAbortSignal,
+    );
     let uniqueTimerId = idCounterStart;
     /** @type {number} */
     let uniqueTimerOrder = 0;
@@ -1021,6 +1036,74 @@ function withGlobal(globalNamespace) {
         return TemporalWithClock;
     }
 
+    /**
+     * Keep native signals and factories, replacing only timeout scheduling.
+     * @param {Clock} clock
+     * @returns {typeof AbortSignal}
+     */
+    function createAbortSignal(clock) {
+        const FakeAbortSignal = function AbortSignal(...args) {
+            return Reflect.construct(
+                NativeAbortSignal,
+                args,
+                new.target || NativeAbortSignal,
+            );
+        };
+        Object.setPrototypeOf(FakeAbortSignal, NativeAbortSignal);
+        FakeAbortSignal.prototype = NativeAbortSignal.prototype;
+
+        FakeAbortSignal.timeout = function timeout(delay) {
+            let milliseconds = delay;
+            if (nodeAbortSignal) {
+                if (typeof milliseconds !== "number") {
+                    throw new TypeError("The delay must be a number");
+                }
+                if (
+                    !Number.isInteger(milliseconds) ||
+                    milliseconds < 0 ||
+                    milliseconds > 2 ** 32 - 1
+                ) {
+                    throw new RangeError(
+                        "The delay must be an unsigned 32-bit integer",
+                    );
+                }
+            } else {
+                // Web IDL's [EnforceRange] unsigned long long conversion.
+                milliseconds = Math.trunc(milliseconds);
+                if (
+                    !Number.isFinite(milliseconds) ||
+                    milliseconds < 0 ||
+                    milliseconds >= 2 ** 64
+                ) {
+                    throw new TypeError(
+                        "The delay must be an unsigned 64-bit integer",
+                    );
+                }
+            }
+
+            const controller = new NativeAbortController();
+            addTimer(
+                clock,
+                {
+                    func: () =>
+                        controller.abort(
+                            new NativeDOMException(
+                                "The operation timed out",
+                                "TimeoutError",
+                            ),
+                        ),
+                    delay: milliseconds,
+                },
+                !nodeAbortSignal,
+            );
+            return controller.signal;
+        };
+
+        return /** @type {typeof AbortSignal} */ (
+            /** @type {unknown} */ (FakeAbortSignal)
+        );
+    }
+
     //eslint-disable-next-line jsdoc/require-jsdoc
     function enqueueJob(clock, job) {
         // enqueues a microtick-deferred task - ecma262/#sec-enqueuejob
@@ -1293,9 +1376,10 @@ function withGlobal(globalNamespace) {
     /**
      * @param {Clock} clock
      * @param {TimerInitialProps} timer
+     * @param {boolean} [allowLongDelay] whether to preserve delays beyond setTimeout's limit
      * @returns {TimerId} id of the created timer
      */
-    function addTimer(clock, timer) {
+    function addTimer(clock, timer, allowLongDelay = false) {
         if (timer.func === undefined) {
             throw new Error("Callback must be provided to timer calls");
         }
@@ -1322,7 +1406,8 @@ function withGlobal(globalNamespace) {
             if (!Number.isFinite(timer.delay)) {
                 timer.delay = 0;
             }
-            timer.delay = timer.delay > maxTimeout ? 1 : timer.delay;
+            timer.delay =
+                timer.delay > maxTimeout && !allowLongDelay ? 1 : timer.delay;
             timer.delay = Math.max(0, timer.delay);
         }
 
@@ -1686,6 +1771,8 @@ function withGlobal(globalNamespace) {
             target[method] = clock[method];
         } else if (method === "Temporal") {
             target[method] = clock[method];
+        } else if (method === "AbortSignal") {
+            target[method] = clock[method];
         } else if (method === "scheduler") {
             const originalSchedulerDescriptor = Object.getOwnPropertyDescriptor(
                 target,
@@ -1822,6 +1909,9 @@ function withGlobal(globalNamespace) {
     if (isPresent.scheduler) {
         timers.scheduler = _global.scheduler;
     }
+    if (isPresent.AbortSignal) {
+        timers.AbortSignal = NativeAbortSignal;
+    }
 
     const originalSetTimeout = _global.setImmediate || _global.setTimeout;
     const originalClearInterval = _global.clearInterval;
@@ -1923,6 +2013,9 @@ function withGlobal(globalNamespace) {
 
         if (isPresent.Temporal) {
             clock.Temporal = createTemporal(clock, () => nanos);
+        }
+        if (isPresent.AbortSignal) {
+            clock.AbortSignal = createAbortSignal(clock);
         }
 
         /**
