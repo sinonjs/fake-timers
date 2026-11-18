@@ -133,7 +133,7 @@ export type Uninstall = () => void;
 export type SetTickMode = (tickModeConfig: SetTickModeConfig) => void;
 export type Hrtime = (prev?: Array<number>) => Array<number>;
 export type WithGlobal = (_global: GlobalNamespace) => FakeTimers;
-export type FakeMethod = "setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal" | "scheduler";
+export type FakeMethod = "setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal" | "scheduler" | "AbortSignal";
 export type TimerId = number | NodeImmediate | Timer;
 export type GlobalObject = Record<string, any> & {
     setTimeout?: SetTimeout;
@@ -307,6 +307,10 @@ export type Timers = {
     scheduler?: {
         postTask: SchedulerPostTask;
     };
+    /**
+     * - native `AbortSignal`, if timeout is available
+     */
+    AbortSignal?: typeof AbortSignal;
 };
 export type ClockState = {
     /**
@@ -629,6 +633,10 @@ export type Clock = {
     scheduler?: {
         postTask: SchedulerPostTask;
     };
+    /**
+     * - native-compatible signals with fake timeout scheduling
+     */
+    AbortSignal?: typeof AbortSignal;
 };
 export type Config = {
     /**
@@ -904,7 +912,7 @@ export type NodeImmediate = {
  * @returns {FakeTimers}
  */
 /**
- * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal" | "scheduler"} FakeMethod
+ * @typedef {"setTimeout" | "clearTimeout" | "setImmediate" | "clearImmediate" | "setInterval" | "clearInterval" | "Date" | "nextTick" | "hrtime" | "requestAnimationFrame" | "cancelAnimationFrame" | "requestIdleCallback" | "cancelIdleCallback" | "performance" | "queueMicrotask" | "Intl" | "Temporal" | "scheduler" | "AbortSignal"} FakeMethod
  */
 /**
  * @typedef {number | NodeImmediate | Timer} TimerId
@@ -1001,6 +1009,7 @@ export type NodeImmediate = {
  * @property {RequestIdleCallback} [requestIdleCallback] - native `requestIdleCallback`, if available
  * @property {CancelIdleCallback} [cancelIdleCallback] - native `cancelIdleCallback`, if available
  * @property {{postTask: SchedulerPostTask}} [scheduler] - native `scheduler`, if available
+ * @property {typeof AbortSignal} [AbortSignal] - native `AbortSignal`, if timeout is available
  */
 /**
  * @typedef {object} ClockState
@@ -1099,6 +1108,7 @@ export type NodeImmediate = {
  * @property {IntlWithClock} [Intl] - fake Intl object
  * @property {any} [Temporal] - fake Temporal object
  * @property {{postTask: SchedulerPostTask}} [scheduler] - fake scheduler object
+ * @property {typeof AbortSignal} [AbortSignal] - native-compatible signals with fake timeout scheduling
  */
 /**
  * Configuration object for the `install` method.

@@ -6,12 +6,17 @@ clock.tickAsync(10).then((now: number) => console.log(now));
 
 const installedClock = FakeTimers.install({
     now: new Date(),
-    toFake: ["setTimeout", "clearTimeout"],
+    toFake: ["setTimeout", "clearTimeout", "AbortSignal"],
     loopLimit: 100
 });
 
 const id = installedClock.setTimeout(() => {}, 10);
 installedClock.clearTimeout(id);
+
+if (installedClock.AbortSignal) {
+    const signal: AbortSignal = installedClock.AbortSignal.timeout(10);
+    signal.addEventListener("abort", () => signal.throwIfAborted());
+}
 
 installedClock.setTickMode({ mode: "nextAsync" });
 installedClock.setTickMode({ mode: "manual" });
