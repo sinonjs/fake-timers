@@ -93,6 +93,7 @@
     "node:perf_hooks": false,
     "node:timers": false,
     "node:timers/promises": false,
+    "node:util": false,
     "timers": false,
     "timers/promises": false
   }
