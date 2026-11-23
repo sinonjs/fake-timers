@@ -6885,6 +6885,22 @@ describe("Intl API", function () {
     });
 });
 
+describe("Intl API after uninstall", function () {
+    ["format", "formatToParts"].forEach((method) => {
+        it(`${method} uses the real time in a formatter created while installed`, function () {
+            const options = { timeZone: "UTC", year: "numeric" };
+            const clock = FakeTimers.install({ now: 0 });
+            const formatter = new Intl.DateTimeFormat("en-GB", options);
+            clock.uninstall();
+
+            assert.equals(
+                formatter[method](),
+                new Intl.DateTimeFormat("en-GB", options)[method](),
+            );
+        });
+    });
+});
+
 describe("missing timers", function () {
     const timers = [
         "performance",

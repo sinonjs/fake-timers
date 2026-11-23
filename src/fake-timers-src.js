@@ -362,7 +362,7 @@ if (typeof require === "function" && typeof module === "object") {
  */
 
 /**
- * @typedef {Record<string, any> & { clock: Clock }} IntlWithClock
+ * @typedef {Record<string, any> & { clock?: Clock }} IntlWithClock
  */
 
 /**
@@ -953,7 +953,7 @@ function withGlobal(globalNamespace) {
             ["format", "formatToParts"].forEach((method) => {
                 formatter[method] = function (date) {
                     return realFormatter[method](
-                        date === undefined ? IntlWithClock.clock.now : date,
+                        date === undefined ? IntlWithClock.clock?.now : date,
                     );
                 };
             });
@@ -2838,6 +2838,11 @@ function withGlobal(globalNamespace) {
 
                 // Prevent multiple executions which will completely remove these props
                 clock.methods = [];
+            }
+
+            // Cached formatters can outlive uninstall and retain pending timers.
+            if (clock.Intl) {
+                clock.Intl.clock = undefined;
             }
 
             if (clock.abortListenerMap) {
