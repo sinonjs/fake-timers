@@ -1386,12 +1386,12 @@ function withGlobal(globalNamespace) {
                     return this.refed;
                 },
                 refresh() {
+                    clock.timerHeap.remove(timer);
                     timer.callAt =
                         clock.now +
                         (parseInt(String(timer.delay)) ||
                             (clock.duringTick ? 1 : 0));
 
-                    clock.timerHeap.remove(timer);
                     timer.order = uniqueTimerOrder++;
                     setTimer(clock, timer);
                     clock.timerHeap.push(timer);
