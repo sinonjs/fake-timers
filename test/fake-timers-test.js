@@ -6885,6 +6885,40 @@ describe("Intl API", function () {
     });
 });
 
+describe("Intl API after uninstall", function () {
+    ["format", "formatToParts"].forEach((method) => {
+        it(`${method} uses the real time in a formatter created while installed`, function () {
+            const options = { timeZone: "UTC", year: "numeric" };
+            const clock = FakeTimers.install({ now: 0 });
+            const formatter = new Intl.DateTimeFormat("en-GB", options);
+            clock.uninstall();
+
+            assert.equals(
+                formatter[method](),
+                new Intl.DateTimeFormat("en-GB", options)[method](),
+            );
+        });
+    });
+
+    it("keeps using the clock when Intl was not installed globally", function () {
+        const options = { timeZone: "UTC", year: "numeric" };
+        const clock = FakeTimers.install({ now: 0, toFake: ["Date"] });
+        const formatter = new clock.Intl.DateTimeFormat("en-GB", options);
+        clock.uninstall();
+
+        assert.equals(formatter.format(), "1970");
+    });
+
+    it("keeps using the clock on a standalone createClock after uninstall", function () {
+        const options = { timeZone: "UTC", year: "numeric" };
+        const clock = FakeTimers.createClock(0);
+        const formatter = new clock.Intl.DateTimeFormat("en-GB", options);
+        clock.uninstall();
+
+        assert.equals(formatter.format(), "1970");
+    });
+});
+
 describe("missing timers", function () {
     const timers = [
         "performance",
