@@ -227,7 +227,7 @@ export type SetTickModeConfig = {
     delta?: number;
 };
 export type IntlWithClock = Record<string, any> & {
-    clock: Clock;
+    clock?: Clock;
 };
 export type PerformanceLike = Record<string, any> & {
     now: () => number;
@@ -976,7 +976,7 @@ export type NodeImmediate = {
  * @property {number} [delta] - interval length in milliseconds
  */
 /**
- * @typedef {Record<string, any> & { clock: Clock }} IntlWithClock
+ * @typedef {Record<string, any> & { clock?: Clock }} IntlWithClock
  */
 /**
  * @typedef {Record<string, any> & { now: () => number }} PerformanceLike

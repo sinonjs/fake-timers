@@ -2836,13 +2836,13 @@ function withGlobal(globalNamespace) {
                     }
                 }
 
+                // Cached formatters can outlive uninstall and retain pending timers.
+                if (clock.methods.includes("Intl") && clock.Intl) {
+                    clock.Intl.clock = undefined;
+                }
+
                 // Prevent multiple executions which will completely remove these props
                 clock.methods = [];
-            }
-
-            // Cached formatters can outlive uninstall and retain pending timers.
-            if (clock.Intl) {
-                clock.Intl.clock = undefined;
             }
 
             if (clock.abortListenerMap) {
